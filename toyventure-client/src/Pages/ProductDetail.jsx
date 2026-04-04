@@ -9,24 +9,27 @@ const ProductDetail = () => {
   const { id } = useParams(); 
   const dispatch = useDispatch();
 
-  // Queries & Mutations
   const { data: responseData, isLoading, error } = useGetProductByIdQuery(id);
   const { data: allProducts } = useGetProductsQuery();
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
 
-  // Safely extract product data
   const product = responseData?.data || (Array.isArray(responseData) ? responseData[0] : responseData);
-  
   const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
 
-  // Review States
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [name, setName] = useState('');
+
+  // Safely display the price directly from your database
+  const displayPrice = (price) => {
+    if (price === undefined || price === null) return '0';
+    const str = String(price);
+    return str.includes('₹') ? str : `₹${str}`;
+  };
 
   useEffect(() => { window.scrollTo(0, 0); }, [id]);
 
@@ -65,7 +68,7 @@ const ProductDetail = () => {
       alert('🎉 Review submitted successfully!');
       setRating(5); setComment(''); setName('');
     } catch (err) {
-      alert(err?.data?.message || 'Failed to submit review.');
+      alert('Failed to submit review.');
     }
   };
 
@@ -119,15 +122,11 @@ const ProductDetail = () => {
                     className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
                     style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center' }}
                 />
-                <div className={`absolute bottom-6 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold text-zinc-800 shadow-sm flex items-center gap-2 transition-all duration-300 ${isZooming ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-                    <span className="material-symbols-outlined text-[16px]">zoom_in</span> Hover to zoom, click to expand
-                </div>
             </div>
           </div>
 
           <div className="flex flex-col justify-center">
             
-            {/* RATING DISPLAY */}
             {product.numReviews > 0 && (
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex gap-0.5">{renderStars(product.rating || 5)}</div>
@@ -139,14 +138,13 @@ const ProductDetail = () => {
               {product.title}
             </h1>
             
-            {/* SAFE PRICE PARSING */}
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white">
               <span className="text-4xl font-black text-primary-container">
-                ₹{product?.price ? Number(String(product.price).replace(/[^0-9.-]+/g, "")).toLocaleString('en-IN') : '0.00'}
+                {displayPrice(product.price)}
               </span>
               {product.oldPrice && (
                 <span className="text-xl font-bold text-zinc-400 line-through">
-                  ₹{Number(String(product.oldPrice).replace(/[^0-9.-]+/g, "")).toLocaleString('en-IN')}
+                  {displayPrice(product.oldPrice)}
                 </span>
               )}
             </div>
@@ -167,9 +165,7 @@ const ProductDetail = () => {
                 <button 
                   onClick={() => dispatch(toggleFavorite(product))}
                   className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md ${
-                      isMainProductFavorited 
-                      ? 'border-red-500 bg-red-50 text-red-500' 
-                      : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'
+                      isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'
                   }`}
                   title="Add to Wishlist"
                 >
@@ -179,9 +175,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* ========================================== */}
         {/* REVIEWS SECTION */}
-        {/* ========================================== */}
         <div className="mt-20 border-t border-white pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           <div className="lg:col-span-7">
@@ -245,37 +239,6 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
-
-        {/* SUGGESTED PRODUCTS */}
-        {suggestedProducts.length > 0 && (
-          <div className="mt-24">
-            <h2 className="text-3xl font-black text-zinc-800 mb-8">You Might Also Like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {suggestedProducts.map((item) => {
-                const isFavorited = wishlistItems.some((wItem) => wItem._id === item._id);
-                return (
-                  <Link to={`/product/${item._id}`} key={item._id} className="flex flex-col group cursor-pointer relative card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300">
-                    <button 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); dispatch(toggleFavorite(item)); }}
-                      className="absolute top-6 right-6 z-10 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
-                    >
-                      <span className={`material-symbols-outlined text-[16px] ${isFavorited ? 'text-red-500 filled' : 'text-zinc-400'}`}>favorite</span>
-                    </button>
-                    <div className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-5 shadow-inner border border-white/60">
-                      <img alt={item.title} src={item.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply" />
-                    </div>
-                    <div className="px-2">
-                      <h3 className="font-bold text-zinc-800 text-[15px] leading-snug group-hover:text-primary-container transition-colors line-clamp-1 mb-2">{item.title}</h3>
-                      <span className="text-zinc-800 font-black text-lg">
-                        ₹{item?.price ? Number(String(item.price).replace(/[^0-9.-]+/g, "")).toLocaleString('en-IN') : '0.00'}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </main>
   );

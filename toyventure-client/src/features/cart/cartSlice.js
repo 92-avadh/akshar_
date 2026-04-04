@@ -1,10 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// 1. Load cart from local storage so it survives page refreshes!
 const initialState = {
-  cartItems: localStorage.getItem('cartItems')
-    ? JSON.parse(localStorage.getItem('cartItems'))
-    : [],
+  // THIS LINE IS CRITICAL: It loads the saved cart from the browser memory
+  cartItems: localStorage.getItem('cartItems') ? JSON.parse(localStorage.getItem('cartItems')) : [],
 };
 
 export const cartSlice = createSlice({
@@ -16,20 +14,19 @@ export const cartSlice = createSlice({
       const existingItem = state.cartItems.find((x) => x._id === item._id);
 
       if (existingItem) {
-        // MATCHED WITH FRONTEND: Use 'qty' instead of 'quantity'
-        existingItem.qty += item.qty;
+        existingItem.qty += item.qty; // Changed 'quantity' to 'qty' to match your UI
       } else {
         state.cartItems.push(item);
       }
       
-      // SAVE TO LOCAL STORAGE
+      // CRITICAL: Save to local storage after adding
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     updateQuantity: (state, action) => {
       const { id, qty } = action.payload;
       const item = state.cartItems.find((x) => x._id === id);
       if (item) {
-        item.qty = qty; 
+        item.qty = qty;
       }
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
