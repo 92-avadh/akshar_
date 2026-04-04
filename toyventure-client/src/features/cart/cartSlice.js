@@ -1,7 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// 1. Load cart from local storage so it survives page refreshes!
 const initialState = {
-  cartItems: [],
+  cartItems: localStorage.getItem('cartItems')
+    ? JSON.parse(localStorage.getItem('cartItems'))
+    : [],
 };
 
 export const cartSlice = createSlice({
@@ -10,29 +13,33 @@ export const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const item = action.payload;
-      // Check if the item is already in the cart using MongoDB's _id
       const existingItem = state.cartItems.find((x) => x._id === item._id);
 
       if (existingItem) {
-        // If it exists, just increase the quantity
-        existingItem.quantity += item.quantity;
+        // MATCHED WITH FRONTEND: Use 'qty' instead of 'quantity'
+        existingItem.qty += item.qty;
       } else {
-        // If it's new, add it to the array
         state.cartItems.push(item);
       }
+      
+      // SAVE TO LOCAL STORAGE
+      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     updateQuantity: (state, action) => {
-      const { id, quantity } = action.payload;
+      const { id, qty } = action.payload;
       const item = state.cartItems.find((x) => x._id === id);
       if (item) {
-        item.quantity = quantity;
+        item.qty = qty; 
       }
+      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     removeFromCart: (state, action) => {
       state.cartItems = state.cartItems.filter((x) => x._id !== action.payload);
+      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     clearCart: (state) => {
       state.cartItems = [];
+      localStorage.removeItem('cartItems');
     }
   },
 });

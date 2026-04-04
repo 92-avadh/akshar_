@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // <-- 1. Import Link from React Router
+import { Link } from 'react-router-dom'; 
+import { useSelector } from 'react-redux'; // <-- IMPORT REDUX
 
 const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []); // <-- GET ITEMS
 
   return (
     <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-xl shadow-xl shadow-purple-900/5 transition-all">
@@ -10,7 +12,6 @@ const Navbar = () => {
         
         {/* Brand & Search */}
         <div className="flex items-center gap-8">
-          {/* 2. Change <a> to <Link> for the logo */}
           <Link to="/" className="text-3xl font-black text-primary-container italic tracking-tighter">
             ToyVenture
           </Link>
@@ -24,7 +25,6 @@ const Navbar = () => {
 
         {/* Navigation Links */}
         <div className="hidden lg:flex items-center gap-6 text-sm">
-          {/* 3. Update all main nav links */}
           <Link to="/" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Home</Link>
           
           <button 
@@ -34,7 +34,6 @@ const Navbar = () => {
             Shop <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isShopOpen ? 'rotate-180' : ''}`}>expand_more</span>
           </button>
           
-          {/* Link this specifically to the shop page we just built */}
           <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Metal Car</Link>
           <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Boys</Link>
           <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Girls</Link>
@@ -42,14 +41,22 @@ const Navbar = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          {/* 4. Link the profile icon to your new Login page */}
           <Link to="/auth" className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">person</span>
           </Link>
-          <button className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
+          
+          {/* ==================================== */}
+          {/* FAVORITE ICON UPDATED WITH REDUX BADGE */}
+          {/* ==================================== */}
+          <Link to="/favorites" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-red-500 rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">favorite</span>
-          </button>
-          {/* 5. Link the Cart icon to the Cart page */}
+            {wishlistItems.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-sm">
+                {wishlistItems.length}
+              </span>
+            )}
+          </Link>
+
           <Link to="/cart" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">shopping_bag</span>
             <span className="absolute top-1 right-1 w-4 h-4 bg-secondary-container text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-sm">3</span>
@@ -62,7 +69,6 @@ const Navbar = () => {
             <div className="w-full max-w-[1440px] mx-auto flex gap-8">
               <div className="flex-1 grid grid-cols-5 gap-6 border-r border-zinc-100 pr-8">
                 
-                {/* Notice how I changed these to Link tags too! */}
                 <div>
                   <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Shop By Age</h4>
                   <ul className="space-y-3">
@@ -81,7 +87,6 @@ const Navbar = () => {
                   </ul>
                 </div>
 
-                {/* You can do the same for the rest of the columns... */}
                 <div>
                   <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Ride & Outdoor</h4>
                   <ul className="space-y-3">

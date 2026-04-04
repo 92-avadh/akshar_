@@ -5,39 +5,32 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:5000/api' }), 
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({
-    // --- PRODUCT ENDPOINTS ---
     getProducts: builder.query({
       query: () => '/products',
       providesTags: ['Product'],
     }),
     getProductById: builder.query({
       query: (id) => `/products/${id}`,
+      // Notice how this provides a specific tag for this ID
       providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
     
-    // --- AUTH ENDPOINTS ---
-    sendOtp: builder.mutation({
-      query: (data) => ({
-        url: '/auth/send-otp',
-        method: 'POST',
-        body: data, 
-      }),
-    }),
-    verifyOtp: builder.mutation({
-      query: (data) => ({
-        url: '/auth/verify-otp',
-        method: 'POST',
-        body: data, 
-      }),
-    }),
+    // Auth & Order endpoints remain the same...
+    sendOtp: builder.mutation({ query: (data) => ({ url: '/auth/send-otp', method: 'POST', body: data }) }),
+    verifyOtp: builder.mutation({ query: (data) => ({ url: '/auth/verify-otp', method: 'POST', body: data }) }),
+    createOrder: builder.mutation({ query: (data) => ({ url: '/orders', method: 'POST', body: data }) }),
 
-    // --- ORDER ENDPOINTS (NEW) ---
-    createOrder: builder.mutation({
-      query: (orderData) => ({
-          url: '/orders',
+    // ==========================================
+    // NEW: CREATE REVIEW MUTATION
+    // ==========================================
+    createReview: builder.mutation({
+      query: (data) => ({
+          url: `/products/${data.productId}/reviews`,
           method: 'POST',
-          body: orderData,
+          body: data,
       }),
+      // This tells Redux to re-fetch the product immediately after a review is submitted!
+      invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
     }),
 
   }),
@@ -48,5 +41,6 @@ export const {
   useGetProductByIdQuery,
   useSendOtpMutation,     
   useVerifyOtpMutation,
-  useCreateOrderMutation // <--- NEW EXPORT
+  useCreateOrderMutation,
+  useCreateReviewMutation // <-- NEW EXPORT
 } = apiSlice;

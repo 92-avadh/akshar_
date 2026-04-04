@@ -14,6 +14,7 @@ import ProductDetail from './Pages/ProductDetail';
 import Cart from './Pages/Cart'; 
 import Checkout from './Pages/Checkout'; 
 import Auth from './Pages/Auth'; 
+import Favorites from './Pages/Favorites'; // <-- IMPORT ADDED
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/favorites" element={<Favorites />} /> {/* <-- ROUTE ADDED */}
             
             {/* Updated 404 Route to be perfectly visible and premium */}
             <Route path="*" element={
