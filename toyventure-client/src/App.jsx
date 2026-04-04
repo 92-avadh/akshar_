@@ -31,7 +31,7 @@ function App() {
         <main className="flex-grow flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/store" element={<Shop />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />

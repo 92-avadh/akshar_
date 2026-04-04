@@ -1,84 +1,34 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ScrollReveal from '../components/ScrollReveal.jsx';
+import { useGetProductsQuery } from '../features/api/apiSlice.js';
 
 const Shop = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const products = [
-    { 
-      id: 1, 
-      title: "G Patton Die-Cast Off-Road SUV Toy Car with Lights & Sounds", 
-      price: "₹1,199.00", 
-      oldPrice: "₹1,999.00", 
-      discount: "[40% OFF]",
-      clubPrice: "₹1,139.00",
-      img: "https://images.unsplash.com/photo-1594787317666-41793740284e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 2, 
-      title: "AMG G63 G Wagon Die-Cast Metal Car with Openable Doors", 
-      price: "₹2,699.00", 
-      oldPrice: "₹3,999.00", 
-      discount: "[33% OFF]",
-      clubPrice: "₹2,564.00",
-      img: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 3, 
-      title: "Rolls Royce Phantom Diecast Car Model | Luxury Series", 
-      price: "₹2,599.00", 
-      oldPrice: "₹3,999.00", 
-      discount: "[35% OFF]",
-      clubPrice: "₹2,469.00",
-      img: "https://images.unsplash.com/photo-1532974297617-c0f05fe48bff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 4, 
-      title: "Range Rover Scale Model Car - Exclusive All Black Edition", 
-      price: "₹2,699.00", 
-      oldPrice: "₹3,999.00", 
-      discount: "[33% OFF]",
-      clubPrice: "₹2,564.00",
-      img: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 5, 
-      title: "Vintage Classic Beetle 1:32 Scale Diecast Pull Back Car", 
-      price: "₹899.00", 
-      oldPrice: "₹1,499.00", 
-      discount: "[40% OFF]",
-      clubPrice: "₹854.00",
-      img: "https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 6, 
-      title: "Lamborghini Aventador Sports Car Metal Replica", 
-      price: "₹3,199.00", 
-      oldPrice: "₹4,999.00", 
-      discount: "[36% OFF]",
-      clubPrice: "₹3,039.00",
-      img: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 7, 
-      title: "Ford Mustang Shelby GT500 Die-Cast Collectible", 
-      price: "₹1,899.00", 
-      oldPrice: "₹2,999.00", 
-      discount: "[36% OFF]",
-      clubPrice: "₹1,804.00",
-      img: "https://images.unsplash.com/photo-1584345604476-8ec5e12e42da?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    },
-    { 
-      id: 8, 
-      title: "Jeep Wrangler Rubicon Heavy Duty Metal Toy", 
-      price: "₹1,499.00", 
-      oldPrice: "₹2,499.00", 
-      discount: "[40% OFF]",
-      clubPrice: "₹1,424.00",
-      img: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
-    }
-  ];
+  // Fetch the real products from your backend
+  const { data: products, isLoading, error } = useGetProductsQuery();
+
+  // Show a loading spinner while fetching
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="w-16 h-16 border-4 border-primary-container border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show an error message if the fetch fails
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <h2 className="text-2xl font-bold text-red-500">Failed to load products. Is your backend running?</h2>
+      </div>
+    );
+  }
+
+  // Ensure products is an array before trying to map it
+  const productsToDisplay = products || [];
 
   return (
     <main className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
@@ -93,14 +43,14 @@ const Shop = () => {
             <span className="material-symbols-outlined text-[16px] mr-1">home</span> HOME
           </Link>
           <span>/</span>
-          <Link to="/store" className="hover:text-primary-container transition-colors">STORE</Link>
+          <Link to="/shop" className="hover:text-primary-container transition-colors">SHOP</Link>
           <span>/</span>
-          <span className="text-zinc-800">METAL CARS</span>
+          <span className="text-zinc-800">ALL TOYS</span>
         </ScrollReveal>
 
         {/* ================= PAGE TITLE ================= */}
         <ScrollReveal delay={50}>
-          <h1 className="text-4xl md:text-5xl font-black text-on-surface mb-8 tracking-tighter">Metal Cars Collection</h1>
+          <h1 className="text-4xl md:text-5xl font-black text-on-surface mb-8 tracking-tighter">Magical Collection</h1>
         </ScrollReveal>
 
         {/* ================= TOP TOOLBAR ================= */}
@@ -120,7 +70,7 @@ const Shop = () => {
               {isFilterOpen ? 'Close Filters' : 'Show Filters'}
             </button>
             <span className="text-zinc-600 font-medium text-sm hidden sm:block bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
-              Showing {products.length} magical items
+              Showing {productsToDisplay.length} magical items
             </span>
           </div>
 
@@ -208,8 +158,8 @@ const Shop = () => {
 
         {/* ================= FULL WIDTH PRODUCT GRID ================= */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8">
-          {products.map((product, index) => (
-            <ScrollReveal as={Link} to={`/product/${product.id}`} key={product.id} delay={index * 50} className="flex flex-col group cursor-pointer relative block card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300">
+          {productsToDisplay.map((product, index) => (
+            <ScrollReveal as={Link} to={`/product/${product._id}`} key={product._id} delay={index * 50} className="flex flex-col group cursor-pointer relative block card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300">
               
               {/* Quick Add Button */}
               <button 
@@ -226,9 +176,11 @@ const Shop = () => {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply" 
                   src={product.img}
                 />
-                <div className="absolute bottom-3 right-3 bg-gradient-to-br from-red-500 to-red-700 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="material-symbols-outlined text-[14px]">toys</span>
-                </div>
+                {product.tag && (
+                  <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-700 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md">
+                    {product.tag}
+                  </div>
+                )}
               </div>
 
               {/* Product Details */}
@@ -238,17 +190,19 @@ const Shop = () => {
                 </h3>
                 
                 <div className="flex items-center gap-2.5 mb-2">
-                  <span className="text-zinc-800 font-black text-xl tracking-tight">{product.price}</span>
-                  <span className="text-zinc-400 line-through text-xs font-medium">{product.oldPrice}</span>
-                  <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider">{product.discount}</span>
+                  <span className="text-zinc-800 font-black text-xl tracking-tight">₹{product.price}</span>
+                  {product.oldPrice && <span className="text-zinc-400 line-through text-xs font-medium">₹{product.oldPrice}</span>}
+                  {product.discount && <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-black tracking-wider">{product.discount}</span>}
                 </div>
                 
-                <div className="mt-auto pt-3 border-t border-zinc-200/50 flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Members</span>
-                  <p className="text-teal-700 font-black text-sm tracking-tight">
-                    {product.clubPrice}
-                  </p>
-                </div>
+                {product.clubPrice && (
+                  <div className="mt-auto pt-3 border-t border-zinc-200/50 flex justify-between items-center">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Members</span>
+                    <p className="text-teal-700 font-black text-sm tracking-tight">
+                      ₹{product.clubPrice}
+                    </p>
+                  </div>
+                )}
               </div>
 
             </ScrollReveal>
@@ -256,12 +210,14 @@ const Shop = () => {
         </div>
 
         {/* Pagination / Load More */}
-        <ScrollReveal delay={200} className="mt-16 mb-8 flex justify-center">
-           <button className="card-surface text-zinc-800 font-black px-10 py-4 rounded-full hover:-translate-y-1 hover:shadow-soft transition-all flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">autorenew</span>
-              Load More Products
-           </button>
-        </ScrollReveal>
+        {productsToDisplay.length > 0 && (
+          <ScrollReveal delay={200} className="mt-16 mb-8 flex justify-center">
+            <button className="card-surface text-zinc-800 font-black px-10 py-4 rounded-full hover:-translate-y-1 hover:shadow-soft transition-all flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">autorenew</span>
+                Load More Products
+            </button>
+          </ScrollReveal>
+        )}
 
       </div>
     </main>

@@ -32,13 +32,13 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center pt-28 pb-24 bg-surface">
         <h2 className="text-3xl font-black text-zinc-800 mb-4">Toy Not Found</h2>
-        <Link to="/store" className="text-primary-container font-bold hover:underline">Go back to Store</Link>
+        {/* UPDATED LINK TO /shop */}
+        <Link to="/shop" className="text-primary-container font-bold hover:underline">Go back to Shop</Link>
       </div>
     );
   }
 
   // For the premium UI, we'll duplicate the main image to mock a gallery 
-  // (until you add an images array to your MongoDB schema later!)
   const thumbnails = [product.img, product.img, product.img];
 
   return (
@@ -53,7 +53,8 @@ const ProductDetail = () => {
             <span className="material-symbols-outlined text-[16px] mr-1">home</span> HOME
           </Link>
           <span>/</span>
-          <Link to="/store" className="hover:text-primary-container transition-colors">{product.category || "STORE"}</Link>
+          {/* UPDATED LINK TO /shop */}
+          <Link to="/shop" className="hover:text-primary-container transition-colors">{product.category || "SHOP"}</Link>
           <span>/</span>
           <span className="text-zinc-800 truncate max-w-[200px]">{product.title}</span>
         </ScrollReveal>
@@ -153,7 +154,6 @@ const ProductDetail = () => {
               </button>
             </ScrollReveal>
             
-            {/* ... (Keep the rest of your Accordion Details exactly the same) ... */}
             <ScrollReveal delay={350} className="space-y-4">
               <details className="group card-surface rounded-3xl overflow-hidden [&_summary::-webkit-details-marker]:hidden" open>
                 <summary className="flex items-center justify-between font-black text-zinc-800 p-6 cursor-pointer outline-none">
