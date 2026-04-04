@@ -1,287 +1,172 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import ScrollReveal from '../components/ScrollReveal.jsx';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate, Link } from 'react-router-dom';
+import { useCreateOrderMutation } from '../features/api/apiSlice';
+// If you have a clearCart action in your cartSlice, uncomment the next line:
+// import { clearCart } from '../features/cart/cartSlice'; 
 
 const Checkout = () => {
-  // Dummy data passed from the Cart
-  const cartItems = [
-    { 
-      id: 1, 
-      title: "G Patton Die-Cast Off-Road SUV Toy Car", 
-      price: 1199, 
-      quantity: 1, 
-      img: "https://images.unsplash.com/photo-1594787317666-41793740284e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-    },
-    { 
-      id: 2, 
-      title: "Educational Building Blocks Set", 
-      price: 1199, 
-      quantity: 2, 
-      img: "https://images.unsplash.com/photo-1555448248-2571daf6344b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-    }
-  ];
+  // Get cart items from Redux store
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  // RTK Query Mutation
+  const [createOrderApi, { isLoading }] = useCreateOrderMutation();
 
-  // Calculations
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 2000 ? 0 : 99;
-  const total = subtotal + shipping;
+  // Local Form State
+  const [shippingDetails, setShippingDetails] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    city: '',
+    pincode: ''
+  });
 
-  const handlePlaceOrder = (e) => {
-    e.preventDefault();
-    alert("Order Placed Successfully! (This is a template)");
-    // In a real app, this would submit the form data to your Express backend
+  // Calculate Total Price
+  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+
+  // Handle Form Input changes
+  const handleInputChange = (e) => {
+    setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
   };
 
-  return (
-    <main className="pt-32 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
+  // Handle Order Submission
+  const placeOrderHandler = async (e) => {
+    e.preventDefault();
+    
+    if (cartItems.length === 0) {
+      alert("Your cart is empty! Please add items before checking out.");
+      navigate('/shop');
+      return;
+    }
+
+    try {
+      // Send the payload to the backend
+      const response = await createOrderApi({
+        orderItems: cartItems,
+        shippingDetails,
+        totalPrice
+      }).unwrap();
+
+      alert(`🎉 Order Placed Successfully!\nYour Order ID is: ${response._id}`);
       
-      {/* Background Doodle overlay */}
-      <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
+      // Clear the cart after successful order (Uncomment if implemented)
+      // dispatch(clearCart()); 
+      
+      navigate('/'); // Send user back to home
+      
+    } catch (error) {
+      alert(error?.data?.message || 'Failed to place order. Please try again.');
+    }
+  };
 
-      <div className="max-w-[1440px] mx-auto px-6 relative z-10">
-        
-        {/* ================= BREADCRUMBS ================= */}
-        <ScrollReveal className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-8">
-          <Link to="/" className="hover:text-primary-container flex items-center transition-colors">
-            <span className="material-symbols-outlined text-[16px] mr-1">home</span> HOME
-          </Link>
-          <span>/</span>
-          <Link to="/cart" className="hover:text-primary-container transition-colors">CART</Link>
-          <span>/</span>
-          <span className="text-zinc-800">CHECKOUT</span>
-        </ScrollReveal>
-
-        <ScrollReveal delay={50}>
-          <h1 className="text-4xl md:text-5xl font-black text-on-surface mb-10 tracking-tighter drop-shadow-sm">Checkout</h1>
-        </ScrollReveal>
-
-        <form onSubmit={handlePlaceOrder} className="flex flex-col lg:flex-row gap-10 lg:gap-16">
-          
-          {/* ================= LEFT: FORMS ================= */}
-          <div className="flex-1 flex flex-col gap-10">
-            
-            {/* Contact Information */}
-            <ScrollReveal delay={100} as="section">
-              <h2 className="text-2xl font-black text-zinc-800 mb-5 flex items-center gap-3 drop-shadow-sm">
-                <div className="bg-white/80 p-2 rounded-full shadow-sm border border-white flex items-center justify-center">
-                   <span className="material-symbols-outlined text-primary-container">contact_mail</span>
-                </div>
-                Contact Information
-              </h2>
-              <div className="card-surface p-6 md:p-8 rounded-[2rem] space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Email Address *</label>
-                  <input type="email" required placeholder="magic@toyventure.com" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-                <label className="flex items-center gap-3 cursor-pointer group mt-4 ml-1">
-                  <input type="checkbox" className="w-5 h-5 rounded text-primary-container focus:ring-primary-container border-white shadow-sm cursor-pointer" defaultChecked />
-                  <span className="text-sm font-medium text-zinc-700 group-hover:text-primary-container transition-colors">Email me with news and offers</span>
-                </label>
-              </div>
-            </ScrollReveal>
-
-            {/* Shipping Address */}
-            <ScrollReveal delay={150} as="section">
-              <h2 className="text-2xl font-black text-zinc-800 mb-5 flex items-center gap-3 drop-shadow-sm">
-                <div className="bg-white/80 p-2 rounded-full shadow-sm border border-white flex items-center justify-center">
-                   <span className="material-symbols-outlined text-primary-container">local_shipping</span> 
-                </div>
-                Shipping Address
-              </h2>
-              <div className="card-surface p-6 md:p-8 rounded-[2.5rem] grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Country/Region</label>
-                  <select className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-bold text-zinc-800 focus:ring-4 focus:ring-primary-container/20 outline-none transition-all cursor-pointer shadow-inner">
-                    <option>India</option>
-                    <option>United States</option>
-                    <option>United Kingdom</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">First Name *</label>
-                  <input type="text" required placeholder="First Name" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Last Name *</label>
-                  <input type="text" required placeholder="Last Name" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Address *</label>
-                  <input type="text" required placeholder="House number, Street name" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Apartment, suite, etc. (optional)</label>
-                  <input type="text" placeholder="Apartment, suite, etc." className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">City *</label>
-                  <input type="text" required placeholder="City" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">State *</label>
-                    <select className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all cursor-pointer shadow-inner">
-                      <option>Gujarat</option>
-                      <option>Maharashtra</option>
-                      <option>Delhi</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">PIN Code *</label>
-                    <input type="text" required placeholder="PIN" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-bold text-zinc-700 mb-1.5 ml-1">Phone Number *</label>
-                  <input type="tel" required placeholder="For delivery updates" className="w-full bg-white/60 backdrop-blur-sm border border-white rounded-xl px-4 py-3.5 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" />
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* Payment Method */}
-            <ScrollReveal delay={200} as="section">
-              <h2 className="text-2xl font-black text-zinc-800 mb-5 flex items-center gap-3 drop-shadow-sm">
-                <div className="bg-white/80 p-2 rounded-full shadow-sm border border-white flex items-center justify-center">
-                   <span className="material-symbols-outlined text-primary-container">payments</span> 
-                </div>
-                Payment
-              </h2>
-              <div className="card-surface rounded-[2.5rem] overflow-hidden shadow-soft">
-                
-                {/* Credit Card Option */}
-                <div 
-                  className={`p-6 border-b border-white/50 cursor-pointer transition-colors ${paymentMethod === 'card' ? 'bg-primary-container/5' : 'hover:bg-white/50'}`}
-                  onClick={() => setPaymentMethod('card')}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-inner ${paymentMethod === 'card' ? 'border-primary-container bg-white' : 'border-zinc-300 bg-white/50'}`}>
-                      {paymentMethod === 'card' && <div className="w-3 h-3 bg-primary-container rounded-full"></div>}
-                    </div>
-                    <span className="font-bold text-zinc-800 text-lg">Credit / Debit Card</span>
-                    <div className="ml-auto flex gap-1">
-                      <span className="material-symbols-outlined text-zinc-400">credit_card</span>
-                    </div>
-                  </div>
-                  {/* Expandable Card Form */}
-                  {paymentMethod === 'card' && (
-                    <div className="mt-5 pt-5 border-t border-white/60 space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                      <input type="text" placeholder="Card Number" className="w-full bg-white/80 border border-white rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none shadow-inner" />
-                      <div className="flex gap-4">
-                        <input type="text" placeholder="MM/YY" className="flex-1 bg-white/80 border border-white rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none shadow-inner" />
-                        <input type="text" placeholder="CVV" className="flex-1 bg-white/80 border border-white rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none shadow-inner" />
-                      </div>
-                      <input type="text" placeholder="Name on Card" className="w-full bg-white/80 border border-white rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none shadow-inner" />
-                    </div>
-                  )}
-                </div>
-
-                {/* UPI Option */}
-                <div 
-                  className={`p-6 border-b border-white/50 cursor-pointer transition-colors ${paymentMethod === 'upi' ? 'bg-primary-container/5' : 'hover:bg-white/50'}`}
-                  onClick={() => setPaymentMethod('upi')}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-inner ${paymentMethod === 'upi' ? 'border-primary-container bg-white' : 'border-zinc-300 bg-white/50'}`}>
-                      {paymentMethod === 'upi' && <div className="w-3 h-3 bg-primary-container rounded-full"></div>}
-                    </div>
-                    <span className="font-bold text-zinc-800 text-lg">UPI (Google Pay, PhonePe, etc.)</span>
-                  </div>
-                  {paymentMethod === 'upi' && (
-                    <div className="mt-5 pt-5 border-t border-white/60 animate-[fadeIn_0.3s_ease-out]">
-                       <p className="text-sm text-zinc-600 mb-3 ml-1 font-medium">Enter your UPI ID. We will send a payment request to your UPI app.</p>
-                       <input type="text" placeholder="user@upi" className="w-full bg-white/80 border border-white rounded-xl px-4 py-3 text-sm font-medium focus:ring-4 focus:ring-primary-container/20 outline-none shadow-inner" />
-                    </div>
-                  )}
-                </div>
-
-                {/* COD Option */}
-                <div 
-                  className={`p-6 cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'bg-primary-container/5' : 'hover:bg-white/50'}`}
-                  onClick={() => setPaymentMethod('cod')}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-inner ${paymentMethod === 'cod' ? 'border-primary-container bg-white' : 'border-zinc-300 bg-white/50'}`}>
-                      {paymentMethod === 'cod' && <div className="w-3 h-3 bg-primary-container rounded-full"></div>}
-                    </div>
-                    <span className="font-bold text-zinc-800 text-lg">Cash on Delivery (COD)</span>
-                  </div>
-                </div>
-
-              </div>
-            </ScrollReveal>
-
-          </div>
-
-          {/* ================= RIGHT: ORDER SUMMARY ================= */}
-          <ScrollReveal delay={300} className="w-full lg:w-[400px] shrink-0">
-            <div className="card-surface rounded-[2.5rem] p-8 sticky top-32 hover:shadow-soft transition-shadow duration-300">
-              <h3 className="font-black text-2xl text-on-surface mb-6 drop-shadow-sm">Order Summary</h3>
-              
-              {/* Items List */}
-              <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 items-center p-2 bg-white/40 rounded-2xl border border-white/60 shadow-sm">
-                    <div className="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0 relative border border-white">
-                      <img src={item.img} alt={item.title} className="w-full h-full object-cover mix-blend-multiply" />
-                      <span className="absolute -top-1 -right-1 bg-zinc-700 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">{item.quantity}</span>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-zinc-800 line-clamp-2 leading-tight">{item.title}</h4>
-                      <span className="text-sm font-black text-red-600">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t border-white/60 pt-6 space-y-4 text-zinc-600 font-medium text-[15px] mb-6">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="font-black text-zinc-800">₹{subtotal.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span className="font-black text-zinc-800">{shipping === 0 ? <span className="text-green-600">Free</span> : `₹${shipping}`}</span>
-                </div>
-              </div>
-
-              <div className="border-t border-white/60 pt-6 mb-8">
-                <div className="flex justify-between items-end">
-                  <span className="font-black text-zinc-800 text-xl">Total</span>
-                  <div className="text-right">
-                    <span className="text-[11px] text-zinc-500 block font-bold mb-1 uppercase tracking-wider">Including GST</span>
-                    <span className="font-black text-4xl text-red-600 tracking-tighter drop-shadow-sm">₹{total.toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" className="w-full py-4 bg-gradient-to-r from-primary-container to-orange-600 text-white font-black text-lg rounded-2xl hover:shadow-lg hover:shadow-orange-500/40 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 active:scale-95">
-                Place Order <span className="material-symbols-outlined text-[20px]">check_circle</span>
-              </button>
-
-              <div className="mt-6 flex flex-col items-center gap-3">
-                <p className="text-center text-xs font-bold text-zinc-500 flex items-center justify-center gap-1.5 bg-white/50 py-2 px-4 rounded-full border border-white">
-                  <span className="material-symbols-outlined text-[16px] text-green-600">lock</span> Secure 256-bit SSL Encryption
-                </p>
-                <div className="flex items-center gap-3 opacity-30 mt-1">
-                  <span className="material-symbols-outlined text-3xl">credit_card</span>
-                  <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
-                  <span className="material-symbols-outlined text-3xl">assured_workload</span>
-                </div>
-              </div>
-
-            </div>
-          </ScrollReveal>
-
-        </form>
+  // IF CART IS EMPTY
+  if (cartItems.length === 0) {
+    return (
+      <div className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6">
+        <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">shopping_bag</span>
+        <h2 className="text-3xl font-black text-zinc-800 mb-4">Your cart is empty</h2>
+        <p className="text-zinc-500 mb-8 text-center max-w-md">Looks like you haven't added any magical toys to your cart yet.</p>
+        <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
+          Start Shopping
+        </Link>
       </div>
-    </main>
+    );
+  }
+
+  // CHECKOUT PAGE UI
+  return (
+    <div className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
+      <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
+      
+      <div className="max-w-[1000px] mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Side: Shipping Form */}
+        <div className="lg:col-span-2 card-surface p-8 rounded-[2.5rem] shadow-soft">
+          <h1 className="text-3xl font-black text-zinc-800 mb-8 border-b border-white pb-4">Shipping Details</h1>
+
+          <form id="checkout-form" onSubmit={placeOrderHandler} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">Full Name</label>
+                <input required type="text" name="fullName" value={shippingDetails.fullName} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" placeholder="John Doe" />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">Phone Number</label>
+                <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" placeholder="+91 99999 00000" />
+              </div>
+
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">Full Address</label>
+                <input required type="text" name="address" value={shippingDetails.address} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" placeholder="123 Magic Toy Street, Apartment 4B" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">City</label>
+                <input required type="text" name="city" value={shippingDetails.city} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" placeholder="Mumbai" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">Pincode</label>
+                <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner" placeholder="400001" />
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Side: Order Summary */}
+        <div className="lg:col-span-1">
+          <div className="card-surface p-6 rounded-[2.5rem] shadow-soft sticky top-32">
+            <h2 className="text-xl font-black text-zinc-800 mb-6 border-b border-white pb-4">Order Summary</h2>
+            
+            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+              {cartItems.map((item, index) => (
+                <div key={index} className="flex gap-4 items-center bg-white/40 p-3 rounded-2xl border border-white">
+                  <div className="w-16 h-16 bg-white rounded-xl overflow-hidden shadow-inner flex-shrink-0">
+                    <img src={item.img} alt={item.title} className="w-full h-full object-cover mix-blend-multiply" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-zinc-800 line-clamp-1">{item.title}</h4>
+                    <p className="text-xs text-zinc-500 font-medium mt-1">Qty: {item.qty}</p>
+                  </div>
+                  <div className="font-black text-zinc-800">
+                    ₹{item.price * item.qty}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-white mt-6 pt-6 space-y-3">
+              <div className="flex justify-between text-sm font-bold text-zinc-600">
+                <span>Subtotal</span>
+                <span>₹{totalPrice}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-zinc-600">
+                <span>Shipping</span>
+                <span className="text-green-600">Free</span>
+              </div>
+              <div className="flex justify-between items-end pt-4">
+                <span className="text-lg font-bold text-zinc-800">Total</span>
+                <span className="text-3xl font-black text-primary-container">₹{totalPrice}</span>
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              form="checkout-form"
+              disabled={isLoading}
+              className="w-full py-4 mt-8 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0"
+            >
+              {isLoading ? 'Processing...' : 'Place Order (COD)'} 
+              {!isLoading && <span className="material-symbols-outlined text-[20px]">local_shipping</span>}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 };
 

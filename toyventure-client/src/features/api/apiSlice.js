@@ -5,17 +5,48 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:5000/api' }), 
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({
+    // --- PRODUCT ENDPOINTS ---
     getProducts: builder.query({
       query: () => '/products',
       providesTags: ['Product'],
     }),
-    // ADD THIS NEW ENDPOINT:
     getProductById: builder.query({
       query: (id) => `/products/${id}`,
       providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
+    
+    // --- AUTH ENDPOINTS ---
+    sendOtp: builder.mutation({
+      query: (data) => ({
+        url: '/auth/send-otp',
+        method: 'POST',
+        body: data, 
+      }),
+    }),
+    verifyOtp: builder.mutation({
+      query: (data) => ({
+        url: '/auth/verify-otp',
+        method: 'POST',
+        body: data, 
+      }),
+    }),
+
+    // --- ORDER ENDPOINTS (NEW) ---
+    createOrder: builder.mutation({
+      query: (orderData) => ({
+          url: '/orders',
+          method: 'POST',
+          body: orderData,
+      }),
+    }),
+
   }),
 });
 
-// EXPORT THE NEW HOOK:
-export const { useGetProductsQuery, useGetProductByIdQuery } = apiSlice;
+export const { 
+  useGetProductsQuery, 
+  useGetProductByIdQuery,
+  useSendOtpMutation,     
+  useVerifyOtpMutation,
+  useCreateOrderMutation // <--- NEW EXPORT
+} = apiSlice;

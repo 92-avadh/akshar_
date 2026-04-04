@@ -1,9 +1,15 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// ==========================================
+// IN-MEMORY OTP STORE (Perfect for testing!)
+// ==========================================
+// Note: In a massive production app, you would use Redis or save this to MongoDB 
+// so the OTPs survive if the server restarts. But Map() is perfect for now.
+const otpStore = new Map();
+
 // Helper function to generate the secure JWT token
 const generateToken = (id) => {
-    // Uses the secret key you added to your .env file!
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '30d',
     });
@@ -19,8 +25,36 @@ const sendOtp = async (req, res) => {
         return res.status(400).json({ message: 'Please provide a valid 10-digit number.' });
     }
 
-    // In a real production app, you would call Twilio or MSG91 API here to send an SMS.
-    // For now, we simulate success.
+    // 1. Generate a random 4-digit OTP (e.g., 5839)
+    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // 2. Save it in our temporary store linked to their mobile number
+    otpStore.set(mobileNumber, generatedOtp);
+
+    // 3. LOG TO TERMINAL FOR LOCAL TESTING
+    console.log(`\n=========================================`);
+    console.log(`🔔 SMS / WHATSAPP MOCK DELIVERY`);
+    console.log(`To: +91 ${mobileNumber}`);
+    console.log(`Message: Your ToyVenture verification code is: ${generatedOtp}`);
+    console.log(`=========================================\n`);
+
+    // 4. REAL SMS/WHATSAPP INTEGRATION GOES HERE
+    // When you are ready for real messages, you will use a service like Twilio:
+    /*
+    const twilioClient = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+    
+    try {
+        await twilioClient.messages.create({
+            body: `Your ToyVenture verification code is ${generatedOtp}`,
+            from: process.env.TWILIO_PHONE_NUMBER, // Or 'whatsapp:+14155238886' for WhatsApp
+            to: `+91${mobileNumber}`               // Or `whatsapp:+91${mobileNumber}` for WhatsApp
+        });
+    } catch (error) {
+        console.error("Failed to send real SMS:", error);
+        return res.status(500).json({ message: "Failed to send SMS." });
+    }
+    */
+
     res.json({ message: `OTP successfully sent to ${mobileNumber}` });
 };
 
@@ -30,21 +64,27 @@ const sendOtp = async (req, res) => {
 const verifyOtp = async (req, res) => {
     const { mobileNumber, otp } = req.body;
 
-    // Simulated OTP check (For development, the magical code is 1234)
-    if (otp !== '1234') {
-        return res.status(401).json({ message: 'Invalid OTP code.' });
+    // 1. Retrieve the saved OTP from our temporary store
+    const storedOtp = otpStore.get(mobileNumber);
+
+    // 2. Check if the OTP exists and matches what the user typed
+    if (!storedOtp || storedOtp !== otp) {
+        return res.status(401).json({ message: 'Invalid or expired OTP code.' });
     }
 
+    // 3. OTP is correct! Delete it from memory so it cannot be reused.
+    otpStore.delete(mobileNumber);
+
     try {
-        // 1. Check if the user already exists in the database
+        // 4. Check if the user already exists in the database
         let user = await User.findOne({ mobileNumber });
 
-        // 2. If they don't exist, create a brand new account for them!
+        // 5. If they don't exist, create a brand new account for them
         if (!user) {
             user = await User.create({ mobileNumber });
         }
 
-        // 3. Send back the user data AND the secure token
+        // 6. Send back the user data AND the secure token
         res.status(200).json({
             _id: user._id,
             mobileNumber: user.mobileNumber,
