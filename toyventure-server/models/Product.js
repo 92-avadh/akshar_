@@ -1,19 +1,28 @@
 const mongoose = require('mongoose');
 
-const productSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  price: { type: String, required: true }, // e.g., "₹1,199.00"
-  oldPrice: { type: String }, // e.g., "₹1,999.00"
-  discount: { type: String }, // e.g., "[40% OFF]"
-  clubPrice: { type: String }, // e.g., "₹1,139.00"
-  img: { type: String, required: true },
-  tag: { type: String }, // e.g., "Diecast"
-  category: { type: String, required: true },
-  countInStock: { type: Number, required: true, default: 0 },
-  description: { type: String },
-}, {
-  timestamps: true // Automatically adds createdAt and updatedAt
-});
+// 1. Create a Schema specifically for individual reviews
+const reviewSchema = mongoose.Schema({
+    name: { type: String, required: true },
+    rating: { type: Number, required: true },
+    comment: { type: String, required: true },
+}, { timestamps: true });
 
-const Product = mongoose.model('Product', productSchema);
-module.exports = Product;
+// 2. Update your main Product Schema
+const productSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true },
+    oldPrice: { type: Number },
+    discount: { type: String },
+    clubPrice: { type: Number },
+    img: { type: String, required: true },
+    tag: { type: String },
+    
+    // NEW REVIEW FIELDS:
+    reviews: [reviewSchema],
+    rating: { type: Number, required: true, default: 0 },
+    numReviews: { type: Number, required: true, default: 0 },
+    
+}, { timestamps: true });
+
+module.exports = mongoose.model('Product', productSchema);
