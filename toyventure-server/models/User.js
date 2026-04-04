@@ -1,23 +1,21 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
     mobileNumber: {
         type: String,
         required: [true, 'Please provide a mobile number'],
-        unique: true, // No two users can have the same number
+        unique: true, 
         trim: true,
-        match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number'] // Ensures exactly 10 digits
+        match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number']
     },
-    // We can add more fields later (like name, addresses) during checkout!
     role: {
         type: String,
         enum: ['user', 'admin'],
         default: 'user'
     }
 }, {
-    timestamps: true // Automatically adds createdAt and updatedAt dates
+    timestamps: true 
 });
 
 const User = mongoose.model('User', userSchema);
-
-export default User;
+module.exports = User;

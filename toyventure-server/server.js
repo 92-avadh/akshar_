@@ -1,44 +1,67 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const productRoutes = require('./routes/productRoutes');
+// 1. Import necessary modules
+const express = require('express'); // The core web framework
+const cors = require('cors');       // Allows cross-origin requests (e.g., from a frontend)
 
-// Connect to MongoDB
-connectDB();
-
+// 2. Initialize the Express application
 const app = express();
 
-// Middleware
-app.use(cors()); // Allows your React frontend to communicate with this backend
-app.use(express.json()); // Allows the server to accept JSON data in the body
+// 3. Define the port (uses environment variable if available, otherwise defaults to 3000)
+const PORT = process.env.PORT || 3000;
 
-// Base Route (Just to check if the API is running)
+// ==========================================
+// 4. MIDDLEWARE SETUP
+// ==========================================
+app.use(cors()); // Enables CORS so your frontend can talk to this API
+app.use(express.json()); // Automatically parses incoming JSON data from requests
+app.use(express.urlencoded({ extended: true })); // Parses URL-encoded data (like form submissions)
+
+// ==========================================
+// 5. ROUTES (API Endpoints)
+// ==========================================
+
+// Basic GET route (testing if the server is alive)
 app.get('/', (req, res) => {
-  res.send('ToyVenture API is running beautifully...');
+    res.status(200).json({ message: 'Welcome to the API! The server is running successfully.' });
 });
 
-// Mount the Product Routes
-app.use('/api/products', productRoutes);
-
-// Error Handling Middleware (Catches bad requests)
-app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
+// Example GET route (fetching data)
+app.get('/api/users', (req, res) => {
+    // In a real app, you would fetch this from a database
+    const users = [
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' }
+    ];
+    res.status(200).json(users);
 });
 
-app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
+// Example POST route (receiving data from the client)
+app.post('/api/users', (req, res) => {
+    const newUser = req.body; // The JSON data sent by the client sits here
+    
+    // Basic validation
+    if (!newUser.name) {
+        return res.status(400).json({ error: 'Name is required' });
+    }
+
+    // In a real app, you would save this to a database
+    res.status(201).json({ 
+        message: 'User created successfully!', 
+        data: newUser 
+    });
 });
 
-const PORT = process.env.PORT || 5000;
+// ==========================================
+// 6. ERROR HANDLING
+// ==========================================
 
+// Catch-all route for requests to endpoints that don't exist
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
+// ==========================================
+// 7. START THE SERVER
+// ==========================================
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server is up and running on http://localhost:${PORT}`);
 });

@@ -1,46 +1,30 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateQuantity, removeFromCart } from '../features/cart/cartSlice';
 import ScrollReveal from '../components/ScrollReveal.jsx';
 
 const Cart = () => {
-  // Initial dummy state for the cart items
-  const [cartItems, setCartItems] = useState([
-    { 
-      id: 1, 
-      title: "G Patton Die-Cast Off-Road SUV Toy Car", 
-      price: 1199, 
-      quantity: 1, 
-      img: "https://images.unsplash.com/photo-1594787317666-41793740284e?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-      tag: "Diecast"
-    },
-    { 
-      id: 2, 
-      title: "Educational Building Blocks Set", 
-      price: 1199, 
-      quantity: 2, 
-      img: "https://images.unsplash.com/photo-1555448248-2571daf6344b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80",
-      tag: "STEM"
-    }
-  ]);
+  // 1. Pull real items from Redux
+  const cartItems = useSelector((state) => state.cart.cartItems);
+  const dispatch = useDispatch();
 
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
 
-  // Helper functions for cart logic
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems(items => 
-      items.map(item => item.id === id ? { ...item, quantity: newQuantity } : item)
-    );
+  // 2. Dispatch helpers
+  const handleUpdateQuantity = (id, newQuantity) => {
+    if (newQuantity >= 1) {
+      dispatch(updateQuantity({ id, quantity: newQuantity }));
+    }
   };
 
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+  const handleRemoveItem = (id) => {
+    dispatch(removeFromCart(id));
   };
 
   const handleApplyPromo = (e) => {
     e.preventDefault();
-    // Simple dummy promo logic
     if (promoCode.toUpperCase() === 'TOY15') {
       setDiscount(0.15); // 15% discount
     } else {
@@ -49,7 +33,7 @@ const Cart = () => {
     }
   };
 
-  // Calculations
+  // 3. Real Calculations based on Redux array
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = subtotal > 2000 || subtotal === 0 ? 0 : 99; // Free shipping over ₹2000
   const discountAmount = subtotal * discount;
@@ -57,13 +41,10 @@ const Cart = () => {
 
   return (
     <main className="pt-32 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
-      
-      {/* Background Doodle overlay to match the premium theme */}
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       <div className="max-w-[1440px] mx-auto px-6 relative z-10">
         
-        {/* ================= BREADCRUMBS ================= */}
         <ScrollReveal className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 uppercase tracking-widest mb-8">
           <Link to="/" className="hover:text-primary-container flex items-center transition-colors">
             <span className="material-symbols-outlined text-[16px] mr-1">home</span> HOME
@@ -94,47 +75,42 @@ const Cart = () => {
             <div className="flex-1 flex flex-col gap-6">
               {cartItems.map((item, index) => (
                 <ScrollReveal 
-                  key={item.id} 
+                  key={item._id} 
                   delay={index * 100} 
                   className="flex flex-col sm:flex-row gap-6 p-5 card-surface rounded-[2rem] hover:-translate-y-1 transition-all duration-300 group"
                 >
                   
-                  {/* Remove Button */}
                   <button 
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemoveItem(item._id)}
                     className="absolute top-4 right-4 text-zinc-400 hover:text-red-600 transition-all bg-white/50 p-2 rounded-full sm:bg-white/80 backdrop-blur-sm border border-transparent hover:border-red-200 hover:shadow-sm hover:scale-110 z-10"
-                    aria-label="Remove item"
                   >
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
 
-                  {/* Item Image */}
                   <div className="w-full sm:w-36 h-36 bg-white/60 backdrop-blur-sm rounded-[1.5rem] overflow-hidden shrink-0 shadow-inner border border-white/80 p-2">
                     <img src={item.img} alt={item.title} className="w-full h-full object-cover mix-blend-multiply rounded-xl group-hover:scale-105 transition-transform duration-500" />
                   </div>
 
-                  {/* Item Details */}
                   <div className="flex-1 flex flex-col justify-between py-2">
                     <div>
-                      <span className="bg-primary-fixed text-primary-container px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider mb-2 inline-block border border-orange-200/50">{item.tag}</span>
+                      {item.tag && <span className="bg-primary-fixed text-primary-container px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider mb-2 inline-block border border-orange-200/50">{item.tag}</span>}
                       <h3 className="font-bold text-zinc-800 text-xl leading-snug pr-10 mb-2 group-hover:text-primary-container transition-colors">
                         {item.title}
                       </h3>
                       <p className="text-red-600 font-black text-2xl tracking-tight">₹{item.price.toLocaleString('en-IN')}</p>
                     </div>
 
-                    {/* Quantity Controls & Total */}
                     <div className="flex flex-wrap items-center justify-between gap-4 mt-4 sm:mt-0 pt-3 border-t border-white/50">
                       <div className="flex items-center justify-between bg-white/80 rounded-full px-1 w-32 h-12 border border-white shadow-sm">
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
                           className="w-10 h-10 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-600 hover:text-black font-black text-xl transition-colors"
                         >
                           -
                         </button>
                         <span className="font-black text-base text-zinc-800">{item.quantity}</span>
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
                           className="w-10 h-10 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-600 hover:text-black font-black text-xl transition-colors"
                         >
                           +
@@ -171,7 +147,6 @@ const Cart = () => {
                   )}
                 </div>
 
-                {/* Promo Code Form */}
                 <form onSubmit={handleApplyPromo} className="flex gap-2 mb-8">
                   <input 
                     type="text" 
@@ -199,9 +174,6 @@ const Cart = () => {
                   Proceed to Checkout <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </Link>
 
-                <p className="text-center text-xs font-bold text-zinc-400 mt-5 flex items-center justify-center gap-1.5 bg-white/50 py-2 rounded-full border border-white">
-                  <span className="material-symbols-outlined text-[16px] text-green-600">lock</span> Secure 256-bit SSL Checkout
-                </p>
               </div>
             </ScrollReveal>
 
