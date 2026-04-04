@@ -64,8 +64,18 @@ export default {
       borderRadius: {
         "DEFAULT": "1rem", 
         "lg": "2rem", 
-        "xl": "3rem", 
+        "xl": "3rem",
+        "2xl": "1.5rem",
+        "3xl": "2rem",
+        "4xl": "2.5rem",
         "full": "9999px"
+      },
+      boxShadow: {
+        "card": "0 24px 60px rgba(15, 23, 42, 0.08)",
+        "soft": "0 18px 38px rgba(17, 135, 230, 0.16)",
+      },
+      backgroundImage: {
+        "hero-glow": "radial-gradient(circle at 10% 10%, rgba(255, 92, 0, 0.12), transparent 36%), radial-gradient(circle at 85% 18%, rgba(99, 88, 128, 0.15), transparent 28%), radial-gradient(circle at 70% 80%, rgba(231, 22, 33, 0.1), transparent 30%)",
       },
     },
   },

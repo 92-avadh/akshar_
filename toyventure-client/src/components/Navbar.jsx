@@ -43,7 +43,7 @@ const Navbar = () => {
         {/* Right Actions */}
         <div className="flex items-center gap-3">
           {/* 4. Link the profile icon to your new Login page */}
-          <Link to="/login" className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
+          <Link to="/auth" className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">person</span>
           </Link>
           <button className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">

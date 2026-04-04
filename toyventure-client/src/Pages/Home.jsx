@@ -1,7 +1,7 @@
 import React from 'react';
+import ScrollReveal from '../components/ScrollReveal.jsx';
 
 const Home = () => {
-  // --- Data for the home page sections ---
   const marqueeCategories = [
     { name: "Action Figures", icon: "sports_martial_arts" },
     { name: "Building Blocks", icon: "extension" },
@@ -58,11 +58,14 @@ const Home = () => {
   ];
 
   return (
-    <main className="pt-24 doodle-bg min-h-screen">
+    <main className="pt-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
+      {/* Background Doodle overlay */}
+      <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
+
       {/* ================= HERO SECTION ================= */}
-      <section className="px-6 py-12 max-w-[1440px] mx-auto">
+      <ScrollReveal as="section" className="px-6 py-12 max-w-[1440px] mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-lg shadow-green-900/10 cursor-pointer">
+          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-card cursor-pointer">
             <img src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Adventure Toys" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col items-center justify-end p-8 text-center">
               <h2 className="text-3xl lg:text-4xl font-black text-white leading-tight mb-3 drop-shadow-md">DINO-MITE<br/>ADVENTURE</h2>
@@ -70,15 +73,15 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-xl shadow-purple-900/20 cursor-pointer md:-translate-y-4">
+          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-card cursor-pointer md:-translate-y-4">
             <img src="https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Wonderland Toys" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-b from-purple-900/40 via-transparent to-black/60 flex flex-col items-center justify-between p-8 text-center">
               <h2 className="text-3xl lg:text-4xl font-black text-yellow-300 leading-tight drop-shadow-lg mt-4">WONDERLAND<br/>FESTIVAL</h2>
-              <div className="flex items-center gap-2 text-white font-bold bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/30">Explore Now <span className="material-symbols-outlined text-sm">arrow_forward</span></div>
+              <div className="flex items-center gap-2 text-white font-bold bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-soft">Explore Now <span className="material-symbols-outlined text-sm">arrow_forward</span></div>
             </div>
           </div>
 
-          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-lg shadow-orange-900/10 cursor-pointer">
+          <div className="relative h-[350px] rounded-[2.5rem] overflow-hidden group shadow-card cursor-pointer">
             <img src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Construction Toys" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/20 to-transparent flex flex-col items-start justify-end p-8">
               <h2 className="text-3xl lg:text-4xl font-black text-blue-200 leading-tight mb-3 drop-shadow-md">THE GREAT<br/>BUILD ZONE</h2>
@@ -86,10 +89,10 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= MARQUEE ================= */}
-      <div className="bg-primary-container text-white py-4 overflow-hidden relative pause-marquee shadow-inner my-6">
+      <ScrollReveal delay={100} className="bg-primary-container text-white py-4 overflow-hidden relative pause-marquee shadow-inner my-6 z-10">
         <div className="animate-marquee flex items-center gap-12 pl-12">
           {duplicatedCategories.map((category, index) => (
             <a key={index} href="#" className="flex items-center gap-3 whitespace-nowrap group hover:scale-110 transition-transform cursor-pointer">
@@ -98,10 +101,10 @@ const Home = () => {
             </a>
           ))}
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* ================= BRANDS BANNER ================= */}
-      <section className="py-10 bg-surface-container-highest border-y border-surface-variant/50">
+      <ScrollReveal as="section" delay={150} className="py-10 bg-surface-container-highest border-y border-surface-variant/50 relative z-10">
         <div className="max-w-[1440px] mx-auto px-6">
           <p className="text-center text-sm font-bold text-zinc-500 uppercase tracking-widest mb-6">Trusted by top toy makers</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
@@ -110,11 +113,11 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= FLASH SALE ================= */}
-      <section className="px-6 py-16 max-w-[1440px] mx-auto">
-        <div className="bg-secondary-container rounded-3xl p-8 md:p-12 text-white shadow-xl shadow-red-900/10">
+      <ScrollReveal as="section" className="px-6 py-16 max-w-[1440px] mx-auto relative z-10">
+        <div className="bg-gradient-to-r from-secondary-container to-red-800 rounded-4xl p-8 md:p-12 text-white shadow-card">
           <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -124,10 +127,10 @@ const Home = () => {
               <p className="text-white/80 font-medium mb-4">Grab these deep discounts on our hottest items updated daily!</p>
             </div>
             <div className="flex gap-4 shrink-0">
-              <div className="bg-white/20 px-5 py-3 rounded-xl text-center backdrop-blur-sm shadow-md">
+              <div className="bg-white/20 px-5 py-3 rounded-2xl text-center backdrop-blur-md shadow-soft border border-white/30">
                 <span className="block text-3xl font-black">04</span><span className="text-xs uppercase font-bold text-white/90">Hours</span>
               </div>
-              <div className="bg-white/20 px-5 py-3 rounded-xl text-center backdrop-blur-sm shadow-md">
+              <div className="bg-white/20 px-5 py-3 rounded-2xl text-center backdrop-blur-md shadow-soft border border-white/30">
                 <span className="block text-3xl font-black">45</span><span className="text-xs uppercase font-bold text-white/90">Mins</span>
               </div>
             </div>
@@ -135,7 +138,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {flashDeals.map((deal, index) => (
-              <div key={index} className="bg-white rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-center group cursor-pointer hover:scale-105 transition-transform shadow-2xl shadow-zinc-900/10">
+              <div key={index} className="card-surface rounded-3xl p-6 flex flex-col sm:flex-row gap-6 items-center group cursor-pointer hover:-translate-y-1 transition-all duration-300">
                 <div className="relative w-32 h-32 shrink-0 rounded-2xl overflow-hidden bg-zinc-100 p-2 shadow-inner">
                   <img src={deal.img} alt={deal.title} className="w-full h-full object-contain mix-blend-multiply" />
                   <span className="absolute top-2 left-2 bg-primary-container text-white text-[10px] font-black px-2.5 py-1.5 rounded-full uppercase tracking-wider">{deal.tag}</span>
@@ -152,12 +155,12 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= FEATURED CATEGORIES ================= */}
-      <section className="px-6 py-12 max-w-[1440px] mx-auto">
+      <ScrollReveal as="section" className="px-6 py-12 max-w-[1440px] mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="group relative h-80 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+          <div className="group relative h-80 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-card hover:-translate-y-1 transition-transform duration-300">
             <img src="https://images.unsplash.com/photo-1594787318286-3d835c1d207f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Metal Cars" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 w-full">
@@ -167,7 +170,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="group relative h-80 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+          <div className="group relative h-80 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-card hover:-translate-y-1 transition-transform duration-300">
             <img src="https://images.unsplash.com/photo-1555448248-2571daf6344b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Toys for Boys" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 w-full">
@@ -176,7 +179,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="group relative h-80 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+          <div className="group relative h-80 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-card hover:-translate-y-1 transition-transform duration-300">
             <img src="https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Toys for Girls" className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 w-full">
@@ -185,42 +188,42 @@ const Home = () => {
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= SHOP BY AGE ================= */}
-      <section className="px-6 py-20 max-w-[1440px] mx-auto">
+      <ScrollReveal as="section" className="px-6 py-20 max-w-[1440px] mx-auto relative z-10">
         <div className="flex flex-col items-center mb-12 text-center">
           <h2 className="text-4xl font-black tracking-tighter mb-4 text-on-surface">Shop by Age</h2>
           <div className="w-24 h-2 bg-primary-container rounded-full"></div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {ages.map((age, index) => (
-            <button key={index} className={`group flex flex-col items-center gap-4 p-8 bg-surface-container-lowest rounded-xl transition-colors duration-300 shadow-sm border border-surface-variant ${age.hoverClass}`}>
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center group-hover:bg-white transition-colors ${age.bgClass} ${age.textClass}`}>
+            <button key={index} className={`group flex flex-col items-center gap-4 p-8 card-surface rounded-[2rem] transition-all duration-300 hover:-translate-y-2 ${age.hoverClass}`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center group-hover:bg-white transition-colors shadow-sm ${age.bgClass} ${age.textClass}`}>
                 <span className="text-2xl font-black">{age.label}</span>
               </div>
               <span className="font-bold text-on-surface group-hover:text-white">{age.title}</span>
             </button>
           ))}
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= NEW ARRIVALS ================= */}
-      <section className="px-6 py-20 bg-surface-container-low rounded-t-[3rem] shadow-inner shadow-purple-900/5">
+      <ScrollReveal as="section" delay={100} className="px-6 py-24 bg-surface-container-low/60 backdrop-blur-sm rounded-[3rem] shadow-card relative z-10 mt-8 border border-white/50">
         <div className="max-w-[1440px] mx-auto">
           <div className="flex items-end justify-between mb-16 gap-6 flex-wrap">
             <div className="flex-1">
               <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-on-surface mb-3">Fresh Arrivals</h2>
               <p className="text-zinc-600 font-medium text-lg">Fresh from the toy factory, just for you!</p>
             </div>
-            <a className="px-6 py-3 bg-white text-primary-container rounded-full font-bold text-base flex items-center gap-2.5 hover:bg-primary-container hover:text-white transition-colors shadow-md shrink-0" href="/new-arrivals">
+            <a className="px-6 py-3 card-surface text-primary-container rounded-full font-bold text-base flex items-center gap-2.5 hover:bg-primary-container hover:text-white transition-all shadow-soft shrink-0" href="/new-arrivals">
               View All New <span className="material-symbols-outlined text-sm font-bold">arrow_forward_ios</span>
             </a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             {products.map((product, index) => (
-              <div key={index} className="group bg-surface-container-lowest rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-orange-900/10 transition-all duration-300 border border-surface-variant/50">
-                <div className="relative h-72 overflow-hidden bg-zinc-50 p-6 flex items-center justify-center">
+              <div key={index} className="group card-surface rounded-[2rem] overflow-hidden hover:-translate-y-2 transition-all duration-400">
+                <div className="relative h-72 overflow-hidden bg-zinc-50/50 p-6 flex items-center justify-center border-b border-white/60">
                   <img alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500" src={product.img}/>
                   <div className="absolute top-5 left-5 bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">{product.tag}</div>
                 </div>
@@ -235,7 +238,7 @@ const Home = () => {
                   <p className="text-zinc-500 text-sm font-medium line-clamp-2 h-10">{product.desc}</p>
                   <div className="flex items-center justify-between gap-4 pt-3 border-t border-surface-variant/50">
                     <span className="text-3xl font-black text-on-surface">{product.price}</span>
-                    <button className="w-14 h-14 bg-primary-container text-white rounded-full flex items-center justify-center shadow-lg shadow-orange-500/20 active:scale-95 transition-transform hover:bg-orange-600">
+                    <button className="w-14 h-14 bg-primary-container text-white rounded-full flex items-center justify-center shadow-soft active:scale-95 transition-transform hover:bg-orange-600">
                       <span className="material-symbols-outlined text-2xl">add_shopping_cart</span>
                     </button>
                   </div>
@@ -244,12 +247,12 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= STANDARD ================= */}
-      <section className="px-6 py-24 max-w-[1440px] mx-auto">
-        <div className="bg-primary-fixed rounded-[3rem] p-12 md:p-20 relative overflow-hidden">
-          <div className="absolute top-10 right-10 opacity-20 transform rotate-12">
+      <ScrollReveal as="section" delay={150} className="px-6 py-24 max-w-[1440px] mx-auto relative z-10">
+        <div className="bg-gradient-to-br from-primary-fixed to-orange-100 rounded-[3rem] p-12 md:p-20 relative overflow-hidden shadow-card border border-white/50">
+          <div className="absolute top-10 right-10 opacity-20 transform rotate-12 float-soft">
             <span className="material-symbols-outlined text-[120px] text-primary-container">rocket_launch</span>
           </div>
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -258,38 +261,38 @@ const Home = () => {
               <p className="text-xl text-on-primary-fixed-variant mb-12 max-w-lg">We deliver safe, sustainable, and joyful experiences that last a lifetime.</p>
               <div className="space-y-8">
                 <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 shrink-0 bg-white rounded-2xl flex items-center justify-center text-primary-container"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span></div>
+                  <div className="w-16 h-16 shrink-0 bg-white/80 backdrop-blur rounded-2xl flex items-center justify-center text-primary-container shadow-sm border border-white"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span></div>
                   <div><h4 className="text-xl font-bold text-on-primary-fixed mb-1">100% Safe</h4><p className="text-on-primary-fixed-variant">Rigorously tested to exceed safety standards.</p></div>
                 </div>
                 <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 shrink-0 bg-white rounded-2xl flex items-center justify-center text-secondary"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span></div>
+                  <div className="w-16 h-16 shrink-0 bg-white/80 backdrop-blur rounded-2xl flex items-center justify-center text-secondary shadow-sm border border-white"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span></div>
                   <div><h4 className="text-xl font-bold text-on-primary-fixed mb-1">Built Sturdy</h4><p className="text-on-primary-fixed-variant">Made with high-impact, non-toxic materials.</p></div>
                 </div>
                 <div className="flex items-start gap-6">
-                  <div className="w-16 h-16 shrink-0 bg-white rounded-2xl flex items-center justify-center text-tertiary"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>nature_people</span></div>
+                  <div className="w-16 h-16 shrink-0 bg-white/80 backdrop-blur rounded-2xl flex items-center justify-center text-tertiary shadow-sm border border-white"><span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>nature_people</span></div>
                   <div><h4 className="text-xl font-bold text-on-primary-fixed mb-1">Eco-Sourced</h4><p className="text-on-primary-fixed-variant">Using sustainable woods and recycled plastics.</p></div>
                 </div>
               </div>
             </div>
             <div className="hidden lg:block">
               <div className="relative">
-                <div className="absolute inset-0 bg-white/20 rounded-full blur-3xl"></div>
-                <img alt="Happy child" className="relative rounded-[2rem] shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700 w-full h-[500px] object-cover" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"/>
+                <div className="absolute inset-0 bg-white/40 rounded-[2.5rem] blur-2xl"></div>
+                <img alt="Happy child" className="relative rounded-[2.5rem] shadow-card rotate-3 hover:rotate-0 transition-transform duration-700 w-full h-[500px] object-cover border-4 border-white/50" src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"/>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= TESTIMONIALS ================= */}
-      <section className="px-6 py-24 max-w-[1440px] mx-auto bg-purple-50 rounded-[3rem] shadow-inner shadow-purple-900/5 mt-16">
+      <ScrollReveal as="section" className="px-6 py-24 max-w-[1440px] mx-auto relative z-10 mt-10">
         <div className="text-center mb-16 space-y-3">
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-on-surface mb-3">Loved by Parents & Kids Alike</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {reviews.map((review, index) => (
-            <div key={index} className="bg-surface-container-lowest p-10 rounded-3xl shadow-xl border border-surface-variant/70 relative space-y-6 flex flex-col justify-between">
-              <span className="absolute top-8 right-8 text-primary-fixed/40 material-symbols-outlined text-6xl">format_quote</span>
+            <div key={index} className="card-surface p-10 rounded-4xl relative space-y-6 flex flex-col justify-between hover:-translate-y-2 transition-transform duration-300">
+              <span className="absolute top-8 right-8 text-primary-fixed/60 material-symbols-outlined text-6xl">format_quote</span>
               <div>
                 <div className="flex text-orange-400 mb-5 gap-0.5">
                   {[...Array(review.rating)].map((_, i) => <span key={i} className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>)}
@@ -297,7 +300,7 @@ const Home = () => {
                 <p className="text-on-surface-variant font-medium text-xl mb-6 relative z-10 leading-relaxed">"{review.comment}"</p>
               </div>
               <div className="flex items-center gap-4 pt-6 border-t border-surface-variant/70">
-                <div className="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary font-black text-xl shadow-inner border border-tertiary-container/30">{review.name.charAt(0)}</div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-tertiary-fixed to-purple-200 flex items-center justify-center text-tertiary font-black text-xl shadow-inner border border-white">{review.name.charAt(0)}</div>
                 <div>
                   <span className="font-bold text-on-surface text-lg block">{review.name}</span>
                   <span className="text-sm text-zinc-500 font-medium">{review.location}</span>
@@ -306,10 +309,10 @@ const Home = () => {
             </div>
           ))}
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= BLOG ================= */}
-      <section className="px-6 py-24 max-w-[1440px] mx-auto">
+      <ScrollReveal as="section" className="px-6 py-24 max-w-[1440px] mx-auto relative z-10">
         <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
           <div>
             <h2 className="text-4xl font-black tracking-tighter text-on-surface mb-2">The ToyVenture Playbook</h2>
@@ -318,26 +321,28 @@ const Home = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {articles.map((article, index) => (
-            <div key={index} className="group cursor-pointer">
-              <div className="relative h-64 rounded-3xl overflow-hidden mb-6 shadow-lg">
+            <div key={index} className="group cursor-pointer card-surface p-4 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
+              <div className="relative h-64 rounded-2xl overflow-hidden mb-6">
                 <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-black text-on-surface uppercase">{article.category}</div>
+                <div className="absolute top-4 left-4 card-surface px-3 py-1 rounded-full text-xs font-black text-on-surface uppercase">{article.category}</div>
               </div>
-              <div className="text-sm font-bold text-zinc-400 mb-2">{article.date}</div>
-              <h3 className="text-2xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-tight">{article.title}</h3>
-              <p className="font-bold text-primary flex items-center gap-1 text-sm">Read Article <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span></p>
+              <div className="px-2 pb-2">
+                <div className="text-sm font-bold text-zinc-400 mb-2">{article.date}</div>
+                <h3 className="text-2xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-tight">{article.title}</h3>
+                <p className="font-bold text-primary flex items-center gap-1 text-sm">Read Article <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span></p>
+              </div>
             </div>
           ))}
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= FAQ ================= */}
-      <section className="px-6 py-20 bg-surface-container-low/50">
+      <ScrollReveal as="section" delay={100} className="px-6 py-20 bg-surface-container-low/50 backdrop-blur-sm relative z-10 border-t border-white/50">
         <div className="max-w-[1000px] mx-auto text-center">
           <h2 className="text-4xl font-black tracking-tighter text-on-surface mb-12">Frequently Asked Questions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             {faqs.map((faq, index) => (
-              <div key={index} className="bg-white p-8 rounded-3xl shadow-sm border border-surface-variant">
+              <div key={index} className="card-surface p-8 rounded-3xl hover:shadow-soft transition-shadow duration-300">
                 <h3 className="text-xl font-bold text-on-surface mb-3 flex items-start gap-3">
                   <span className="material-symbols-outlined text-primary-container">help</span>{faq.q}
                 </h3>
@@ -346,21 +351,21 @@ const Home = () => {
             ))}
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ================= NEWSLETTER ================= */}
-      <section className="px-6 py-20 max-w-[1440px] mx-auto my-16">
-        <div className="bg-tertiary-container rounded-3xl p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl shadow-purple-900/10 border border-purple-200">
+      <ScrollReveal as="section" className="px-6 py-20 max-w-[1440px] mx-auto my-16 relative z-10">
+        <div className="bg-gradient-to-r from-tertiary-container to-purple-700 rounded-[3rem] p-10 md:p-20 flex flex-col md:flex-row items-center justify-between gap-12 shadow-card border border-purple-300/50">
           <div className="text-center md:text-left flex-1 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black text-on-tertiary-container tracking-tighter mb-4 leading-tight">Join the Adventure & Save 15%!</h2>
-            <p className="text-on-tertiary-container/80 text-xl font-medium max-w-xl">Subscribe to our playful newsletter for exclusive offers, early access to new drops, and fun parenting tips.</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 leading-tight">Join the Adventure & Save 15%!</h2>
+            <p className="text-white/80 text-xl font-medium max-w-xl">Subscribe to our playful newsletter for exclusive offers, early access to new drops, and fun parenting tips.</p>
           </div>
-          <form className="w-full md:w-auto flex flex-col sm:flex-row gap-5 shrink-0 bg-white/20 p-6 rounded-3xl backdrop-blur-sm shadow-xl" onSubmit={(e) => e.preventDefault()}>
-            <input className="px-8 py-4 bg-white text-on-tertiary-container placeholder:text-zinc-400 rounded-full focus:ring-4 focus:ring-white/50 focus:border-purple-300 transition-all w-full sm:w-96 outline-none font-bold text-lg shadow-inner border border-purple-100" placeholder="Your playful email..." type="email" required/>
-            <button type="submit" className="px-12 py-4 bg-white text-tertiary-container font-black text-xl rounded-full hover:bg-surface-container transition-colors shadow-2xl shadow-purple-900/10 shrink-0">Subscribe</button>
+          <form className="w-full md:w-auto flex flex-col sm:flex-row gap-5 shrink-0 bg-white/10 p-6 rounded-[2.5rem] backdrop-blur-md shadow-soft border border-white/20" onSubmit={(e) => e.preventDefault()}>
+            <input className="px-8 py-4 bg-white/90 text-on-tertiary-container placeholder:text-zinc-500 rounded-full focus:ring-4 focus:ring-purple-300/50 focus:border-white transition-all w-full sm:w-96 outline-none font-bold text-lg shadow-inner" placeholder="Your playful email..." type="email" required/>
+            <button type="submit" className="px-12 py-4 bg-primary-container text-white font-black text-xl rounded-full hover:bg-orange-600 transition-colors shadow-lg shrink-0">Subscribe</button>
           </form>
         </div>
-      </section>
+      </ScrollReveal>
 
     </main>
   );
