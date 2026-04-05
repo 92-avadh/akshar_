@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { toggleFavorite } from '../features/wishlist/wishlistSlice';
+import { toggleFavorite, markFavoritesSeen } from '../features/wishlist/wishlistSlice';
 // import { addToCart } from '../features/cart/cartSlice';
 
 const Favorites = () => {
   const wishlistItems = useSelector((state) => state.wishlist.wishlistItems);
   const dispatch = useDispatch();
+
+  // NEW: Reset the notification badge when this page opens
+  useEffect(() => {
+    dispatch(markFavoritesSeen());
+  }, [dispatch]);
 
   const handleMoveToCart = (item) => {
     // If you have a cart action, you would dispatch it here:

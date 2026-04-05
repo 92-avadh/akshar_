@@ -5,24 +5,43 @@ import { useGetProductByIdQuery, useGetProductsQuery, useCreateReviewMutation } 
 import { toggleFavorite } from '../features/wishlist/wishlistSlice';
 import { addToCart } from '../features/cart/cartSlice';
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
+import ScrollReveal from '../components/ScrollReveal.jsx'; 
 
 const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
+  // RTK Query Hooks
   const { data: responseData, isLoading, error } = useGetProductByIdQuery(id);
-  const { data: allProducts } = useGetProductsQuery();
+  const { data: allProductsData } = useGetProductsQuery(); 
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
 
   const product = responseData?.data || (Array.isArray(responseData) ? responseData[0] : responseData);
   const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
+  // UI State
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
+  
+  // NEW: State for Active Gallery Image
+  const [mainImage, setMainImage] = useState('');
+  
+  // Review Form State
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [name, setName] = useState('');
+
+  // Extract related products
+  const relatedProducts = allProductsData?.products?.filter(p => p._id !== id).slice(0, 4) || [];
+
+  // When product loads, set the main image
+  useEffect(() => { 
+    window.scrollTo(0, 0); 
+    if (product?.img) {
+      setMainImage(product.img);
+    }
+  }, [id, product]);
 
   const displayPrice = (price) => {
     if (price === undefined || price === null) return '₹0';
@@ -39,8 +58,6 @@ const ProductDetail = () => {
     return Math.round(((op - p) / op) * 100);
   };
 
-  useEffect(() => { window.scrollTo(0, 0); }, [id]);
-
   if (isLoading) return <SkeletonProductDetail />;
 
   if (error || !product) {
@@ -50,6 +67,11 @@ const ProductDetail = () => {
       </div>
     );
   }
+
+  // Create gallery array (Using placeholders if backend doesn't provide multiple images yet)
+  const galleryImages = product.images?.length > 0 
+    ? product.images 
+    : [product.img, product.img, product.img]; // Replace this later when your DB has an images array!
 
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product, qty: 1 }));
@@ -68,9 +90,12 @@ const ProductDetail = () => {
     try {
       await createReview({ productId: id, rating, comment, name }).unwrap();
       alert('🎉 Review submitted successfully!');
-      setRating(5); setComment(''); setName('');
+      setRating(5); 
+      setComment(''); 
+      setName('');
     } catch (err) {
-      alert('Failed to submit review.');
+      const errorMessage = err?.data?.message || 'Failed to submit review. Please try again.';
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -102,7 +127,7 @@ const ProductDetail = () => {
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
           <img
-            src={product.img}
+            src={mainImage || product.img}
             alt={product.title}
             className="max-w-[90%] max-h-[90vh] object-contain rounded-3xl shadow-2xl"
           />
@@ -123,8 +148,9 @@ const ProductDetail = () => {
         {/* MAIN PRODUCT SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
 
-          {/* LEFT: IMAGE */}
+          {/* LEFT: IMAGE & GALLERY */}
           <div className="relative group">
+            {/* MAIN IMAGE VIEWPORT */}
             <div
               className="w-full aspect-square card-surface rounded-[3rem] p-8 flex items-center justify-center shadow-soft relative overflow-hidden cursor-crosshair"
               onMouseEnter={() => setIsZooming(true)}
@@ -133,13 +159,31 @@ const ProductDetail = () => {
               onClick={() => setIsImageModalOpen(true)}
             >
               <img
-                src={product.img}
+                src={mainImage || product.img}
                 alt={product.title}
                 className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
                 style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center' }}
               />
             </div>
-            <p className="text-center text-xs text-zinc-400 font-medium mt-3 flex items-center justify-center gap-1">
+            
+            {/* NEW: THUMBNAIL GALLERY */}
+            <div className="flex items-center justify-center gap-4 mt-6">
+              {galleryImages.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setMainImage(imgUrl)}
+                  className={`w-20 h-20 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm ${
+                    mainImage === imgUrl 
+                      ? 'border-primary-container shadow-lg scale-110' 
+                      : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'
+                  }`}
+                >
+                  <img src={imgUrl} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply p-1" />
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-zinc-400 font-medium mt-4 flex items-center justify-center gap-1">
               <span className="material-symbols-outlined text-[14px]">zoom_in</span>
               Hover to zoom · Click to expand
             </p>
@@ -151,7 +195,7 @@ const ProductDetail = () => {
             {/* STARS */}
             {product.numReviews > 0 && (
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex gap-0.5">{renderStars(product.rating || 5)}</div>
+                <div className="flex gap-0.5">{renderStars(Math.round(product.rating) || 5)}</div>
                 <span className="text-sm font-bold text-zinc-500">({product.numReviews} Reviews)</span>
               </div>
             )}
@@ -186,7 +230,7 @@ const ProductDetail = () => {
 
             {/* DESCRIPTION */}
             <p className="text-zinc-600 font-medium leading-relaxed mb-8 text-lg">
-              {product.description || "Bring home the magic with this incredible toy!"}
+              {product.description || "Bring home the magic with this incredible toy! Spark creativity, imagination, and endless hours of joy."}
             </p>
 
             {/* ACTION BUTTONS */}
@@ -325,6 +369,62 @@ const ProductDetail = () => {
           </div>
 
         </div>
+
+        {/* YOU MIGHT ALSO LIKE SECTION */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-24 pt-16 border-t border-white">
+            <h2 className="text-3xl font-black text-zinc-800 mb-8 text-center">You Might Also Like</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {relatedProducts.map((relProduct, index) => {
+                const isRelFavorited = wishlistItems.some((w) => w._id === relProduct._id);
+                return (
+                  <ScrollReveal
+                    as="div"
+                    key={relProduct._id}
+                    delay={index * 50}
+                    className="flex flex-col group relative card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300"
+                  >
+                    {/* FAVORITE BUTTON */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        dispatch(toggleFavorite(relProduct));
+                      }}
+                      className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                    >
+                      <span className={`material-symbols-outlined text-[20px] transition-colors ${isRelFavorited ? 'text-red-500 filled' : 'text-zinc-400 hover:text-red-400'}`}>
+                        favorite
+                      </span>
+                    </button>
+
+                    <Link
+                      to={`/product/${relProduct._id}`}
+                      className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-4 shadow-inner border border-white/60 block z-10 isolate transform-gpu"
+                    >
+                      <img
+                        alt={relProduct.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply"
+                        src={relProduct.img}
+                      />
+                    </Link>
+
+                    <div className="px-2 flex flex-col flex-1">
+                      <Link to={`/product/${relProduct._id}`}>
+                        <h3 className="font-bold text-zinc-800 text-sm leading-snug hover:text-primary-container transition-colors line-clamp-2 h-10 mb-2">
+                          {relProduct.title}
+                        </h3>
+                      </Link>
+                      <span className="text-zinc-800 font-black text-lg tracking-tight">
+                        {displayPrice(relProduct.price)}
+                      </span>
+                    </div>
+                  </ScrollReveal>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );

@@ -5,7 +5,9 @@ import { useSelector } from 'react-redux';
 const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
+  
+  // NEW: Grab the unseenCount instead of the total array length
+  const unseenFavorites = useSelector((state) => state.wishlist?.unseenCount || 0);
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
   const navigate = useNavigate();
 
@@ -74,14 +76,15 @@ const Navbar = () => {
 
           <Link to="/favorites" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-red-500 rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">favorite</span>
-            {wishlistItems.length > 0 && (
+            {/* NEW: Only show badge if there are UNSEEN favorites */}
+            {unseenFavorites > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-sm">
-                {wishlistItems.length}
+                {unseenFavorites}
               </span>
             )}
           </Link>
 
-          {/* CART BADGE — now uses real Redux count */}
+          {/* CART BADGE */}
           <Link to="/cart" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined">shopping_bag</span>
             {cartItems.length > 0 && (

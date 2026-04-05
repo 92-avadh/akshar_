@@ -10,6 +10,11 @@ html {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+/* NEW: This tells the icon to become solid when the "filled" class is added */
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .tonal-shift-no-border {
   background-color: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
