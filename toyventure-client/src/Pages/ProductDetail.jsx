@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { motion } from 'framer-motion'; 
+import toast from 'react-hot-toast'; 
 import { useGetProductByIdQuery, useGetProductsQuery, useCreateReviewMutation } from '../features/api/apiSlice';
 import { addToCart } from '../features/cart/cartSlice';
-// Make sure you have this import if you are using toggleFavorite!
 import { toggleFavorite } from '../features/wishlist/wishlistSlice'; 
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
 import ScrollReveal from '../components/ScrollReveal.jsx'; 
@@ -15,7 +16,7 @@ const ProductDetail = () => {
   const { data: responseData, isLoading, error } = useGetProductByIdQuery(id);
   const product = responseData?.data || (Array.isArray(responseData) ? responseData[0] : responseData);
 
-  const { data: allProductsData } = useGetProductsQuery(undefined, {
+  const { data: allProductsData } = useGetProductsQuery({ limit: 8 }, {
     skip: !product, 
   }); 
   
@@ -70,7 +71,7 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product, qty: 1 }));
-    alert(`${product.title} magically added to your cart!`);
+    toast.success(`${product.title} magically added to your cart!`); 
   };
 
   const handleMouseMove = (e) => {
@@ -84,10 +85,10 @@ const ProductDetail = () => {
     e.preventDefault();
     try {
       await createReview({ productId: id, rating, comment, name }).unwrap();
-      alert('🎉 Review submitted successfully!');
+      toast.success('🎉 Review submitted successfully!'); 
       setRating(5); setComment(''); setName('');
     } catch (err) {
-      alert(`Error: ${err?.data?.message || 'Failed to submit review. Please try again.'}`);
+      toast.error(err?.data?.message || 'Failed to submit review. Please try again.');
     }
   };
 
@@ -103,7 +104,13 @@ const ProductDetail = () => {
   const discountPercent = getDiscountPercent(product.price, product.oldPrice);
 
   return (
-    <main className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
+    // NEW: We removed the heavy `y: 20` movement. Now it just fades in instantly, eliminating graphics lag!
+    <motion.main 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.3 }}
+      className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative"
+    >
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       {isImageModalOpen && (
@@ -111,7 +118,7 @@ const ProductDetail = () => {
           <button onClick={() => setIsImageModalOpen(false)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
-          <img src={mainImage || product.img} alt={product.title} className="max-w-[90%] max-h-[90vh] object-contain rounded-3xl shadow-2xl" />
+          <img src={mainImage || product.img} alt={product.title} className="max-w-[90%] max-h-[90vh] object-contain rounded-3xl shadow-2xl transform-gpu" />
         </div>
       )}
 
@@ -127,7 +134,7 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
           <div className="relative group">
             <div
-              className="w-full aspect-square card-surface rounded-[3rem] p-8 flex items-center justify-center shadow-soft relative overflow-hidden cursor-crosshair"
+              className="w-full aspect-square card-surface rounded-[3rem] p-8 flex items-center justify-center shadow-soft relative overflow-hidden cursor-crosshair transform-gpu"
               onMouseEnter={() => setIsZooming(true)}
               onMouseLeave={() => setIsZooming(false)}
               onMouseMove={handleMouseMove}
@@ -136,8 +143,9 @@ const ProductDetail = () => {
               <img
                 src={mainImage || product.img}
                 alt={product.title}
-                className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
-                style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center' }}
+                decoding="async" // <-- NEW: Tells browser to paint image without freezing the page
+                className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear transform-gpu ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
+                style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center', willChange: 'transform' }}
               />
             </div>
             
@@ -146,7 +154,7 @@ const ProductDetail = () => {
                 <button
                   key={idx}
                   onClick={() => setMainImage(imgUrl)}
-                  className={`w-20 h-20 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm ${mainImage === imgUrl ? 'border-primary-container shadow-lg scale-110' : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'}`}
+                  className={`w-20 h-20 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm transform-gpu ${mainImage === imgUrl ? 'border-primary-container shadow-lg scale-110' : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'}`}
                 >
                   <img src={imgUrl} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply p-1" />
                 </button>
@@ -167,7 +175,6 @@ const ProductDetail = () => {
 
             <h1 className="text-4xl md:text-5xl font-black text-zinc-800 tracking-tight leading-tight mb-4">{product.title}</h1>
 
-            {/* NEW INVENTORY BADGES */}
             <div className="mb-6">
               {product.countInStock > 10 ? (
                 <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
@@ -186,8 +193,8 @@ const ProductDetail = () => {
 
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white flex-wrap">
               <span className="text-4xl font-black text-primary-container">{displayPrice(product.price)}</span>
-              {product.oldPrice && <span className="text-xl font-bold text-zinc-400 line-through">{displayPrice(product.oldPrice)}</span>}
-              {discountPercent && (
+              {product.oldPrice > 0 && <span className="text-xl font-bold text-zinc-400 line-through">{displayPrice(product.oldPrice)}</span>}
+              {discountPercent > 0 && (
                 <div className="flex flex-col gap-1">
                   <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-black text-sm px-3 py-1.5 rounded-full">
                     <span className="material-symbols-outlined text-[16px]">local_offer</span> {discountPercent}% OFF
@@ -202,7 +209,6 @@ const ProductDetail = () => {
             </p>
 
             <div className="flex gap-4">
-              {/* NEW: Button disabled conditionally based on countInStock */}
               <button 
                 onClick={handleAddToCart} 
                 disabled={product.countInStock === 0}
@@ -216,7 +222,14 @@ const ProductDetail = () => {
                 {product.countInStock > 0 && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>}
               </button>
               
-              <button onClick={() => dispatch(toggleFavorite(product))} className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md ${isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'}`} title="Add to Wishlist">
+              <button 
+                onClick={() => {
+                    dispatch(toggleFavorite(product));
+                    isMainProductFavorited ? toast.error('Removed from favorites') : toast.success('Added to favorites!');
+                }} 
+                className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md ${isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'}`} 
+                title="Add to Wishlist"
+              >
                 <span className={`material-symbols-outlined text-[32px] ${isMainProductFavorited ? 'filled' : ''}`}>favorite</span>
               </button>
             </div>
@@ -229,6 +242,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* REVIEWS SECTION */}
         <div className="mt-20 border-t border-white pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-7">
             <h2 className="text-3xl font-black text-zinc-800 mb-8 flex items-center gap-3">
@@ -293,6 +307,7 @@ const ProductDetail = () => {
           </div>
         </div>
 
+        {/* RELATED PRODUCTS */}
         {relatedProducts.length > 0 && (
           <div className="mt-24 pt-16 border-t border-white">
             <h2 className="text-3xl font-black text-zinc-800 mb-8 text-center">You Might Also Like</h2>
@@ -301,11 +316,18 @@ const ProductDetail = () => {
                 const isRelFavorited = wishlistItems.some((w) => w._id === relProduct._id);
                 return (
                   <ScrollReveal as="div" key={relProduct._id} delay={index * 50} className="flex flex-col group relative card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300">
-                    <button onClick={(e) => { e.preventDefault(); dispatch(toggleFavorite(relProduct)); }} className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110">
+                    <button 
+                      onClick={(e) => { 
+                          e.preventDefault(); 
+                          dispatch(toggleFavorite(relProduct)); 
+                          isRelFavorited ? toast.error('Removed from favorites') : toast.success('Added to favorites!');
+                      }} 
+                      className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                    >
                       <span className={`material-symbols-outlined text-[20px] transition-colors ${isRelFavorited ? 'text-red-500 filled' : 'text-zinc-400 hover:text-red-400'}`}>favorite</span>
                     </button>
                     <Link to={`/product/${relProduct._id}`} className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-4 shadow-inner border border-white/60 block z-10 isolate transform-gpu">
-                      <img alt={relProduct.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply" src={relProduct.img} />
+                      <img alt={relProduct.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply transform-gpu" src={relProduct.img} />
                     </Link>
                     <div className="px-2 flex flex-col flex-1">
                       <Link to={`/product/${relProduct._id}`}>
@@ -320,7 +342,7 @@ const ProductDetail = () => {
           </div>
         )}
       </div>
-    </main>
+    </motion.main>
   );
 };
 

@@ -7,7 +7,7 @@ const Cart = () => {
   const cartItems = useSelector((state) => state.cart.cartItems);
   const dispatch = useDispatch();
   
-  // FIX: Bulletproof check to ensure we don't accidentally read "null" as a logged-in user
+  // Bulletproof check to ensure we don't accidentally read "null" as a logged-in user
   const userInfoData = localStorage.getItem('userInfo');
   const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
                    ? JSON.parse(userInfoData) 
@@ -106,10 +106,14 @@ const Cart = () => {
               const itemPrice = getNumericPrice(item.price);
               const itemQty = parseInt(item.qty, 10) || 1;
               const itemTotal = itemPrice * itemQty;
-              const isExceedingStock = itemQty > item.countInStock;
+              
+              // NEW: Split logic for Completely Out of Stock vs Just Exceeding Limits
+              const isOutOfStock = item.countInStock === 0;
+              const isExceedingStock = itemQty > item.countInStock && item.countInStock > 0;
+              const hasStockError = isOutOfStock || isExceedingStock;
 
               return (
-                <div key={item._id} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6 relative border ${isExceedingStock ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
+                <div key={item._id} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6 relative border ${hasStockError ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
                   
                   <Link to={`/product/${item._id}`} className="w-24 h-24 md:w-32 md:h-32 bg-white/60 rounded-[1.5rem] p-2 flex-shrink-0 shadow-inner">
                     <img src={item.img} alt={item.title} className="w-full h-full object-cover mix-blend-multiply rounded-xl" />
@@ -122,16 +126,23 @@ const Cart = () => {
                     <p className="text-zinc-500 font-bold text-sm mt-1">₹{itemPrice.toLocaleString('en-IN')}</p>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
-                    <button onClick={() => handleDecrease(item)} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors">-</button>
-                    <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
-                    
-                    <button 
-                      onClick={() => handleIncrease(item)} 
-                      disabled={itemQty >= item.countInStock}
-                      className={`font-black text-xl w-6 flex justify-center items-center transition-colors ${itemQty >= item.countInStock ? 'text-zinc-300 cursor-not-allowed' : 'text-zinc-500 hover:text-green-500'}`}
-                    >+</button>
-                  </div>
+                  {/* NEW: Show Red "Out of Stock" Box OR Quantity Controls */}
+                  {isOutOfStock ? (
+                    <div className="bg-red-500 text-white font-black px-6 py-2.5 rounded-xl border border-red-600 uppercase text-xs tracking-widest text-center shadow-sm w-full md:w-auto">
+                      Out of Stock
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
+                      <button onClick={() => handleDecrease(item)} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors">-</button>
+                      <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
+                      
+                      <button 
+                        onClick={() => handleIncrease(item)} 
+                        disabled={itemQty >= item.countInStock}
+                        className={`font-black text-xl w-6 flex justify-center items-center transition-colors ${itemQty >= item.countInStock ? 'text-zinc-300 cursor-not-allowed' : 'text-zinc-500 hover:text-green-500'}`}
+                      >+</button>
+                    </div>
+                  )}
 
                   <div className="text-xl font-black text-zinc-800 w-28 text-right">
                     ₹{itemTotal.toLocaleString('en-IN')}
@@ -145,6 +156,7 @@ const Cart = () => {
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
 
+                  {/* Show specific limit warning ONLY if they have more in cart than available (but not 0) */}
                   {isExceedingStock && (
                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-red-100 text-red-600 text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
                        Only {item.countInStock} available. Please reduce quantity.
@@ -183,7 +195,7 @@ const Cart = () => {
               </Link>
             ) : (
               <button disabled className="w-full py-4 bg-zinc-300 text-zinc-500 font-black text-lg rounded-2xl cursor-not-allowed flex items-center justify-center gap-2 block text-center opacity-70">
-                Fix Cart Errors <span className="material-symbols-outlined text-[20px]">warning</span>
+               Out Of Stock <span className="material-symbols-outlined text-[20px]">warning</span>
               </button>
             )}
             

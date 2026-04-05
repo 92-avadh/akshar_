@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './Pages/Home';
@@ -10,11 +11,12 @@ import Checkout from './Pages/Checkout';
 import Profile from './Pages/Profile';
 import Auth from './Pages/Auth';
 import Favorites from './Pages/Favorites';
-import About from './Pages/About';       // NEW: Imported About page
-import Contact from './Pages/Contact';   // NEW: Imported Contact page
+import About from './Pages/About';       
+import Contact from './Pages/Contact';   
 import AdminDashboard from './Pages/AdminDashboard';
 import AdminCatalog from './Pages/AdminCatalog';
 import ScrollToTop from './components/ScrollToTop';
+import Loader from './components/Loader'; // <-- NEW: Imported your magical Loader
 
 // ==========================================
 // SECURE ADMIN ROUTE GATEKEEPER
@@ -31,27 +33,61 @@ const AdminRoute = ({ children }) => {
     console.error("Error parsing user info");
   }
   
-  // If user exists AND has the admin role, allow them in.
   if (userInfo && userInfo.role === 'admin') {
     return children;
   }
   
-  // Otherwise, kick them to the login screen and save the URL they tried to visit
   return <Navigate to="/auth?redirect=/admin" replace />;
 };
 
 const App = () => {
+  // NEW: Initial splash screen state
+  const [isAppLoading, setIsAppLoading] = useState(true);
+
+  useEffect(() => {
+    // Show the beautiful loader for 1.5 seconds when the website first opens
+    const splashTimer = setTimeout(() => {
+      setIsAppLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(splashTimer);
+  }, []);
+
+  // If the app is starting up, show the full-screen Loader!
+  if (isAppLoading) {
+    return <Loader />;
+  }
+
   return (
     <Router>
       <ScrollToTop />
+      
+      {/* Global Toast Notification Container */}
+      <Toaster 
+        position="bottom-right" 
+        toastOptions={{
+          style: {
+            borderRadius: '16px',
+            background: '#fff',
+            color: '#27272a',
+            fontWeight: '900',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #f4f4f5'
+          },
+          success: {
+            iconTheme: { primary: '#16a34a', secondary: '#fff' },
+          },
+        }}
+      />
+
       <Navbar />
       <div className="flex-grow">
         <Routes>
           {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
-          <Route path="/about" element={<About />} />       {/* NEW: Added About Route */}
-          <Route path="/contact" element={<Contact />} />   {/* NEW: Added Contact Route */}
+          <Route path="/about" element={<About />} />       
+          <Route path="/contact" element={<Contact />} />   
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} /> 
@@ -59,23 +95,9 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
 
-          {/* SECURE ADMIN ROUTES (Wrapped in Gatekeeper) */}
-          <Route 
-            path="/admin" 
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            } 
-          />
-          <Route 
-            path="/admin/catalog" 
-            element={
-              <AdminRoute>
-                <AdminCatalog />
-              </AdminRoute>
-            } 
-          />
+          {/* SECURE ADMIN ROUTES */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/catalog" element={<AdminRoute><AdminCatalog /></AdminRoute>} />
         </Routes>
       </div>
       <Footer />

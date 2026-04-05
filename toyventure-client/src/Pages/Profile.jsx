@@ -34,7 +34,7 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userInfo');
-    navigate('/auth');
+    navigate('/');
   };
 
   const handleUpdateProfile = async (e) => {
