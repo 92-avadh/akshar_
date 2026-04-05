@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 
 // @desc    Create new order
 // @route   POST /api/orders
-// @access  Public 
+// @access  Private (Changed from Public)
 const createOrder = async (req, res) => {
     try {
         const { orderItems, shippingDetails, totalPrice } = req.body;
@@ -12,6 +12,7 @@ const createOrder = async (req, res) => {
         }
 
         const order = new Order({
+            user: req.user._id, // NEW: Attach the logged-in user's ID
             orderItems,
             shippingDetails,
             totalPrice,

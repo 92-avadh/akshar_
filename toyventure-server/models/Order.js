@@ -1,29 +1,41 @@
-const Order = require('./Order');
+const mongoose = require('mongoose');
 
-// @desc    Create new order
-// @route   POST /api/orders
-// @access  Public 
-const createOrder = async (req, res) => {
-    try {
-        const { orderItems, shippingDetails, totalPrice } = req.body;
-
-        if (orderItems && orderItems.length === 0) {
-            return res.status(400).json({ message: 'No order items provided' });
+const orderSchema = new mongoose.Schema({
+    // Link the order to the authenticated user
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    orderItems: [
+        {
+            name: { type: String, required: true },
+            qty: { type: Number, required: true },
+            image: { type: String, required: true },
+            price: { type: Number, required: true },
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+                ref: 'Product'
+            }
         }
-
-        const order = new Order({
-            orderItems,
-            shippingDetails,
-            totalPrice,
-        });
-
-        const createdOrder = await order.save();
-        res.status(201).json(createdOrder);
-
-    } catch (error) {
-        console.error("Order Error:", error);
-        res.status(500).json({ message: 'Server error: Failed to create order' });
+    ],
+    shippingDetails: {
+        address: { type: String, required: true },
+        city: { type: String, required: true },
+        postalCode: { type: String, required: true },
+        country: { type: String, required: true },
+    },
+    totalPrice: {
+        type: Number,
+        required: true,
+        default: 0.0
+    },
+    isPaid: {
+        type: Boolean,
+        required: true,
+        default: false
     }
-};
+}, { timestamps: true });
 
-module.exports = { createOrder };
+module.exports = mongoose.model('Order', orderSchema);
