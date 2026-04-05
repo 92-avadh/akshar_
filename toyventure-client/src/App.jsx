@@ -15,6 +15,7 @@ import Auth from './Pages/Auth';
 import Favorites from './Pages/Favorites'; 
 import Profile from './Pages/Profile';
 import AdminDashboard from './Pages/AdminDashboard'; // <-- NEW IMPORT
+import AdminCatalog from './Pages/AdminCatalog';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
             
             {/* NEW: Admin Route */}
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/catalog" element={<AdminCatalog />} />
             
             <Route path="*" element={
               <div className="flex-grow flex flex-col items-center justify-center pt-32 pb-24 text-center px-6">

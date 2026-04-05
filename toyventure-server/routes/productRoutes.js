@@ -1,14 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const { getProducts, getProductById, createProductReview } = require('../controllers/productController');
+const { 
+    getProducts, 
+    getProductById, 
+    createProductReview,
+    createProduct,
+    updateProduct,
+    deleteProduct
+} = require('../controllers/productController');
+const { protect, admin } = require('../middleware/authMiddleware');
 
-// Route to get all products
-router.route('/').get(getProducts);
+// Route to get all products (Public) AND create a new product (Admin Only)
+router.route('/')
+    .get(getProducts)
+    .post(protect, admin, createProduct);
 
-// Route to get a single product by ID
-router.route('/:id').get(getProductById);
+// Route to get single product (Public), Update (Admin Only), and Delete (Admin Only)
+router.route('/:id')
+    .get(getProductById)
+    .put(protect, admin, updateProduct)
+    .delete(protect, admin, deleteProduct);
 
-// NEW: Route to add a review
+// Route to add a review
 router.route('/:id/reviews').post(createProductReview);
 
 module.exports = router;

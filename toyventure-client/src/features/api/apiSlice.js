@@ -38,6 +38,31 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
     }),
+
+    // ==========================================
+    // ADMIN PRODUCTS (CRUD)
+    // ==========================================
+    createProduct: builder.mutation({
+      query: () => ({ url: '/products', method: 'POST' }),
+      invalidatesTags: ['Product'], // Auto-refreshes your product table!
+    }),
+    
+    updateProduct: builder.mutation({
+      query: (data) => ({
+        url: `/products/${data._id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
+    deleteProduct: builder.mutation({
+      query: (productId) => ({
+        url: `/products/${productId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Product'],
+    }),
     
     // ==========================================
     // AUTHENTICATION
@@ -107,6 +132,9 @@ export const {
   useGetProductsQuery, 
   useGetProductByIdQuery,
   useCreateReviewMutation,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
   useSendOtpMutation,     
   useVerifyOtpMutation,
   useGetUserProfileQuery,

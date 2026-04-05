@@ -1,7 +1,8 @@
 const Product = require('../models/Product');
 
-// Get all products (You probably already have this)
-// Get all products with Search, Filter, and Pagination
+// @desc    Fetch all products with Search, Filter, and Pagination
+// @route   GET /api/products
+// @access  Public
 const getProducts = async (req, res) => {
     try {
         // 1. Pagination Setup
@@ -43,7 +44,10 @@ const getProducts = async (req, res) => {
         res.status(500).json({ message: "Server Error: Could not fetch products" });
     }
 };
-// Get single product (You probably already have this)
+
+// @desc    Fetch single product
+// @route   GET /api/products/:id
+// @access  Public
 const getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -57,10 +61,9 @@ const getProductById = async (req, res) => {
     }
 };
 
-// ==========================================
-// NEW: Create a Review
-// @route POST /api/products/:id/reviews
-// ==========================================
+// @desc    Create a Review
+// @route   POST /api/products/:id/reviews
+// @access  Public / Private (Depends on your auth flow)
 const createProductReview = async (req, res) => {
     try {
         const { rating, comment, name } = req.body;
@@ -95,4 +98,83 @@ const createProductReview = async (req, res) => {
     }
 };
 
-module.exports = { getProducts, getProductById, createProductReview };
+// ==========================================
+// ADMIN ONLY ROUTES
+// ==========================================
+
+// @desc    Create a product (Generates a blank template)
+// @route   POST /api/products
+// @access  Private/Admin
+const createProduct = async (req, res) => {
+    try {
+        const product = new Product({
+            title: 'New Magical Toy',
+            price: 0,
+            user: req.user._id,
+            img: 'https://via.placeholder.com/400x400?text=Upload+Image',
+            tag: 'General',
+            countInStock: 0,
+            numReviews: 0,
+            description: 'Enter a magical description here...',
+        });
+
+        const createdProduct = await product.save();
+        res.status(201).json(createdProduct);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to create product template', error });
+    }
+};
+
+// @desc    Update a product
+// @route   PUT /api/products/:id
+// @access  Private/Admin
+const updateProduct = async (req, res) => {
+    try {
+        const { title, price, description, img, tag, oldPrice, countInStock } = req.body;
+        const product = await Product.findById(req.params.id);
+
+        if (product) {
+            product.title = title || product.title;
+            product.price = price || product.price;
+            product.description = description || product.description;
+            product.img = img || product.img;
+            product.tag = tag || product.tag;
+            product.oldPrice = oldPrice || product.oldPrice;
+            product.countInStock = countInStock || product.countInStock;
+
+            const updatedProduct = await product.save();
+            res.json(updatedProduct);
+        } else {
+            res.status(404).json({ message: 'Product not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to update product', error });
+    }
+};
+
+// @desc    Delete a product
+// @route   DELETE /api/products/:id
+// @access  Private/Admin
+const deleteProduct = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+
+        if (product) {
+            await Product.deleteOne({ _id: product._id });
+            res.json({ message: 'Product completely removed from store' });
+        } else {
+            res.status(404).json({ message: 'Product not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to delete product', error });
+    }
+};
+
+module.exports = { 
+    getProducts, 
+    getProductById, 
+    createProductReview,
+    createProduct, 
+    updateProduct, 
+    deleteProduct 
+};

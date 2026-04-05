@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetProductByIdQuery, useGetProductsQuery, useCreateReviewMutation } from '../features/api/apiSlice';
-import { toggleFavorite } from '../features/wishlist/wishlistSlice';
 import { addToCart } from '../features/cart/cartSlice';
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
 import ScrollReveal from '../components/ScrollReveal.jsx'; 
@@ -21,8 +20,8 @@ const ProductDetail = () => {
     skip: !product, 
   }); 
   
-  const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
-  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
+const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
+ const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });

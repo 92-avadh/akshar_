@@ -11,6 +11,7 @@ const getUserProfile = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 mobileNumber: user.mobileNumber,
+                role: user.role, // <-- ADDED: Now the frontend knows the role
                 addresses: user.addresses,
             });
         } else {
@@ -44,6 +45,7 @@ const updateUserProfile = async (req, res) => {
                 _id: updatedUser._id,
                 name: updatedUser.name,
                 mobileNumber: updatedUser.mobileNumber,
+                role: updatedUser.role, // <-- ADDED: Keep role synced on update
                 addresses: updatedUser.addresses,
             });
         } else {

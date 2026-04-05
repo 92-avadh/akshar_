@@ -1,34 +1,32 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useGetAllOrdersQuery, useDeliverOrderMutation } from '../features/api/apiSlice';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-  // Kick out anyone who isn't an admin
   useEffect(() => {
     if (!userInfo || userInfo.role !== 'admin') {
       navigate('/');
     }
   }, [navigate, userInfo]);
 
-  const { data: orders, isLoading, error } = useGetAllOrdersQuery();
+  const { data: orders, isLoading } = useGetAllOrdersQuery();
   const [deliverOrder, { isLoading: isDelivering }] = useDeliverOrderMutation();
 
   const handleDeliver = async (id) => {
-    if (window.confirm('Mark this order as delivered?')) {
+    if (window.confirm('Mark this order as shipped/delivered?')) {
       try {
         await deliverOrder(id).unwrap();
-        alert('Order successfully marked as delivered!');
+        alert('Order status updated!');
       } catch (err) {
-        alert(err?.data?.message || 'Failed to update order');
+        alert('Failed to update order');
       }
     }
   };
 
-  if (isLoading) return <div className="pt-32 text-center font-bold">Loading Dashboard...</div>;
-  if (error) return <div className="pt-32 text-center text-red-500 font-bold">Error loading dashboard</div>;
+  if (isLoading) return <div className="pt-32 text-center font-bold text-zinc-500">Loading Command Center...</div>;
 
   const totalRevenue = orders?.reduce((acc, order) => acc + order.totalPrice, 0) || 0;
   const totalOrders = orders?.length || 0;
@@ -40,18 +38,19 @@ const AdminDashboard = () => {
 
       <div className="max-w-[1300px] mx-auto px-6 relative z-10">
         
-        {/* Header */}
-        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/60 p-6 md:p-8 rounded-[2.5rem] border border-white shadow-sm">
+        {/* Header & Global Navigation */}
+        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/60 p-6 md:p-8 rounded-[2.5rem] border border-white shadow-sm">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black text-zinc-800 tracking-tight">Admin Command Center</h1>
-            <p className="text-zinc-500 font-bold mt-2">Manage orders, track revenue, and update shipments.</p>
+            <h1 className="text-3xl md:text-4xl font-black text-zinc-800 tracking-tight">Admin Dashboard</h1>
+            <p className="text-zinc-500 font-bold mt-2">Overview of your sales, revenue, and fulfillment queue.</p>
           </div>
-          <div className="bg-zinc-900 text-white px-6 py-3 rounded-full font-black text-sm shadow-md flex items-center gap-2 w-max">
-            <span className="material-symbols-outlined text-[20px]">verified_user</span> SUPER ADMIN
-          </div>
+          
+          <Link to="/admin/catalog" className="bg-primary-container text-white px-8 py-4 rounded-2xl font-black shadow-md hover:bg-orange-600 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 w-full md:w-auto">
+            <span className="material-symbols-outlined">inventory_2</span> Manage Inventory Catalog
+          </Link>
         </div>
 
-        {/* Top Analytics Cards */}
+        {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft flex items-center gap-6">
             <div className="w-16 h-16 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center border border-green-100 shadow-inner">
@@ -88,8 +87,8 @@ const AdminDashboard = () => {
         <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden">
           <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
             <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary-container text-[28px]">inventory_2</span> 
-              Recent Orders
+              <span className="material-symbols-outlined text-primary-container text-[28px]">local_shipping</span> 
+              Fulfillment Queue
             </h2>
           </div>
           
@@ -124,11 +123,11 @@ const AdminDashboard = () => {
                     <td className="p-5">
                       {order.isDelivered ? (
                         <span className="bg-green-50 border border-green-200 text-green-700 text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1 w-max shadow-sm">
-                          <span className="material-symbols-outlined text-[14px]">check_circle</span> Delivered
+                          <span className="material-symbols-outlined text-[14px]">check_circle</span> Shipped
                         </span>
                       ) : (
                         <span className="bg-orange-50 border border-orange-200 text-orange-700 text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1 w-max shadow-sm">
-                          <span className="material-symbols-outlined text-[14px]">local_shipping</span> Pending
+                          <span className="material-symbols-outlined text-[14px]">timer</span> Processing
                         </span>
                       )}
                     </td>
@@ -137,9 +136,9 @@ const AdminDashboard = () => {
                         <button 
                           onClick={() => handleDeliver(order._id)}
                           disabled={isDelivering}
-                          className="bg-primary-container text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-orange-600 transition-all shadow-md hover:-translate-y-0.5 disabled:opacity-50"
+                          className="bg-zinc-900 text-white text-xs font-black px-4 py-2.5 rounded-xl hover:bg-black transition-all shadow-md hover:-translate-y-0.5 disabled:opacity-50"
                         >
-                          Ship Order
+                          Mark Shipped
                         </button>
                       ) : (
                         <span className="text-xs font-bold text-zinc-400 flex items-center justify-end gap-1">
