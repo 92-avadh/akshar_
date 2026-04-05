@@ -23,9 +23,10 @@ const AdminCatalog = () => {
   
   // NEW: Instead of a modal, we use this to toggle the full-page form view
   const [isFormOpen, setIsFormOpen] = useState(false); 
+  const [uploading, setUploading] = useState(false); // <-- NEW uploading state
   
   const [editingProduct, setEditingProduct] = useState({
-    title: '', price: 0, oldPrice: 0, description: '', img: '', tag: '', countInStock: 0
+    title: '', price: 0, oldPrice: 0, description: '', img: '', images: [], tag: '', countInStock: 0
   });
 
   // --- API HOOKS ---
@@ -75,6 +76,50 @@ const AdminCatalog = () => {
 
   const handleEditChange = (e) => {
     setEditingProduct({ ...editingProduct, [e.target.name]: e.target.value });
+  };
+
+  // --- NEW MULTIPLE FILE UPLOAD LOGIC ---
+  const handleFileUpload = async (e) => {
+    const files = e.target.files;
+    
+    if (files.length > 7) {
+      alert('You can only upload a maximum of 7 images.');
+      return;
+    }
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('images', files[i]);
+    }
+
+    setUploading(true);
+    try {
+      // NOTE: Using absolute URL to ensure it reaches your server properly.
+      const res = await fetch('http://localhost:5000/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json(); // Returns array of paths like ['/uploads/img-xxx.jpg', ...]
+
+      setEditingProduct({
+        ...editingProduct,
+        images: data,
+        img: data[0] // Set cover image to the first one
+      });
+      setUploading(false);
+    } catch (error) {
+      console.error(error);
+      alert('Image upload failed. Ensure server is running and files are images.');
+      setUploading(false);
+    }
+  };
+
+  // Helper to resolve image URLs (for local uploads vs web URLs)
+  const resolveImage = (imgSrc) => {
+    if (!imgSrc) return '';
+    return imgSrc.startsWith('/uploads') ? `http://localhost:5000${imgSrc}` : imgSrc;
   };
 
   if (isLoading) return <div className="pt-32 text-center font-bold text-zinc-500">Loading Catalog...</div>;
@@ -153,11 +198,31 @@ const AdminCatalog = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-black text-zinc-400 uppercase tracking-widest ml-1">Main Image URL</label>
-                      <input type="text" name="img" value={editingProduct.img} onChange={handleEditChange} required className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 text-sm font-medium transition-all" />
-                      {editingProduct.img && (
+                      <label className="text-sm font-black text-zinc-400 uppercase tracking-widest ml-1">Upload Product Images (Max 7)</label>
+                      <input 
+                        type="file" 
+                        multiple 
+                        accept="image/jpeg, image/png, image/webp"
+                        onChange={handleFileUpload} 
+                        disabled={uploading}
+                        className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 text-sm font-medium transition-all file:bg-primary-container/10 file:text-primary-container file:border-0 file:rounded-xl file:px-4 file:py-2 file:font-bold hover:file:bg-primary-container/20 cursor-pointer disabled:opacity-50" 
+                      />
+                      
+                      {uploading && <p className="text-xs font-bold text-primary-container mt-2 animate-pulse">Uploading images...</p>}
+
+                      {/* Display Image Previews */}
+                      {editingProduct.images && editingProduct.images.length > 0 ? (
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                          {editingProduct.images.map((img, idx) => (
+                            <div key={idx} className="rounded-xl border border-zinc-200 overflow-hidden bg-white p-1 shadow-sm aspect-square relative">
+                              {idx === 0 && <span className="absolute top-1 left-1 bg-primary-container text-white text-[10px] px-2 py-0.5 rounded-md font-bold z-10 shadow-sm">Main</span>}
+                              <img src={resolveImage(img)} alt={`Preview ${idx}`} className="w-full h-full object-cover mix-blend-multiply" />
+                            </div>
+                          ))}
+                        </div>
+                      ) : editingProduct.img && (
                         <div className="mt-4 rounded-3xl border border-zinc-200 overflow-hidden bg-white p-2 shadow-sm">
-                          <img src={editingProduct.img} alt="Preview" className="w-full aspect-square object-contain mix-blend-multiply" />
+                          <img src={resolveImage(editingProduct.img)} alt="Preview" className="w-full aspect-square object-contain mix-blend-multiply" />
                         </div>
                       )}
                     </div>
@@ -168,7 +233,7 @@ const AdminCatalog = () => {
                   <button type="button" onClick={() => setIsFormOpen(false)} className="px-8 py-4 bg-zinc-100 text-zinc-600 font-black text-lg rounded-2xl hover:bg-zinc-200 transition-all">
                     Cancel
                   </button>
-                  <button type="submit" disabled={isUpdating} className="flex-1 py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all shadow-lg hover:-translate-y-1 disabled:opacity-50">
+                  <button type="submit" disabled={isUpdating || uploading} className="flex-1 py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all shadow-lg hover:-translate-y-1 disabled:opacity-50">
                     {isUpdating ? 'Saving to Database...' : 'Save Product Changes'}
                   </button>
                 </div>
@@ -240,7 +305,7 @@ const AdminCatalog = () => {
                       <tr key={product._id} className="hover:bg-white transition-colors border-b border-zinc-50 group">
                         <td className="p-5 pl-8">
                           <div className="w-14 h-14 bg-white rounded-xl overflow-hidden shadow-sm border border-zinc-100 p-1">
-                            <img src={product.img} alt={product.title} className="w-full h-full object-cover mix-blend-multiply" />
+                            <img src={resolveImage(product.img)} alt={product.title} className="w-full h-full object-cover mix-blend-multiply" />
                           </div>
                         </td>
                         <td className="p-5">

@@ -23,8 +23,13 @@ const Cart = () => {
     return acc + (price * qty);
   }, 0);
 
+  // PREVENT INCREASING PAST INVENTORY LIMIT
   const handleIncrease = (item) => {
-    dispatch(updateQuantity({ id: item._id, qty: (item.qty || 1) + 1 }));
+    if (item.qty < item.countInStock) {
+      dispatch(updateQuantity({ id: item._id, qty: (item.qty || 1) + 1 }));
+    } else {
+      alert(`Sorry, we only have ${item.countInStock} units available.`);
+    }
   };
 
   const handleDecrease = (item) => {
@@ -34,6 +39,9 @@ const Cart = () => {
       dispatch(removeFromCart(item._id));
     }
   };
+
+  // CHECK IF CART IS VALID (Prevents checkout if an item in cart goes out of stock)
+  const isCartValid = cartItems.every(item => item.countInStock >= item.qty && item.countInStock > 0);
 
   if (cartItems.length === 0) {
     return (
@@ -74,9 +82,10 @@ const Cart = () => {
               const itemPrice = getNumericPrice(item.price);
               const itemQty = parseInt(item.qty, 10) || 1;
               const itemTotal = itemPrice * itemQty;
+              const isExceedingStock = itemQty > item.countInStock; // Validation boolean
 
               return (
-                <div key={item._id} className="card-surface p-4 md:p-6 rounded-[2rem] shadow-sm flex flex-col md:flex-row items-center gap-6 relative border border-white">
+                <div key={item._id} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6 relative border ${isExceedingStock ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
                   
                   <Link to={`/product/${item._id}`} className="w-24 h-24 md:w-32 md:h-32 bg-white/60 rounded-[1.5rem] p-2 flex-shrink-0 shadow-inner">
                     <img src={item.img} alt={item.title} className="w-full h-full object-cover mix-blend-multiply rounded-xl" />
@@ -92,7 +101,13 @@ const Cart = () => {
                   <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
                     <button onClick={() => handleDecrease(item)} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors">-</button>
                     <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
-                    <button onClick={() => handleIncrease(item)} className="text-zinc-500 hover:text-green-500 font-black text-xl w-6 flex justify-center items-center transition-colors">+</button>
+                    
+                    {/* Disable plus button if max stock reached */}
+                    <button 
+                      onClick={() => handleIncrease(item)} 
+                      disabled={itemQty >= item.countInStock}
+                      className={`font-black text-xl w-6 flex justify-center items-center transition-colors ${itemQty >= item.countInStock ? 'text-zinc-300 cursor-not-allowed' : 'text-zinc-500 hover:text-green-500'}`}
+                    >+</button>
                   </div>
 
                   <div className="text-xl font-black text-zinc-800 w-28 text-right">
@@ -106,6 +121,13 @@ const Cart = () => {
                   >
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
+
+                  {/* Warning message if item became out of stock */}
+                  {isExceedingStock && (
+                     <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-red-100 text-red-600 text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
+                       Only {item.countInStock} available. Please reduce quantity.
+                     </div>
+                  )}
                 </div>
               );
             })}
@@ -133,9 +155,16 @@ const Cart = () => {
               <span className="text-3xl font-black text-primary-container">₹{totalPrice.toLocaleString('en-IN')}</span>
             </div>
 
-            <Link to="/checkout" className="w-full py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 block text-center">
-              Proceed to Checkout <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </Link>
+            {/* Conditionally render checkout button based on cart validity */}
+            {isCartValid ? (
+              <Link to="/checkout" className="w-full py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 block text-center">
+                Proceed to Checkout <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              </Link>
+            ) : (
+              <button disabled className="w-full py-4 bg-zinc-300 text-zinc-500 font-black text-lg rounded-2xl cursor-not-allowed flex items-center justify-center gap-2 block text-center opacity-70">
+                Fix Cart Errors <span className="material-symbols-outlined text-[20px]">warning</span>
+              </button>
+            )}
             
             <p className="text-center text-[10px] text-zinc-400 font-bold mt-4 uppercase tracking-wider flex items-center justify-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">verified_user</span> Secure Checkout

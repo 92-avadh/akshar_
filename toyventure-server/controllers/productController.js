@@ -112,6 +112,7 @@ const createProduct = async (req, res) => {
             price: 0,
             user: req.user._id,
             img: 'https://via.placeholder.com/400x400?text=Upload+Image',
+            images: [], // NEW: Initialize blank images array
             tag: 'General',
             countInStock: 0,
             numReviews: 0,
@@ -130,17 +131,24 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
     try {
-        const { title, price, description, img, tag, oldPrice, countInStock } = req.body;
+        const { title, price, description, img, tag, oldPrice, countInStock, images } = req.body; // Added images
         const product = await Product.findById(req.params.id);
 
         if (product) {
             product.title = title || product.title;
             product.price = price || product.price;
             product.description = description || product.description;
-            product.img = img || product.img;
             product.tag = tag || product.tag;
             product.oldPrice = oldPrice || product.oldPrice;
             product.countInStock = countInStock || product.countInStock;
+            
+            // NEW: Handle images array and fallback main img
+            if (images && images.length > 0) {
+                product.images = images;
+                product.img = images[0]; // Set cover image to first uploaded
+            } else {
+                product.img = img || product.img;
+            }
 
             const updatedProduct = await product.save();
             res.json(updatedProduct);

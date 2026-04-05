@@ -16,6 +16,7 @@ const productSchema = new mongoose.Schema({
     discount: { type: String },
     clubPrice: { type: Number },
     img: { type: String, required: true },
+    images: [{ type: String }], // NEW: Added images array for max 7 files
     tag: { type: String },
     
     // NEW REVIEW FIELDS:

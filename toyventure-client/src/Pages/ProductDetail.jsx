@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetProductByIdQuery, useGetProductsQuery, useCreateReviewMutation } from '../features/api/apiSlice';
 import { addToCart } from '../features/cart/cartSlice';
+// Make sure you have this import if you are using toggleFavorite!
+import { toggleFavorite } from '../features/wishlist/wishlistSlice'; 
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
 import ScrollReveal from '../components/ScrollReveal.jsx'; 
 
@@ -10,18 +12,15 @@ const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  // 1. Fetch Main Product
   const { data: responseData, isLoading, error } = useGetProductByIdQuery(id);
   const product = responseData?.data || (Array.isArray(responseData) ? responseData[0] : responseData);
 
-  // 2. LAG FIX: Staggered Fetch! 
-  // We wait until the main product is loaded before fetching the rest. This prevents navigation stutter.
   const { data: allProductsData } = useGetProductsQuery(undefined, {
     skip: !product, 
   }); 
   
-const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
- const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
+  const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
+  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
@@ -34,7 +33,6 @@ const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation()
 
   const relatedProducts = allProductsData?.products?.filter(p => p._id !== id).slice(0, 4) || [];
 
-  // LAG FIX 2: Removed window.scrollTo(0,0) from here. App.jsx handles it globally now!
   useEffect(() => { 
     if (product?.img) {
       setMainImage(product.img);
@@ -167,7 +165,24 @@ const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation()
               </div>
             )}
 
-            <h1 className="text-4xl md:text-5xl font-black text-zinc-800 tracking-tight leading-tight mb-6">{product.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-black text-zinc-800 tracking-tight leading-tight mb-4">{product.title}</h1>
+
+            {/* NEW INVENTORY BADGES */}
+            <div className="mb-6">
+              {product.countInStock > 10 ? (
+                <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[16px]">inventory_2</span> In Stock
+                </span>
+              ) : product.countInStock > 0 ? (
+                <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[16px]">warning</span> Hurry, only {product.countInStock} left!
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[16px]">error</span> Out of Stock
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white flex-wrap">
               <span className="text-4xl font-black text-primary-container">{displayPrice(product.price)}</span>
@@ -187,9 +202,20 @@ const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation()
             </p>
 
             <div className="flex gap-4">
-              <button onClick={handleAddToCart} className="flex-1 py-5 bg-zinc-900 text-white font-black text-xl rounded-[2rem] hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl hover:-translate-y-1 active:scale-95 group">
-                Add to Cart <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>
+              {/* NEW: Button disabled conditionally based on countInStock */}
+              <button 
+                onClick={handleAddToCart} 
+                disabled={product.countInStock === 0}
+                className={`flex-1 py-5 font-black text-xl rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-xl group ${
+                  product.countInStock === 0 
+                  ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed opacity-70' 
+                  : 'bg-zinc-900 text-white hover:bg-black hover:-translate-y-1 active:scale-95'
+                }`}
+              >
+                {product.countInStock === 0 ? 'Out of Stock' : 'Add to Cart'} 
+                {product.countInStock > 0 && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>}
               </button>
+              
               <button onClick={() => dispatch(toggleFavorite(product))} className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md ${isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'}`} title="Add to Wishlist">
                 <span className={`material-symbols-outlined text-[32px] ${isMainProductFavorited ? 'filled' : ''}`}>favorite</span>
               </button>
