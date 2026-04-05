@@ -1,21 +1,18 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-    mobileNumber: {
-        type: String,
-        required: [true, 'Please provide a mobile number'],
-        unique: true, 
-        trim: true,
-        match: [/^\d{10}$/, 'Please provide a valid 10-digit mobile number']
-    },
-    role: {
-        type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
-    }
-}, {
-    timestamps: true 
+const addressSchema = new mongoose.Schema({
+    flatNumber: { type: String, required: true },
+    street: { type: String, required: true },
+    landmark: { type: String },
+    city: { type: String, required: true },
+    pincode: { type: String, required: true }
 });
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+const userSchema = new mongoose.Schema({
+    mobileNumber: { type: String, required: true, unique: true },
+    name: { type: String, default: '' },
+    addresses: [addressSchema],
+    role: { type: String, default: 'user' }
+}, { timestamps: true });
+
+module.exports = mongoose.model('User', userSchema);

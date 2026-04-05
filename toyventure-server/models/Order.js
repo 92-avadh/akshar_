@@ -37,6 +37,15 @@ const orderSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    // NEW FIELDS FOR ADMIN PANEL
+    isDelivered: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    deliveredAt: {
+        type: Date
     }
 }, { timestamps: true });
 

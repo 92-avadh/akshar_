@@ -6,12 +6,10 @@ const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Grab counts from the Redux store
   const unseenFavorites = useSelector((state) => state.wishlist?.unseenCount || 0);
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
   const navigate = useNavigate();
 
-  // AUTH LOGIC: Check if the user is currently logged in
   const userInfoStr = localStorage.getItem('userInfo');
   const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
 
@@ -64,7 +62,6 @@ const Navbar = () => {
         {/* Icons & Actions */}
         <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
           
-          {/* Wishlist Icon */}
           <Link to="/favorites" className="relative text-zinc-600 hover:text-red-500 transition-colors">
             <span className="material-symbols-outlined text-[28px]">favorite</span>
             {unseenFavorites > 0 && (
@@ -74,7 +71,6 @@ const Navbar = () => {
             )}
           </Link>
 
-          {/* Cart Icon */}
           <Link to="/cart" className="relative text-zinc-600 hover:text-primary-container transition-colors">
             <span className="material-symbols-outlined text-[28px]">shopping_cart</span>
             {cartItems.length > 0 && (
@@ -85,16 +81,25 @@ const Navbar = () => {
           </Link>
 
           {/* ========================================= */}
-          {/* DYNAMIC AUTH BUTTON (Login vs Profile)      */}
+          {/* DYNAMIC AUTH BUTTONS                      */}
           {/* ========================================= */}
           {userInfo ? (
-            <Link 
-              to="/profile" 
-              className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-primary-container/10 text-primary-container border border-primary-container/20 rounded-full font-bold hover:bg-primary-container hover:text-white transition-all shadow-sm"
-            >
-              <span className="material-symbols-outlined text-[20px]">person</span>
-              Profile
-            </Link>
+            <div className="hidden md:flex items-center gap-3">
+              {/* Show Admin button ONLY if role is admin */}
+              {userInfo.role === 'admin' && (
+                <Link to="/admin" className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-full font-bold hover:bg-black transition-all shadow-sm">
+                  <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                  Admin
+                </Link>
+              )}
+              <Link 
+                to="/profile" 
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary-container/10 text-primary-container border border-primary-container/20 rounded-full font-bold hover:bg-primary-container hover:text-white transition-all shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[20px]">person</span>
+                Profile
+              </Link>
+            </div>
           ) : (
             <Link 
               to="/auth" 
@@ -105,7 +110,6 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* Mobile Profile Icon (Visible only on small screens) */}
           <Link to={userInfo ? "/profile" : "/auth"} className="md:hidden text-zinc-600 hover:text-primary-container transition-colors">
             <span className="material-symbols-outlined text-[28px]">
               {userInfo ? "person" : "login"}

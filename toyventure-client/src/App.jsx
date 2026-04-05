@@ -1,9 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
-// 1. Import the new ScrollToTop component
 import ScrollToTop from './components/ScrollToTop';
-
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -16,20 +14,16 @@ import Checkout from './Pages/Checkout';
 import Auth from './Pages/Auth'; 
 import Favorites from './Pages/Favorites'; 
 import Profile from './Pages/Profile';
+import AdminDashboard from './Pages/AdminDashboard'; // <-- NEW IMPORT
 
 function App() {
   return (
     <Router>
-      {/* 2. Place it inside the Router so it can listen to URL changes */}
       <ScrollToTop />
       
-      {/* Wrap the whole app in a flex column that takes at least the full screen height */}
       <div className="flex flex-col min-h-screen">
-        
         <Navbar />
         
-        {/* Wrap Routes in a main tag with 'flex-grow'. 
-            This forces this section to stretch and push the footer to the bottom! */}
         <main className="flex-grow flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -41,7 +35,9 @@ function App() {
             <Route path="/favorites" element={<Favorites />} /> 
             <Route path="/profile" element={<Profile />} />
             
-            {/* Updated 404 Route to be perfectly visible and premium */}
+            {/* NEW: Admin Route */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            
             <Route path="*" element={
               <div className="flex-grow flex flex-col items-center justify-center pt-32 pb-24 text-center px-6">
                 <h1 className="text-[120px] md:text-[150px] leading-none font-black bg-gradient-to-br from-primary-container to-purple-600 text-transparent bg-clip-text mb-4 drop-shadow-md">
@@ -58,10 +54,8 @@ function App() {
         </main>
 
         <Footer />
-
       </div>
 
-      {/* Floating Action Button (Kept outside the flex layout so it floats properly) */}
       <div className="fixed bottom-10 right-10 z-40">
         <button className="w-16 h-16 bg-primary-container text-white rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50 hover:scale-110 active:scale-95 transition-transform hover:bg-orange-600">
           <span className="material-symbols-outlined text-3xl">chat_bubble</span>

@@ -15,6 +15,9 @@ export const apiSlice = createApi({
   tagTypes: ['Product', 'Order', 'User'],
   endpoints: (builder) => ({
     
+    // ==========================================
+    // PRODUCTS
+    // ==========================================
     getProducts: builder.query({
       query: ({ keyword = '', tag = '', page = 1, limit = 12 } = {}) => {
         return `/products?keyword=${keyword}&tag=${tag}&page=${page}&limit=${limit}`;
@@ -26,19 +29,6 @@ export const apiSlice = createApi({
       query: (id) => `/products/${id}`,
       providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
-    
-    sendOtp: builder.mutation({ query: (data) => ({ url: '/auth/send-otp', method: 'POST', body: data }) }),
-    verifyOtp: builder.mutation({ query: (data) => ({ url: '/auth/verify-otp', method: 'POST', body: data }) }),
-    
-    createOrder: builder.mutation({ query: (data) => ({ url: '/orders', method: 'POST', body: data }) }),
-
-    // ==========================================
-    // NEW: Query to fetch the user's orders
-    // ==========================================
-    getMyOrders: builder.query({
-      query: () => '/orders/myorders',
-      providesTags: ['Order'], // This tag ensures data refreshes if a new order is placed
-    }),
 
     createReview: builder.mutation({
       query: (data) => ({
@@ -48,16 +38,83 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
     }),
+    
+    // ==========================================
+    // AUTHENTICATION
+    // ==========================================
+    sendOtp: builder.mutation({ query: (data) => ({ url: '/auth/send-otp', method: 'POST', body: data }) }),
+    verifyOtp: builder.mutation({ query: (data) => ({ url: '/auth/verify-otp', method: 'POST', body: data }) }),
+    
+    // ==========================================
+    // USER PROFILE
+    // ==========================================
+    getUserProfile: builder.query({
+      query: () => '/users/profile',
+      providesTags: ['User'],
+    }),
+
+    updateUserProfile: builder.mutation({
+      query: (data) => ({
+        url: '/users/profile',
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
+
+    // ==========================================
+    // ORDERS (USER)
+    // ==========================================
+    createOrder: builder.mutation({ query: (data) => ({ url: '/orders', method: 'POST', body: data }) }),
+
+    getMyOrders: builder.query({
+      query: () => '/orders/myorders',
+      providesTags: ['Order'], 
+    }),
+
+    // ==========================================
+    // ADMIN DASHBOARD
+    // ==========================================
+    getAllOrders: builder.query({
+      query: () => '/orders',
+      providesTags: ['Order'],
+    }),
+
+    deliverOrder: builder.mutation({
+      query: (orderId) => ({
+        url: `/orders/${orderId}/deliver`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Order'], 
+    }),
+
+    // ==========================================
+    // RAZORPAY PAYMENTS
+    // ==========================================
+    createRazorpayOrder: builder.mutation({
+      query: (data) => ({ url: '/payments/razorpay/order', method: 'POST', body: data })
+    }),
+    
+    verifyRazorpayPayment: builder.mutation({
+      query: (data) => ({ url: '/payments/razorpay/verify', method: 'POST', body: data })
+    })
 
   }),
 });
 
+// EXPORT ALL HOOKS
 export const { 
   useGetProductsQuery, 
   useGetProductByIdQuery,
+  useCreateReviewMutation,
   useSendOtpMutation,     
   useVerifyOtpMutation,
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
   useCreateOrderMutation,
-  useGetMyOrdersQuery, // <-- NEW EXPORT
-  useCreateReviewMutation 
+  useGetMyOrdersQuery, 
+  useGetAllOrdersQuery,    
+  useDeliverOrderMutation,
+  useCreateRazorpayOrderMutation,
+  useVerifyRazorpayPaymentMutation
 } = apiSlice;

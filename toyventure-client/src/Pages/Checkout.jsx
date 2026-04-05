@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { useCreateOrderMutation } from '../features/api/apiSlice';
+import { useCreateOrderMutation, useGetUserProfileQuery } from '../features/api/apiSlice';
 import { clearCart } from '../features/cart/cartSlice'; 
 
 const Checkout = () => {
@@ -10,8 +10,8 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createOrderApi, { isLoading }] = useCreateOrderMutation();
+  const { data: profile } = useGetUserProfileQuery();
 
-  // UPDATED: Added new granular address fields
   const [shippingDetails, setShippingDetails] = useState({
     fullName: '',
     phone: '',
@@ -34,6 +34,18 @@ const Checkout = () => {
     setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
   };
 
+  const handleSelectSavedAddress = (addressObj) => {
+    setShippingDetails({
+      fullName: profile?.name || '',
+      phone: profile?.mobileNumber || '',
+      flatNumber: addressObj.flatNumber,
+      street: addressObj.street,
+      landmark: addressObj.landmark || '',
+      city: addressObj.city,
+      pincode: addressObj.pincode
+    });
+  };
+
   const placeOrderHandler = async (e) => {
     e.preventDefault();
     
@@ -53,7 +65,7 @@ const Checkout = () => {
 
       alert(`🎉 Payment Successful & Order Placed!\nYour Order ID is: ${response._id}`);
       dispatch(clearCart()); 
-      navigate('/'); 
+      navigate('/profile'); // Redirects to profile so they can see order history
       
     } catch (error) {
       alert(error?.data?.message || 'Failed to process payment. Please make sure you are logged in.');
@@ -83,10 +95,30 @@ const Checkout = () => {
         <div className="lg:col-span-7 flex flex-col gap-6">
           
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft">
-            <div className="flex items-center gap-3 mb-8 border-b border-white pb-4">
+            <div className="flex items-center gap-3 mb-6 border-b border-white pb-4">
                 <span className="material-symbols-outlined text-primary-container text-[28px]">local_shipping</span>
                 <h1 className="text-2xl font-black text-zinc-800">Shipping Details</h1>
             </div>
+
+            {/* Quick Select Saved Address Box */}
+            {profile?.addresses && profile.addresses.length > 0 && (
+              <div className="mb-8 p-4 bg-white/40 rounded-2xl border border-white shadow-sm">
+                <p className="text-sm font-bold text-zinc-500 mb-3 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">bolt</span> Quick Select Saved Address:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {profile.addresses.map((addr, idx) => (
+                    <button 
+                      key={idx} 
+                      type="button" 
+                      onClick={() => handleSelectSavedAddress(addr)}
+                      className="text-left p-3 rounded-xl border-2 border-transparent bg-white hover:border-primary-container/30 hover:shadow-md transition-all"
+                    >
+                      <p className="font-bold text-zinc-800 text-sm line-clamp-1">{addr.flatNumber}, {addr.street}</p>
+                      <p className="text-xs text-zinc-500 mt-1">{addr.city} - {addr.pincode}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <form id="checkout-form" onSubmit={placeOrderHandler} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -101,7 +133,6 @@ const Checkout = () => {
                   <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="+91 99999 00000" />
                 </div>
 
-                {/* NEW GRANULAR ADDRESS FIELDS */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Flat / Block No.</label>
                   <input required type="text" name="flatNumber" value={shippingDetails.flatNumber} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="A-404, Sunshine Apts" />

@@ -28,16 +28,11 @@ const createOrder = async (req, res) => {
     }
 };
 
-// ==========================================
-// NEW: Fetch user's order history
-// ==========================================
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
 // @access  Private
 const getMyOrders = async (req, res) => {
     try {
-        // Find all orders where the 'user' matches the logged-in user's ID
-        // .sort({ createdAt: -1 }) ensures the newest orders show up first
         const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
@@ -46,4 +41,38 @@ const getMyOrders = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getMyOrders };
+// @desc    Get all orders
+// @route   GET /api/orders
+// @access  Private/Admin
+const getOrders = async (req, res) => {
+    try {
+        // Fetch all orders and attach the user's basic info
+        const orders = await Order.find({}).populate('user', 'name mobileNumber').sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch all orders' });
+    }
+};
+
+// @desc    Update order to delivered
+// @route   PUT /api/orders/:id/deliver
+// @access  Private/Admin
+const updateOrderToDelivered = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (order) {
+            order.isDelivered = true;
+            order.deliveredAt = Date.now();
+
+            const updatedOrder = await order.save();
+            res.json(updatedOrder);
+        } else {
+            res.status(404).json({ message: 'Order not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to update order status' });
+    }
+};
+
+module.exports = { createOrder, getMyOrders, getOrders, updateOrderToDelivered };
