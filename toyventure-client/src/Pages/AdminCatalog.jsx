@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   useGetProductsQuery,
   useCreateProductMutation,
@@ -8,22 +8,12 @@ import {
 } from '../features/api/apiSlice';
 
 const AdminCatalog = () => {
-  const navigate = useNavigate();
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-
-  // Security Check
-  useEffect(() => {
-    if (!userInfo || userInfo.role !== 'admin') {
-      navigate('/');
-    }
-  }, [navigate, userInfo]);
 
   // --- STATE ---
   const [searchTerm, setSearchTerm] = useState('');
   
-  // NEW: Instead of a modal, we use this to toggle the full-page form view
   const [isFormOpen, setIsFormOpen] = useState(false); 
-  const [uploading, setUploading] = useState(false); // <-- NEW uploading state
+  const [uploading, setUploading] = useState(false);
   
   const [editingProduct, setEditingProduct] = useState({
     title: '', price: 0, oldPrice: 0, description: '', img: '', images: [], tag: '', countInStock: 0
@@ -42,9 +32,9 @@ const AdminCatalog = () => {
     if (window.confirm('Create a new blank product template?')) {
       try {
         const newProduct = await createProduct().unwrap();
-        setEditingProduct(newProduct);
-        setIsFormOpen(true); // Open the full-page form
-        window.scrollTo(0, 0); // Scroll to top for the form
+        setEditingProduct({ ...newProduct, images: newProduct.images || [] });
+        setIsFormOpen(true); 
+        window.scrollTo(0, 0); 
       } catch (err) {
         alert('Failed to create product template');
       }
@@ -67,7 +57,7 @@ const AdminCatalog = () => {
     try {
       await updateProduct(editingProduct).unwrap();
       alert('Product updated successfully!');
-      setIsFormOpen(false); // Close the form and return to table
+      setIsFormOpen(false); 
       window.scrollTo(0, 0);
     } catch (err) {
       alert('Failed to update product');
@@ -78,7 +68,7 @@ const AdminCatalog = () => {
     setEditingProduct({ ...editingProduct, [e.target.name]: e.target.value });
   };
 
-  // --- NEW MULTIPLE FILE UPLOAD LOGIC ---
+  // MULTIPLE FILE UPLOAD LOGIC
   const handleFileUpload = async (e) => {
     const files = e.target.files;
     
@@ -94,19 +84,18 @@ const AdminCatalog = () => {
 
     setUploading(true);
     try {
-      // NOTE: Using absolute URL to ensure it reaches your server properly.
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
         body: formData,
       });
 
       if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json(); // Returns array of paths like ['/uploads/img-xxx.jpg', ...]
+      const data = await res.json(); 
 
       setEditingProduct({
         ...editingProduct,
         images: data,
-        img: data[0] // Set cover image to the first one
+        img: data[0] 
       });
       setUploading(false);
     } catch (error) {
@@ -116,7 +105,6 @@ const AdminCatalog = () => {
     }
   };
 
-  // Helper to resolve image URLs (for local uploads vs web URLs)
   const resolveImage = (imgSrc) => {
     if (!imgSrc) return '';
     return imgSrc.startsWith('/uploads') ? `http://localhost:5000${imgSrc}` : imgSrc;
@@ -132,11 +120,10 @@ const AdminCatalog = () => {
         
         {isFormOpen ? (
           // =========================================================
-          // FULL PAGE FORM VIEW (Replaces the Modal)
+          // FULL PAGE FORM VIEW 
           // =========================================================
           <div className="animate-[fadeIn_0.3s_ease-out]">
             
-            {/* Form Header */}
             <div className="mb-8">
               <button 
                 onClick={() => setIsFormOpen(false)} 
@@ -156,7 +143,6 @@ const AdminCatalog = () => {
               </div>
             </div>
 
-            {/* Form Content */}
             <div className="card-surface p-8 md:p-12 rounded-[3rem] border border-white shadow-soft">
               <form onSubmit={handleUpdateProductSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -210,7 +196,6 @@ const AdminCatalog = () => {
                       
                       {uploading && <p className="text-xs font-bold text-primary-container mt-2 animate-pulse">Uploading images...</p>}
 
-                      {/* Display Image Previews */}
                       {editingProduct.images && editingProduct.images.length > 0 ? (
                         <div className="mt-4 grid grid-cols-3 gap-2">
                           {editingProduct.images.map((img, idx) => (
@@ -248,7 +233,6 @@ const AdminCatalog = () => {
           // =========================================================
           <div className="animate-[fadeIn_0.3s_ease-out]">
             
-            {/* Navigation & Header */}
             <div className="mb-8">
               <Link to="/admin" className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-primary-container mb-4 transition-colors">
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span> Back to Dashboard
@@ -268,7 +252,6 @@ const AdminCatalog = () => {
               </div>
             </div>
 
-            {/* Toolbar (Search & Stats) */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
               <div className="relative w-full md:w-96">
                 <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400">search</span>
@@ -286,7 +269,6 @@ const AdminCatalog = () => {
               </div>
             </div>
 
-            {/* Catalog Table */}
             <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[1000px]">
@@ -338,7 +320,7 @@ const AdminCatalog = () => {
                           <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => { 
-                                setEditingProduct(product); 
+                                setEditingProduct({ ...product, images: product.images || [] }); 
                                 setIsFormOpen(true); 
                                 window.scrollTo(0, 0); 
                               }}

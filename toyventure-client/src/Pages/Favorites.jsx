@@ -1,24 +1,61 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { toggleFavorite, markFavoritesSeen } from '../features/wishlist/wishlistSlice';
-// import { addToCart } from '../features/cart/cartSlice';
+import { toggleFavorite } from '../features/wishlist/wishlistSlice';
+import ScrollReveal from '../components/ScrollReveal';
 
 const Favorites = () => {
-  const wishlistItems = useSelector((state) => state.wishlist.wishlistItems);
   const dispatch = useDispatch();
+  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
+  
+  // FIX: Bulletproof check to ensure we don't accidentally read "null" as a logged-in user
+  const userInfoData = localStorage.getItem('userInfo');
+  const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
+                   ? JSON.parse(userInfoData) 
+                   : null;
 
-  // NEW: Reset the notification badge when this page opens
   useEffect(() => {
-    dispatch(markFavoritesSeen());
-  }, [dispatch]);
+    window.scrollTo(0, 0);
+  }, []);
 
-  const handleMoveToCart = (item) => {
-    // If you have a cart action, you would dispatch it here:
-    // dispatch(addToCart({ ...item, qty: 1 }));
-    // dispatch(toggleFavorite(item)); // Automatically remove from wishlist once added to cart
-    alert(`${item.title} moved to cart!`);
+  const displayPrice = (price) => {
+    if (price === undefined || price === null) return '₹0';
+    return '₹' + Number(price).toLocaleString('en-IN');
   };
+
+  // ==========================================
+  // NOT LOGGED IN STATE
+  // ==========================================
+  if (!userInfo) {
+    return (
+      <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 fade-in">
+        <div className="w-24 h-24 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-[48px] text-zinc-300">lock</span>
+        </div>
+        <h2 className="text-3xl font-black text-zinc-800 mb-4">Login to View Favorites</h2>
+        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Please log in or create an account to view your saved magical toys.</p>
+        <Link to="/auth?redirect=/favorites" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+          Login / Sign Up <span className="material-symbols-outlined">arrow_forward</span>
+        </Link>
+      </main>
+    );
+  }
+
+  // ==========================================
+  // EMPTY FAVORITES STATE
+  // ==========================================
+  if (wishlistItems.length === 0) {
+    return (
+      <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 fade-in">
+        <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">favorite_border</span>
+        <h2 className="text-3xl font-black text-zinc-800 mb-4">No favorites yet!</h2>
+        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Save the toys you love by clicking the heart icon while shopping.</p>
+        <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
+          Explore Shop
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
@@ -26,59 +63,63 @@ const Favorites = () => {
 
       <div className="max-w-[1200px] mx-auto px-6 relative z-10">
         
-        <div className="flex items-center gap-3 mb-8 border-b border-white pb-6">
-            <span className="material-symbols-outlined text-red-500 text-[36px] filled">favorite</span>
-            <h1 className="text-4xl font-black text-zinc-800 tracking-tight">Your Favourites</h1>
-            <span className="bg-white/60 text-zinc-600 font-bold px-4 py-1.5 rounded-full ml-auto shadow-inner text-sm">
-                {wishlistItems.length} Items
-            </span>
+        {/* HEADER SECTION */}
+        <div className="flex flex-row items-start sm:items-center justify-between mb-10 border-b border-white pb-6 gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-zinc-800 flex items-center gap-3 tracking-tight">
+              <span className="material-symbols-outlined text-primary-container text-[36px]">favorite</span>
+              Your Favorites
+            </h1>
+            <p className="text-zinc-500 font-bold mt-2">All your saved magical toys in one place.</p>
+          </div>
+          
+          <span className="bg-white/60 px-4 py-2 rounded-full border border-white shadow-sm text-sm font-bold text-zinc-500 whitespace-nowrap">
+            {wishlistItems.length} {wishlistItems.length === 1 ? 'Item' : 'Items'}
+          </span>
         </div>
 
-        {wishlistItems.length === 0 ? (
-          <div className="card-surface rounded-[3rem] p-16 flex flex-col items-center justify-center text-center shadow-soft">
-            <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">heart_broken</span>
-            <h2 className="text-2xl font-black text-zinc-800 mb-3">No favourites yet!</h2>
-            <p className="text-zinc-500 mb-8 max-w-md">You haven't saved any magical toys to your wishlist. Let's find something you'll love.</p>
-            <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
-              Discover Toys
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {wishlistItems.map((item) => (
-              <div key={item._id} className="flex flex-col group relative card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300">
-                
-                {/* Remove from Favorites Button */}
-                <button 
-                  onClick={() => dispatch(toggleFavorite(item))}
-                  className="absolute top-6 right-6 z-10 bg-white/90 backdrop-blur-md text-red-500 p-2.5 rounded-full shadow-md hover:scale-110 transition-all"
-                  title="Remove from favorites"
-                >
-                  <span className="material-symbols-outlined text-[20px] filled">favorite</span>
-                </button>
+        {/* PRODUCTS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {wishlistItems.map((product, index) => (
+            <ScrollReveal as="div" key={product._id} delay={index * 50} className="flex flex-col group relative card-surface p-4 rounded-[2rem] hover:-translate-y-2 transition-all duration-300 shadow-sm border border-white">
+              
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  dispatch(toggleFavorite(product)); 
+                }} 
+                className="absolute top-6 right-6 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md transition-all hover:scale-110"
+                title="Remove from favorites"
+              >
+                <span className="material-symbols-outlined text-[20px] text-red-500 filled">favorite</span>
+              </button>
 
-                {/* Product Image linked to details page */}
-                <Link to={`/product/${item._id}`} className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-5 shadow-inner border border-white/60 block">
-                  <img alt={item.title} src={item.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply" />
-                </Link>
+              <Link to={`/product/${product._id}`} className="w-full aspect-square bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-5 shadow-inner border border-white/60 block z-10 isolate">
+                <img 
+                  alt={product.title} 
+                  className="w-full h-full object-cover mix-blend-multiply p-2 transition-transform duration-700 group-hover:scale-110" 
+                  src={product.img} 
+                />
+              </Link>
 
-                <div className="px-2 flex flex-col flex-1">
-                  <h3 className="font-bold text-zinc-800 text-[15px] leading-snug group-hover:text-primary-container transition-colors line-clamp-2 h-11 mb-2">
-                    {item.title}
+              <div className="px-2 flex flex-col flex-1">
+                <Link to={`/product/${product._id}`}>
+                  <h3 className="font-bold text-zinc-800 text-base leading-snug hover:text-primary-container transition-colors line-clamp-2 h-11 mb-2">
+                    {product.title}
                   </h3>
-                  <span className="text-zinc-800 font-black text-xl mb-4">₹{item.price}</span>
-                  
-                  <button 
-                    onClick={() => handleMoveToCart(item)}
-                    className="mt-auto w-full py-3 bg-zinc-900 text-white font-black text-sm rounded-xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-md hover:-translate-y-0.5 active:scale-95"
-                  >
-                    Move to Cart <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-                  </button>
+                </Link>
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  <span className="text-zinc-800 font-black text-xl tracking-tight">{displayPrice(product.price)}</span>
+                  {product.countInStock > 0 ? (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-100">In Stock</span>
+                  ) : (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100">Sold Out</span>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </ScrollReveal>
+          ))}
+        </div>
 
       </div>
     </main>

@@ -1,174 +1,204 @@
-import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSendOtpMutation, useVerifyOtpMutation } from '../features/api/apiSlice';
 
 const Auth = () => {
-  const [step, setStep] = useState(1); 
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [isLogin, setIsLogin] = useState(true);
+  const [step, setStep] = useState(1); // Step 1: Send OTP | Step 2: Verify OTP
   
-  const navigate = useNavigate(); 
-  const otpRefs = [useRef(), useRef(), useRef(), useRef()];
+  const [identifier, setIdentifier] = useState(''); // Handles both Email and Phone
+  const [name, setName] = useState('');
+  const [otp, setOtp] = useState('');
 
-  // RTK Query hooks mapped to your apiSlice
-  const [sendOtpApi, { isLoading: isSending }] = useSendOtpMutation();
-  const [verifyOtpApi, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    if (mobileNumber.length !== 10) {
-      alert("Please enter a valid 10-digit mobile number.");
-      return;
+  // Using the OTP mutations you added to your apiSlice
+  const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
+  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+
+  // Parse the URL to see if they were kicked out of a restricted page
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/';
+
+  // If they are already logged in, send them directly to their destination
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo) {
+      navigate(redirect);
     }
+  }, [navigate, redirect]);
 
-    try {
-      // Send network request to backend
-      await sendOtpApi({ mobileNumber }).unwrap();
-      setStep(2); // Only move to step 2 if the API call succeeds
-    } catch (error) {
-      alert(error?.data?.message || "Failed to send OTP. Please try again.");
+  // Helper to determine if the input is purely numeric
+  const isPhone = /^\d+$/.test(identifier);
+
+  const handleIdentifierChange = (e) => {
+    const val = e.target.value;
+    // If user is typing only numbers, restrict it to max 10 digits
+    if (/^\d+$/.test(val) && val.length > 10) {
+      return; 
     }
+    setIdentifier(val);
   };
 
-  const handleVerifyOTP = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    const enteredOtp = otp.join('');
-    
-    if (enteredOtp.length !== 4) {
-      alert("Please enter the complete 4-digit OTP.");
+
+    // Enforce exactly 10 digits if they are using a mobile number
+    if (isPhone && identifier.length < 10) {
+      alert('Mobile number must be exactly 10 digits.');
       return;
     }
 
     try {
-      // Send network request to backend to verify
-      const result = await verifyOtpApi({ mobileNumber, otp: enteredOtp }).unwrap();
+      // FIX: Changed 'phone' to 'mobileNumber' to match your backend database schema
+      const payload = isPhone ? { mobileNumber: identifier } : { email: identifier };
       
-      // Save the token and user data to localStorage so they stay logged in
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('userInfo', JSON.stringify({
-        id: result._id,
-        mobileNumber: result.mobileNumber,
-        role: result.role
-      }));
+      // If registering, pass the name along
+      if (!isLogin) {
+        payload.name = name;
+      }
 
-      alert("Login successful! Let's get back to shopping.");
-      navigate('/shop'); 
-    } catch (error) {
-      alert(error?.data?.message || "Invalid OTP code. Please try again.");
-      setOtp(['', '', '', '']); // Clear the inputs on failure
-      otpRefs[0].current.focus();
+      await sendOtp(payload).unwrap();
+      
+      alert(`OTP sent successfully to your ${isPhone ? 'mobile number' : 'email'}!`);
+      setStep(2); // Move to OTP verification screen
+    } catch (err) {
+      alert(err?.data?.message || 'Failed to send OTP. Please try again.');
     }
   };
 
-  const handleOtpChange = (index, value) => {
-    if (isNaN(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    try {
+      // FIX: Changed 'phone' to 'mobileNumber' here as well
+      const payload = isPhone ? { mobileNumber: identifier, otp } : { email: identifier, otp };
+      
+      // Let backend know if this is a registration or login attempt
+      if (!isLogin) {
+        payload.name = name;
+        payload.isRegister = true; 
+      } else {
+        payload.isLogin = true;
+      }
 
-    if (value !== '' && index < 3) {
-      otpRefs[index + 1].current.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && otp[index] === '' && index > 0) {
-      otpRefs[index - 1].current.focus();
+      const res = await verifyOtp(payload).unwrap();
+      
+      // Save credentials and token
+      localStorage.setItem('userInfo', JSON.stringify(res));
+      
+      // Bounce them to the dashboard (or home if no redirect is set)
+      navigate(redirect);
+      window.location.reload(); // Refresh to update Navbars/Redux state
+    } catch (err) {
+      alert(err?.data?.message || 'Invalid OTP. Please check the code and try again.');
     }
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden bg-surface bg-hero-glow py-24 px-6 fade-in">
+    <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 relative overflow-hidden">
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
-      <div className="w-full max-w-[420px] card-surface rounded-[3rem] p-8 md:p-10 relative z-10 shadow-soft">
-        <div className="absolute top-6 right-6">
-          <Link to="/shop" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/50 backdrop-blur-sm border border-white text-zinc-500 hover:text-zinc-800 hover:bg-white hover:scale-110 transition-all shadow-sm" title="Keep Shopping">
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </Link>
-        </div>
-
-        <div className="text-center mb-10 mt-2">
-          <Link to="/" className="text-4xl font-black text-primary-container italic tracking-tighter block mb-3 drop-shadow-sm hover:scale-105 transition-transform inline-block">
-            ToyVenture
-          </Link>
-          <p className="text-zinc-600 font-bold bg-white/50 inline-block px-4 py-1.5 rounded-full border border-white">
-            {step === 1 ? 'Enter your number to continue' : 'Verify your mobile number'}
+      <div className="card-surface p-8 md:p-12 rounded-[3rem] shadow-soft w-full max-w-md relative z-10 border border-white animate-[fadeIn_0.3s_ease-out]">
+        
+        {/* HEADER SECTION */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-primary-container text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+             <span className="material-symbols-outlined text-[32px]">
+               {step === 1 ? (isLogin ? 'lock_open' : 'person_add') : 'dialpad'}
+             </span>
+          </div>
+          
+          <h1 className="text-3xl font-black text-zinc-800 tracking-tight">
+            {step === 1 ? (isLogin ? 'Welcome Back' : 'Create Account') : 'Verification'}
+          </h1>
+          
+          <p className="text-zinc-500 font-bold mt-2">
+            {step === 1 
+              ? (isLogin ? 'Enter your details below to receive a secure OTP.' : 'Join the magic of ToyVenture with a quick OTP.')
+              : `Enter the 6-digit code sent to ${identifier}`
+            }
           </p>
         </div>
 
-        {step === 1 && (
-          <form onSubmit={handleSendOTP} className="space-y-6 animate-[fadeIn_0.3s_ease-out]">
-            <div>
-              <label className="block text-sm font-black text-zinc-800 mb-2 ml-1">Mobile Number</label>
-              <div className="flex shadow-inner rounded-2xl overflow-hidden border border-white bg-white/60 backdrop-blur-sm focus-within:ring-4 focus-within:ring-primary-container/20 transition-all">
-                <div className="flex items-center justify-center px-4 bg-white/80 border-r border-white/60 text-zinc-800 font-black text-base">
-                  +91
-                </div>
+        {/* STEP 1: SEND OTP FORM */}
+        {step === 1 ? (
+          <form onSubmit={handleSendOtp} className="space-y-5 animate-[fadeIn_0.3s_ease-out]">
+            {!isLogin && (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-600 ml-1">Full Name</label>
                 <input 
-                  type="tel" 
+                  type="text" 
                   required 
-                  maxLength="10"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 10-digit number" 
-                  className="w-full bg-transparent px-4 py-4 text-lg font-bold text-zinc-800 tracking-wide outline-none placeholder:text-zinc-400" 
-                  autoFocus
-                  disabled={isSending}
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="John Doe" 
+                  className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" 
                 />
               </div>
+            )}
+            
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-zinc-600 ml-1">Email or Mobile Number</label>
+              <input 
+                type="text" 
+                required 
+                value={identifier} 
+                onChange={handleIdentifierChange} 
+                placeholder="hello@toyventure.com OR 9876543210" 
+                className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" 
+              />
             </div>
 
-            {/* Replace your current Send OTP button with this one: */}
-        <button 
-          disabled={isSending || mobileNumber.length !== 10} // <-- Added length check here
-          type="submit" 
-          className="w-full py-4 bg-gradient-to-r from-primary-container to-orange-600 text-white font-black text-lg rounded-2xl hover:shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed cursor-pointer"
-        >
-          {isSending ? 'Sending...' : 'Send OTP'} <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-        </button>
-          </form>
-        )}
-
-        {step === 2 && (
-          <form onSubmit={handleVerifyOTP} className="space-y-8 animate-[fadeIn_0.3s_ease-out]">
-            <div className="text-center mb-2 bg-white/50 p-4 rounded-2xl border border-white">
-              <p className="text-sm font-medium text-zinc-600">
-                Code sent to <span className="font-black text-zinc-800 tracking-wide">+91 {mobileNumber}</span>
-              </p>
-              <button 
-                type="button" 
-                onClick={() => setStep(1)} 
-                className="text-xs font-black text-primary-container mt-2 hover:underline bg-primary-container/10 px-3 py-1 rounded-full"
-              >
-                Change Number
-              </button>
-            </div>
-
-            <div className="flex justify-center gap-4">
-              {otp.map((data, index) => (
-                <input
-                  key={index}
-                  ref={otpRefs[index]}
-                  type="text"
-                  maxLength="1"
-                  value={data}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  onFocus={(e) => e.target.select()}
-                  disabled={isVerifying}
-                  className="w-14 h-16 bg-white/60 backdrop-blur-sm border border-white rounded-2xl text-center text-3xl font-black text-zinc-800 focus:bg-white focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner disabled:opacity-50"
-                />
-              ))}
-            </div>
-
-            <button disabled={isVerifying} type="submit" className="w-full py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0">
-              {isVerifying ? 'Verifying...' : 'Verify & Keep Shopping'}
+            <button type="submit" disabled={isSending || !identifier} className="w-full py-4 mt-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0">
+              {isSending ? 'Sending OTP...' : 'Get Secure OTP'}
+              {!isSending && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
             </button>
           </form>
+
+        ) : (
+
+        /* STEP 2: VERIFY OTP FORM */
+          <form onSubmit={handleVerifyOtp} className="space-y-5 animate-[fadeIn_0.3s_ease-out]">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-zinc-600 ml-1">Secure OTP Code</label>
+              <input 
+                type="text" 
+                required 
+                maxLength="6"
+                value={otp} 
+                onChange={(e) => setOtp(e.target.value)} 
+                placeholder="••••••" 
+                className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-black text-zinc-800 text-center text-2xl tracking-[0.5em]" 
+              />
+            </div>
+
+            <button type="submit" disabled={isVerifying || otp.length < 4} className="w-full py-4 mt-4 bg-primary-container text-white font-black text-lg rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0">
+              {isVerifying ? 'Verifying...' : 'Verify & Login'}
+              {!isVerifying && <span className="material-symbols-outlined text-[20px]">verified_user</span>}
+            </button>
+
+            <div className="text-center mt-4">
+              <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-zinc-500 hover:text-zinc-800 transition-colors">
+                &larr; Change {isPhone ? 'mobile number' : 'email address'}
+              </button>
+            </div>
+          </form>
         )}
+
+        {/* TOGGLE LOGIN / SIGNUP (Only visible on Step 1) */}
+        {step === 1 && (
+          <div className="mt-8 text-center border-t border-zinc-100 pt-6">
+            <p className="text-sm font-bold text-zinc-500">
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button type="button" onClick={() => { setIsLogin(!isLogin); setIdentifier(''); }} className="text-primary-container hover:text-orange-600 hover:underline transition-all">
+                {isLogin ? 'Sign up here' : 'Login here'}
+              </button>
+            </p>
+          </div>
+        )}
+
       </div>
-    </div>
+    </main>
   );
 };
 

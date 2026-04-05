@@ -62,15 +62,13 @@ const Shop = () => {
       // 2. Availability Filter
       const { inStock, outOfStock } = activeFilters.availability;
       if (inStock !== outOfStock) { 
-        // Assuming your product schema has an inStock property, or resolving it based on stock count
-        const isProductInStock = product.inStock !== false; // Default to true if undefined
+        const isProductInStock = product.inStock !== false;
         if (inStock && !isProductInStock) return false;
         if (outOfStock && isProductInStock) return false;
       }
 
       // 3. Age Filter
       if (activeFilters.selectedAges.length > 0) {
-        // Check if product's ageGroup (or tag) matches the selected ages
         const productAge = product.ageGroup || product.tag;
         if (!activeFilters.selectedAges.includes(productAge)) {
           return false;
@@ -113,9 +111,8 @@ const Shop = () => {
   };
 
   const openSidebar = () => {
-    setTempFilters(activeFilters); // Sync sidebar with current active filters
+    setTempFilters(activeFilters);
     setIsSidebarOpen(true);
-    // Prevent background scrolling
     document.body.style.overflow = 'hidden'; 
   };
 
@@ -126,7 +123,7 @@ const Shop = () => {
 
   const applyFilters = () => {
     setActiveFilters(tempFilters);
-    setPage(1); // Reset pagination when filters change
+    setPage(1);
     closeSidebar();
   };
 
@@ -329,7 +326,6 @@ const Shop = () => {
               >
                 <span className="material-symbols-outlined text-[18px]">tune</span>
                 Filters
-                {/* Badge for active filters */}
                 {(activeFilters.selectedAges.length > 0 || activeFilters.minPrice > 0 || activeFilters.maxPrice < 2000 || activeFilters.availability.inStock || activeFilters.availability.outOfStock) && (
                   <span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">
                     !
@@ -337,7 +333,7 @@ const Shop = () => {
                 )}
               </button>
 
-              {/* Inline Search Bar - Border None & Ring Removed */}
+              {/* Inline Search Bar */}
               <form
                 onSubmit={handleLocalSearch}
                 className="flex items-center gap-2 bg-white/80 rounded-full px-5 py-2.5 shadow-inner w-full sm:w-80 border-none focus-within:shadow-md transition-shadow"
@@ -440,14 +436,14 @@ const Shop = () => {
                       <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
                     </button>
 
-                    {/* PRODUCT IMAGE */}
+                    {/* PRODUCT IMAGE — rounded-[1.5rem] added to <img> to fix GPU clipping bug */}
                     <Link
                       to={`/product/${product._id}`}
                       className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-5 shadow-inner border border-white/60 block z-10 isolate transform-gpu"
                     >
                       <img
                         alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply"
+                        className="w-full h-full object-cover rounded-[1.5rem] group-hover:scale-110 transition-transform duration-700 mix-blend-multiply"
                         src={product.img}
                       />
                       {product.tag && (

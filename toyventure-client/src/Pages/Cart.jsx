@@ -6,12 +6,17 @@ import { removeFromCart, updateQuantity, clearCart } from '../features/cart/cart
 const Cart = () => {
   const cartItems = useSelector((state) => state.cart.cartItems);
   const dispatch = useDispatch();
+  
+  // FIX: Bulletproof check to ensure we don't accidentally read "null" as a logged-in user
+  const userInfoData = localStorage.getItem('userInfo');
+  const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
+                   ? JSON.parse(userInfoData) 
+                   : null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Extracts ONLY the numbers and decimals from the database string to prevent NaN errors
   const getNumericPrice = (priceStr) => {
     if (!priceStr) return 0;
     return Number(String(priceStr).replace(/[^0-9.-]+/g, "")) || 0;
@@ -23,7 +28,6 @@ const Cart = () => {
     return acc + (price * qty);
   }, 0);
 
-  // PREVENT INCREASING PAST INVENTORY LIMIT
   const handleIncrease = (item) => {
     if (item.qty < item.countInStock) {
       dispatch(updateQuantity({ id: item._id, qty: (item.qty || 1) + 1 }));
@@ -40,15 +44,35 @@ const Cart = () => {
     }
   };
 
-  // CHECK IF CART IS VALID (Prevents checkout if an item in cart goes out of stock)
   const isCartValid = cartItems.every(item => item.countInStock >= item.qty && item.countInStock > 0);
 
+  // ==========================================
+  // NOT LOGGED IN STATE
+  // ==========================================
+  if (!userInfo) {
+    return (
+      <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 fade-in">
+        <div className="w-24 h-24 bg-white rounded-full shadow-sm flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-[48px] text-zinc-300">lock</span>
+        </div>
+        <h2 className="text-3xl font-black text-zinc-800 mb-4">Login to View Cart</h2>
+        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Please log in or create an account to view and manage your shopping cart.</p>
+        <Link to="/auth?redirect=/cart" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+          Login / Sign Up <span className="material-symbols-outlined">arrow_forward</span>
+        </Link>
+      </main>
+    );
+  }
+
+  // ==========================================
+  // EMPTY CART STATE
+  // ==========================================
   if (cartItems.length === 0) {
     return (
-      <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6">
+      <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 fade-in">
         <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">shopping_bag</span>
         <h2 className="text-3xl font-black text-zinc-800 mb-4">Your cart is empty!</h2>
-        <p className="text-zinc-500 mb-8 text-center max-w-md">Looks like you haven't added any magical toys yet.</p>
+        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Looks like you haven't added any magical toys yet.</p>
         <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
           Discover Toys
         </Link>
@@ -82,7 +106,7 @@ const Cart = () => {
               const itemPrice = getNumericPrice(item.price);
               const itemQty = parseInt(item.qty, 10) || 1;
               const itemTotal = itemPrice * itemQty;
-              const isExceedingStock = itemQty > item.countInStock; // Validation boolean
+              const isExceedingStock = itemQty > item.countInStock;
 
               return (
                 <div key={item._id} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6 relative border ${isExceedingStock ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
@@ -102,7 +126,6 @@ const Cart = () => {
                     <button onClick={() => handleDecrease(item)} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors">-</button>
                     <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
                     
-                    {/* Disable plus button if max stock reached */}
                     <button 
                       onClick={() => handleIncrease(item)} 
                       disabled={itemQty >= item.countInStock}
@@ -122,7 +145,6 @@ const Cart = () => {
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
 
-                  {/* Warning message if item became out of stock */}
                   {isExceedingStock && (
                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-red-100 text-red-600 text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
                        Only {item.countInStock} available. Please reduce quantity.
@@ -155,7 +177,6 @@ const Cart = () => {
               <span className="text-3xl font-black text-primary-container">₹{totalPrice.toLocaleString('en-IN')}</span>
             </div>
 
-            {/* Conditionally render checkout button based on cart validity */}
             {isCartValid ? (
               <Link to="/checkout" className="w-full py-4 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 block text-center">
                 Proceed to Checkout <span className="material-symbols-outlined text-[20px]">arrow_forward</span>

@@ -4,8 +4,6 @@ const jwt = require('jsonwebtoken');
 // ==========================================
 // IN-MEMORY OTP STORE (Perfect for testing!)
 // ==========================================
-// Note: In a massive production app, you would use Redis or save this to MongoDB 
-// so the OTPs survive if the server restarts. But Map() is perfect for now.
 const otpStore = new Map();
 
 // Helper function to generate the secure JWT token
@@ -15,84 +13,90 @@ const generateToken = (id) => {
     });
 };
 
-// @desc    Send OTP to mobile number
+// @desc    Send OTP to mobile number or email
 // @route   POST /api/auth/send-otp
 // @access  Public
 const sendOtp = async (req, res) => {
-    const { mobileNumber } = req.body;
+    const { mobileNumber, email } = req.body;
 
-    if (!mobileNumber || mobileNumber.length !== 10) {
-        return res.status(400).json({ message: 'Please provide a valid 10-digit number.' });
+    // Figure out which identifier the user is using
+    const identifier = mobileNumber || email;
+
+    if (!identifier) {
+        return res.status(400).json({ message: 'Please provide an email or mobile number.' });
     }
 
-    // 1. Generate a random 4-digit OTP (e.g., 5839)
-    const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    // Safely check length by forcing it to a String first (fixes the undefined length bug!)
+    if (mobileNumber) {
+        const strMobile = String(mobileNumber);
+        if (strMobile.length !== 10) {
+            return res.status(400).json({ message: 'Please provide a valid 10-digit number.' });
+        }
+    }
 
-    // 2. Save it in our temporary store linked to their mobile number
-    otpStore.set(mobileNumber, generatedOtp);
+    // 1. Generate a random 6-digit OTP to match the frontend (e.g., 583921)
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 2. Save it in our temporary store linked to their email or phone
+    otpStore.set(identifier, generatedOtp);
 
     // 3. LOG TO TERMINAL FOR LOCAL TESTING
     console.log(`\n=========================================`);
-    console.log(`🔔 SMS / WHATSAPP MOCK DELIVERY`);
-    console.log(`To: +91 ${mobileNumber}`);
+    console.log(`🔔 OTP MOCK DELIVERY`);
+    console.log(`To: ${mobileNumber ? '+91 ' + mobileNumber : email}`);
     console.log(`Message: Your ToyVenture verification code is: ${generatedOtp}`);
     console.log(`=========================================\n`);
 
-    // 4. REAL SMS/WHATSAPP INTEGRATION GOES HERE
-    // When you are ready for real messages, you will use a service like Twilio:
-    /*
-    const twilioClient = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-    
-    try {
-        await twilioClient.messages.create({
-            body: `Your ToyVenture verification code is ${generatedOtp}`,
-            from: process.env.TWILIO_PHONE_NUMBER, // Or 'whatsapp:+14155238886' for WhatsApp
-            to: `+91${mobileNumber}`               // Or `whatsapp:+91${mobileNumber}` for WhatsApp
-        });
-    } catch (error) {
-        console.error("Failed to send real SMS:", error);
-        return res.status(500).json({ message: "Failed to send SMS." });
-    }
-    */
-
-    res.json({ message: `OTP successfully sent to ${mobileNumber}` });
+    res.json({ message: `OTP successfully sent to ${identifier}` });
 };
 
 // @desc    Verify OTP & Login/Register User
 // @route   POST /api/auth/verify-otp
 // @access  Public
 const verifyOtp = async (req, res) => {
-    const { mobileNumber, otp } = req.body;
+    const { mobileNumber, email, otp, name, isRegister } = req.body;
+    
+    const identifier = mobileNumber || email;
 
     // 1. Retrieve the saved OTP from our temporary store
-    const storedOtp = otpStore.get(mobileNumber);
+    const storedOtp = otpStore.get(identifier);
 
-    // 2. Check if the OTP exists and matches what the user typed
-    if (!storedOtp || storedOtp !== otp) {
+    // 2. Check if the OTP exists and matches what the user typed (force both to strings to be safe)
+    if (!storedOtp || storedOtp !== String(otp)) {
         return res.status(401).json({ message: 'Invalid or expired OTP code.' });
     }
 
     // 3. OTP is correct! Delete it from memory so it cannot be reused.
-    otpStore.delete(mobileNumber);
+    otpStore.delete(identifier);
 
     try {
-        // 4. Check if the user already exists in the database
-        let user = await User.findOne({ mobileNumber });
+        // 4. Build the query to check if user exists by either phone or email
+        let query = {};
+        if (mobileNumber) query.mobileNumber = String(mobileNumber);
+        if (email) query.email = email;
+
+        let user = await User.findOne(query);
 
         // 5. If they don't exist, create a brand new account for them
         if (!user) {
-            user = await User.create({ mobileNumber });
+            user = await User.create({ 
+                mobileNumber: mobileNumber ? String(mobileNumber) : undefined,
+                email: email || undefined,
+                name: name || 'ToyVenture User' // Fallback name if they didn't provide one
+            });
         }
 
         // 6. Send back the user data AND the secure token
         res.status(200).json({
             _id: user._id,
+            name: user.name,
+            email: user.email,
             mobileNumber: user.mobileNumber,
             role: user.role,
             token: generateToken(user._id),
         });
     } catch (error) {
-        console.error(error);
+        console.error("Auth Error:", error);
         res.status(500).json({ message: 'Server error during authentication.' });
     }
 };

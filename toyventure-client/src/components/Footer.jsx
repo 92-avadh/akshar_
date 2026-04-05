@@ -3,7 +3,9 @@ import React from 'react';
 const Footer = () => {
   return (
     <footer className="bg-purple-100 rounded-t-[3rem] mt-10">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-12 py-20 w-full max-w-[1440px] mx-auto">
+      {/* FIX: Changed px-12 to px-6 md:px-12 for better mobile spacing */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-12 py-16 md:py-20 w-full max-w-[1440px] mx-auto">
+        
         <div className="space-y-6">
           <div className="text-3xl font-black text-primary-container mb-4 tracking-tighter">ToyVenture</div>
           <p className="text-zinc-700 font-medium">Making every childhood moment a magical adventure through play.</p>
@@ -16,6 +18,7 @@ const Footer = () => {
             </a>
           </div>
         </div>
+
         <div>
           <h4 className="font-black text-on-surface mb-6 uppercase tracking-wider text-sm">Shop Categories</h4>
           <ul className="space-y-4">
@@ -24,6 +27,7 @@ const Footer = () => {
             <li><a className="text-zinc-600 hover:underline decoration-2 underline-offset-4" href="#">Arts & Crafts</a></li>
           </ul>
         </div>
+
         <div>
           <h4 className="font-black text-on-surface mb-6 uppercase tracking-wider text-sm">Support</h4>
           <ul className="space-y-4">
@@ -32,6 +36,7 @@ const Footer = () => {
             <li><a className="text-zinc-600 hover:underline decoration-2 underline-offset-4" href="#">Returns</a></li>
           </ul>
         </div>
+
         <div>
           <h4 className="font-black text-on-surface mb-6 uppercase tracking-wider text-sm">Legal</h4>
           <ul className="space-y-4">
@@ -40,7 +45,9 @@ const Footer = () => {
           </ul>
         </div>
       </div>
-      <div className="border-t border-purple-200/50 py-8 px-12 text-center text-zinc-500 font-medium text-sm">
+      
+      {/* FIX: Adjusted padding here too for mobile */}
+      <div className="border-t border-purple-200/50 py-8 px-6 md:px-12 text-center text-zinc-500 font-medium text-sm">
         © 2024 ToyVenture. Play Safe, Dream Big.
       </div>
     </footer>

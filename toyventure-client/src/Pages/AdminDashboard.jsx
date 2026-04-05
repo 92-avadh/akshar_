@@ -1,17 +1,8 @@
-import React, { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { useGetAllOrdersQuery, useDeliverOrderMutation } from '../features/api/apiSlice';
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-
-  useEffect(() => {
-    if (!userInfo || userInfo.role !== 'admin') {
-      navigate('/');
-    }
-  }, [navigate, userInfo]);
-
   const { data: orders, isLoading } = useGetAllOrdersQuery();
   const [deliverOrder, { isLoading: isDelivering }] = useDeliverOrderMutation();
 

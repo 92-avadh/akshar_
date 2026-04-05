@@ -1,160 +1,243 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { clearCart } from '../features/cart/cartSlice';
 
 const Navbar = () => {
-  const [isShopOpen, setIsShopOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   
-  const unseenFavorites = useSelector((state) => state.wishlist?.unseenCount || 0);
-  const cartItems = useSelector((state) => state.cart?.cartItems || []);
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
-  const userInfoStr = localStorage.getItem('userInfo');
-  const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+  // Get raw items from Redux
+  const cartItemsRaw = useSelector((state) => state.cart.cartItems);
+  const wishlistItemsRaw = useSelector((state) => state.wishlist?.wishlistItems || []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      setIsShopOpen(false);
+  // Bulletproof user check
+  const userInfoData = localStorage.getItem('userInfo');
+  const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
+                   ? JSON.parse(userInfoData) 
+                   : null;
+
+  // IMPORTANT FIX: If no user is logged in, treat cart and wishlist as completely empty for the UI
+  const cartItemsCount = userInfo ? cartItemsRaw.length : 0;
+  const wishlistItemsCount = userInfo ? wishlistItemsRaw.length : 0;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close dropdowns when clicking outside or changing route
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsProfileDropdownOpen(false);
+  }, [location]);
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('token');
+      // Optional: you can dispatch an action here to completely wipe Redux state if you want
+      // dispatch(clearCart()); 
+      
+      setIsProfileDropdownOpen(false);
+      navigate('/auth');
+      window.location.reload(); // Hard refresh to flush out all state
     }
   };
 
+  const navLinks = [
+    { name: 'Home', path: '/' },
+    { name: 'Shop Toys', path: '/shop' },
+    { name: 'About', path: '/About' },
+    { name: 'Contact', path: '/Contact' },
+  ];
+
   return (
-    <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-xl shadow-xl shadow-purple-900/5 transition-all">
-      <nav className="relative flex items-center justify-between px-6 py-4 max-w-[1440px] mx-auto">
-
-        {/* Brand & Search */}
-        <div className="flex items-center gap-8 flex-1">
-          <Link to="/" className="text-3xl font-black text-primary-container italic tracking-tighter hover:scale-105 transition-transform">
-            ToyVenture
-          </Link>
+    <>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'py-3' : 'py-5'}`}>
+        <div className="max-w-[1300px] mx-auto px-4 sm:px-6 relative">
           
-          <form onSubmit={handleSearch} className="hidden md:flex relative w-full max-w-md">
-            <input 
-              type="text" 
-              placeholder="Search for magical toys..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-100/80 px-5 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-primary-container/20 text-sm font-medium text-zinc-800 placeholder:text-zinc-400 transition-all"
-            />
-            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-primary-container">
-              <span className="material-symbols-outlined text-[20px]">search</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Navigation Links */}
-        <div className="hidden lg:flex items-center gap-8 mx-8">
-          <Link to="/" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">Home</Link>
-          <button 
-            onClick={() => setIsShopOpen(!isShopOpen)} 
-            className={`font-bold flex items-center gap-1 transition-colors ${isShopOpen ? 'text-primary-container' : 'text-zinc-600 hover:text-primary-container'}`}
-          >
-            Shop <span className={`material-symbols-outlined text-[18px] transition-transform ${isShopOpen ? 'rotate-180' : ''}`}>expand_more</span>
-          </button>
-          <Link to="/about" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">About Us</Link>
-          <Link to="/contact" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">Contact</Link>
-        </div>
-
-        {/* Icons & Actions */}
-        <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
-          
-          <Link to="/favorites" className="relative text-zinc-600 hover:text-red-500 transition-colors">
-            <span className="material-symbols-outlined text-[28px]">favorite</span>
-            {unseenFavorites > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                {unseenFavorites}
-              </span>
-            )}
-          </Link>
-
-          <Link to="/cart" className="relative text-zinc-600 hover:text-primary-container transition-colors">
-            <span className="material-symbols-outlined text-[28px]">shopping_cart</span>
-            {cartItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary-container text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                {cartItems.length}
-              </span>
-            )}
-          </Link>
-
-          {/* ========================================= */}
-          {/* DYNAMIC AUTH BUTTONS                      */}
-          {/* ========================================= */}
-          {userInfo ? (
-            <div className="hidden md:flex items-center gap-3">
-              {/* Show Admin button ONLY if role is admin */}
-              {userInfo.role === 'admin' && (
-                <Link to="/admin" className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 text-white rounded-full font-bold hover:bg-black transition-all shadow-sm">
-                  <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                  Admin
-                </Link>
-              )}
-              <Link 
-                to="/profile" 
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary-container/10 text-primary-container border border-primary-container/20 rounded-full font-bold hover:bg-primary-container hover:text-white transition-all shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[20px]">person</span>
-                Profile
-              </Link>
-            </div>
-          ) : (
-            <Link 
-              to="/auth" 
-              className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-zinc-900 text-white rounded-full font-bold hover:bg-black hover:shadow-lg hover:-translate-y-0.5 transition-all"
-            >
-              <span className="material-symbols-outlined text-[20px]">login</span>
-              Login
-            </Link>
-          )}
-
-          <Link to={userInfo ? "/profile" : "/auth"} className="md:hidden text-zinc-600 hover:text-primary-container transition-colors">
-            <span className="material-symbols-outlined text-[28px]">
-              {userInfo ? "person" : "login"}
-            </span>
-          </Link>
-
-        </div>
-
-        {/* Mega Menu Dropdown */}
-        {isShopOpen && (
-          <div className="absolute top-full left-0 w-full bg-white border-t border-zinc-100 shadow-2xl z-40 animate-[fadeIn_0.2s_ease-out]">
-            <div className="max-w-[1440px] mx-auto px-6 py-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                
-                <div>
-                  <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Categories</h4>
-                  <ul className="space-y-3 mb-6">
-                    {['Action Figures', 'Educational', 'Puzzles', 'Sports Gear'].map((item) => (
-                      <li key={item}><Link to="/shop" onClick={() => setIsShopOpen(false)} className="text-sm font-medium text-zinc-600 hover:text-primary-container hover:pl-1 transition-all block">{item}</Link></li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">By Price</h4>
-                  <ul className="space-y-3 mb-6">
-                    {['Under ₹299', 'Under ₹499', 'Under ₹999', 'Premium Toys'].map((item) => (
-                      <li key={item}><Link to="/shop" onClick={() => setIsShopOpen(false)} className="text-sm font-bold text-secondary-container hover:text-primary-container hover:pl-1 transition-all block">{item}</Link></li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Actions</h4>
-                  <Link to="/shop" onClick={() => setIsShopOpen(false)} className="block text-center py-2 px-4 rounded-xl bg-primary-container text-sm font-bold text-white hover:bg-orange-600 transition-colors shadow-md">
-                    View All Products
-                  </Link>
-                </div>
-
+          {/* Main Navbar Bar */}
+          <div className={`relative flex items-center justify-between rounded-full transition-all duration-300 ${
+            isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md border border-white/40 px-6 py-3' : 'bg-transparent px-2'
+          }`}>
+            
+            {/* Left: Logo */}
+            <Link to="/" className="flex items-center gap-2 group z-20">
+              <div className="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center transform group-hover:rotate-12 transition-transform shadow-inner">
+                 <span className="material-symbols-outlined text-[24px]">toys</span>
               </div>
+              <span className="font-black text-2xl tracking-tight text-zinc-900">
+                Toy<span className="text-primary-container">Venture</span>
+              </span>
+            </Link>
+
+            {/* Middle: Desktop Links */}
+            <div className="hidden md:flex items-center gap-1 bg-zinc-100/50 backdrop-blur-sm p-1 rounded-full border border-white/60">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+                    location.pathname === link.path 
+                    ? 'bg-white text-zinc-900 shadow-sm' 
+                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-white/50'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Right: Icons & Profile */}
+            <div className="flex items-center gap-2 z-20">
+              
+              {/* Favorites Icon */}
+              <Link to="/favorites" className="relative p-2 text-zinc-600 hover:text-red-500 transition-colors hidden sm:block group">
+                <span className="material-symbols-outlined text-[26px] group-hover:scale-110 transition-transform">favorite</span>
+                {wishlistItemsCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm border border-white animate-bounce-in">
+                    {wishlistItemsCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Cart Icon */}
+              <Link to="/cart" className="relative p-2 text-zinc-600 hover:text-primary-container transition-colors group">
+                <span className="material-symbols-outlined text-[26px] group-hover:scale-110 transition-transform">shopping_cart</span>
+                {cartItemsCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-primary-container text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-sm border border-white animate-bounce-in">
+                    {cartItemsCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Profile / Auth Button */}
+              <div className="relative ml-2">
+                {userInfo ? (
+                  <button 
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="flex items-center gap-2 bg-white border border-zinc-200 pl-2 pr-4 py-1.5 rounded-full hover:border-primary-container/30 hover:shadow-sm transition-all focus:ring-2 focus:ring-primary-container/20 outline-none"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-fixed to-orange-100 flex items-center justify-center text-primary-container font-black text-sm shadow-inner">
+                      {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <span className="font-bold text-sm text-zinc-700 hidden lg:block line-clamp-1 max-w-[100px]">
+                      {userInfo.name?.split(' ')[0] || 'User'}
+                    </span>
+                    <span className="material-symbols-outlined text-[18px] text-zinc-400">expand_more</span>
+                  </button>
+                ) : (
+                  <Link to="/auth" className="flex items-center gap-2 bg-zinc-900 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:shadow-md transition-all">
+                    <span className="material-symbols-outlined text-[18px] hidden sm:block">login</span>
+                    Log In
+                  </Link>
+                )}
+
+                {/* Profile Dropdown Menu */}
+                {isProfileDropdownOpen && userInfo && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 py-2">
+                    <div className="px-5 py-4 border-b border-zinc-50 bg-zinc-50/50">
+                      <p className="font-black text-zinc-800 line-clamp-1">{userInfo.name || 'ToyVenture User'}</p>
+                      <p className="text-xs font-bold text-zinc-400 mt-0.5 break-all">{userInfo.email || userInfo.mobileNumber}</p>
+                    </div>
+                    
+                    <div className="p-2 flex flex-col gap-1">
+                      {userInfo.role === 'admin' && (
+                        <Link to="/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 hover:text-primary-container hover:bg-primary-container/5 rounded-xl transition-colors">
+                          <span className="material-symbols-outlined text-[20px]">dashboard</span> Admin Dashboard
+                        </Link>
+                      )}
+                      
+                      <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 hover:text-primary-container hover:bg-primary-container/5 rounded-xl transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">person</span> My Profile
+                      </Link>
+                      
+                      <Link to="/profile?tab=orders" className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-zinc-600 hover:text-primary-container hover:bg-primary-container/5 rounded-xl transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">package</span> Order History
+                      </Link>
+                    </div>
+
+                    <div className="p-2 border-t border-zinc-50">
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-black text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        Sign Out <span className="material-symbols-outlined text-[20px]">logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Menu Toggle Button */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors ml-1"
+              >
+                <span className="material-symbols-outlined text-[28px]">
+                  {isMobileMenuOpen ? 'close' : 'menu_open'}
+                </span>
+              </button>
+
             </div>
           </div>
-        )}
+
+          {/* Mobile Navigation Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden absolute top-[110%] left-4 right-4 bg-white/95 backdrop-blur-xl border border-zinc-100 shadow-xl rounded-[2rem] p-4 flex flex-col gap-2 animate-[slideDown_0.3s_ease-out] overflow-hidden">
+              {navLinks.map((link) => (
+                <Link 
+                  key={link.name} 
+                  to={link.path} 
+                  className={`px-5 py-4 rounded-2xl text-base font-black transition-all flex items-center justify-between ${
+                    location.pathname === link.path 
+                    ? 'bg-primary-container/10 text-primary-container' 
+                    : 'text-zinc-600 hover:bg-zinc-50'
+                  }`}
+                >
+                  {link.name}
+                  <span className="material-symbols-outlined text-[20px] opacity-50">chevron_right</span>
+                </Link>
+              ))}
+              <Link 
+                to="/favorites" 
+                className={`px-5 py-4 rounded-2xl text-base font-black transition-all flex items-center justify-between ${
+                  location.pathname === '/favorites' 
+                  ? 'bg-primary-container/10 text-primary-container' 
+                  : 'text-zinc-600 hover:bg-zinc-50'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[22px]">favorite</span> Favorites
+                </div>
+                {wishlistItemsCount > 0 && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{wishlistItemsCount}</span>}
+              </Link>
+            </div>
+          )}
+
+        </div>
       </nav>
-    </header>
+
+      {/* Overlay to close dropdowns on outside click */}
+      {(isProfileDropdownOpen || isMobileMenuOpen) && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/5 backdrop-blur-[2px]"
+          onClick={() => {
+            setIsProfileDropdownOpen(false);
+            setIsMobileMenuOpen(false);
+          }}
+        />
+      )}
+    </>
   );
 };
 
