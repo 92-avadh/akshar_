@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCreateOrderMutation } from '../features/api/apiSlice';
-// import { clearCart } from '../features/cart/cartSlice'; 
+import { clearCart } from '../features/cart/cartSlice'; 
 
 const Checkout = () => {
   const cartItems = useSelector((state) => state.cart.cartItems);
@@ -11,22 +11,19 @@ const Checkout = () => {
 
   const [createOrderApi, { isLoading }] = useCreateOrderMutation();
 
-  // Local Form State
+  // UPDATED: Added new granular address fields
   const [shippingDetails, setShippingDetails] = useState({
     fullName: '',
     phone: '',
-    address: '',
+    flatNumber: '',
+    street: '',
+    landmark: '',
     city: '',
     pincode: ''
   });
 
-  // NEW: Payment Method State
   const [paymentMethod, setPaymentMethod] = useState('card');
 
-  // ==========================================
-  // BUG FIX: The NaN Total Price Fix
-  // We force JavaScript to treat these as numbers before multiplying
-  // ==========================================
   const totalPrice = cartItems.reduce((acc, item) => {
     const price = parseFloat(item.price) || 0;
     const qty = parseInt(item.qty, 10) || 1;
@@ -47,27 +44,22 @@ const Checkout = () => {
     }
 
     try {
-      // In a real app, you would process the Stripe/Razorpay payment here FIRST.
-      // For now, we simulate a successful payment and save the order.
-      
       const response = await createOrderApi({
         orderItems: cartItems,
         shippingDetails,
         totalPrice,
-        isPaid: true // Mark as paid since they used Card/UPI
+        isPaid: true 
       }).unwrap();
 
       alert(`🎉 Payment Successful & Order Placed!\nYour Order ID is: ${response._id}`);
-      
-      // dispatch(clearCart()); 
+      dispatch(clearCart()); 
       navigate('/'); 
       
     } catch (error) {
-      alert(error?.data?.message || 'Failed to process payment. Please try again.');
+      alert(error?.data?.message || 'Failed to process payment. Please make sure you are logged in.');
     }
   };
 
-  // IF CART IS EMPTY
   if (cartItems.length === 0) {
     return (
       <div className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6">
@@ -87,12 +79,9 @@ const Checkout = () => {
       
       <div className="max-w-[1100px] mx-auto px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* ========================================== */}
-        {/* LEFT SIDE: SHIPPING & PAYMENT DETAILS      */}
-        {/* ========================================== */}
+        {/* LEFT SIDE: SHIPPING & PAYMENT DETAILS */}
         <div className="lg:col-span-7 flex flex-col gap-6">
           
-          {/* Shipping Form Card */}
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft">
             <div className="flex items-center gap-3 mb-8 border-b border-white pb-4">
                 <span className="material-symbols-outlined text-primary-container text-[28px]">local_shipping</span>
@@ -101,6 +90,7 @@ const Checkout = () => {
 
             <form id="checkout-form" onSubmit={placeOrderHandler} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Full Name</label>
                   <input required type="text" name="fullName" value={shippingDetails.fullName} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="John Doe" />
@@ -111,9 +101,20 @@ const Checkout = () => {
                   <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="+91 99999 00000" />
                 </div>
 
+                {/* NEW GRANULAR ADDRESS FIELDS */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-600 ml-1">Flat / Block No.</label>
+                  <input required type="text" name="flatNumber" value={shippingDetails.flatNumber} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="A-404, Sunshine Apts" />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-600 ml-1">Street / Locality</label>
+                  <input required type="text" name="street" value={shippingDetails.street} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="M.G. Road" />
+                </div>
+
                 <div className="md:col-span-2 space-y-2">
-                  <label className="text-sm font-bold text-zinc-600 ml-1">Full Address</label>
-                  <input required type="text" name="address" value={shippingDetails.address} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="123 Magic Toy Street, Apartment 4B" />
+                  <label className="text-sm font-bold text-zinc-600 ml-1">Landmark (Optional)</label>
+                  <input type="text" name="landmark" value={shippingDetails.landmark} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Near City Mall" />
                 </div>
 
                 <div className="space-y-2">
@@ -125,11 +126,11 @@ const Checkout = () => {
                   <label className="text-sm font-bold text-zinc-600 ml-1">Pincode</label>
                   <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="400001" />
                 </div>
+
               </div>
             </form>
           </div>
 
-          {/* Payment Method Card */}
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft">
              <div className="flex items-center gap-3 mb-6 border-b border-white pb-4">
                 <span className="material-symbols-outlined text-primary-container text-[28px]">payments</span>
@@ -137,7 +138,6 @@ const Checkout = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* Credit Card Option */}
                 <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'card' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                     <div className="flex items-center justify-between">
                         <span className="material-symbols-outlined text-primary-container text-[28px]">credit_card</span>
@@ -147,7 +147,6 @@ const Checkout = () => {
                     <span className="text-xs text-zinc-500 font-medium">Credit / Debit Card</span>
                 </label>
 
-                {/* UPI Option */}
                 <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'upi' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                     <div className="flex items-center justify-between">
                         <span className="material-symbols-outlined text-primary-container text-[28px]">qr_code_scanner</span>
@@ -158,7 +157,6 @@ const Checkout = () => {
                 </label>
             </div>
 
-            {/* Dynamic Payment Input Fields */}
             {paymentMethod === 'card' && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
                     <input form="checkout-form" required type="text" placeholder="Card Number (0000 0000 0000 0000)" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" />
@@ -174,14 +172,10 @@ const Checkout = () => {
                     <input form="checkout-form" required type="text" placeholder="Enter UPI ID (e.g., name@okhdfc)" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" />
                 </div>
             )}
-
           </div>
-
         </div>
 
-        {/* ========================================== */}
-        {/* RIGHT SIDE: ORDER SUMMARY RECEIPT          */}
-        {/* ========================================== */}
+        {/* RIGHT SIDE: ORDER SUMMARY RECEIPT */}
         <div className="lg:col-span-5">
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft sticky top-32">
             <h2 className="text-xl font-black text-zinc-800 mb-6 border-b border-white pb-4">Order Summary</h2>
@@ -197,7 +191,6 @@ const Checkout = () => {
                     <p className="text-xs text-zinc-500 font-medium mt-1">Qty: {item.qty}</p>
                   </div>
                   <div className="font-black text-zinc-800">
-                    {/* Convert to number explicitly here too for safety */}
                     ₹{(parseFloat(item.price) || 0) * (parseInt(item.qty, 10) || 1)}
                   </div>
                 </div>
@@ -207,7 +200,7 @@ const Checkout = () => {
             <div className="border-t border-white mt-6 pt-6 space-y-3">
               <div className="flex justify-between text-sm font-bold text-zinc-600">
                 <span>Subtotal</span>
-                <span>₹{totalPrice}</span>
+                <span>₹{totalPrice.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-zinc-600">
                 <span>Shipping</span>
@@ -215,7 +208,7 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between items-end pt-4">
                 <span className="text-lg font-bold text-zinc-800">Total Due</span>
-                <span className="text-3xl font-black text-primary-container">₹{totalPrice}</span>
+                <span className="text-3xl font-black text-primary-container">₹{totalPrice.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -225,7 +218,7 @@ const Checkout = () => {
               disabled={isLoading}
               className="w-full py-4 mt-8 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 group"
             >
-              {isLoading ? 'Processing Payment...' : `Pay ₹${totalPrice}`} 
+              {isLoading ? 'Processing Payment...' : `Pay ₹${totalPrice.toLocaleString('en-IN')}`} 
               {!isLoading && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">lock</span>}
             </button>
             <p className="text-center text-[10px] text-zinc-400 font-bold mt-4 uppercase tracking-wider flex items-center justify-center gap-1">

@@ -14,7 +14,7 @@ export const cartSlice = createSlice({
       const existingItem = state.cartItems.find((x) => x._id === item._id);
 
       if (existingItem) {
-        existingItem.qty += item.qty; // Changed 'quantity' to 'qty' to match your UI
+        existingItem.qty += item.qty; 
       } else {
         state.cartItems.push(item);
       }

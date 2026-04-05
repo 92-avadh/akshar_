@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// IMPORT THE HOOKS FROM RTK QUERY:
 import { useSendOtpMutation, useVerifyOtpMutation } from '../features/api/apiSlice';
 
 const Auth = () => {
@@ -11,7 +10,7 @@ const Auth = () => {
   const navigate = useNavigate(); 
   const otpRefs = [useRef(), useRef(), useRef(), useRef()];
 
-  // INITIALIZE THE RTK QUERY MUTATIONS:
+  // RTK Query hooks mapped to your apiSlice
   const [sendOtpApi, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtpApi, { isLoading: isVerifying }] = useVerifyOtpMutation();
 
@@ -80,11 +79,9 @@ const Auth = () => {
 
   return (
     <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden bg-surface bg-hero-glow py-24 px-6 fade-in">
-      
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       <div className="w-full max-w-[420px] card-surface rounded-[3rem] p-8 md:p-10 relative z-10 shadow-soft">
-        
         <div className="absolute top-6 right-6">
           <Link to="/shop" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/50 backdrop-blur-sm border border-white text-zinc-500 hover:text-zinc-800 hover:bg-white hover:scale-110 transition-all shadow-sm" title="Keep Shopping">
             <span className="material-symbols-outlined text-[20px]">close</span>
@@ -122,9 +119,14 @@ const Auth = () => {
               </div>
             </div>
 
-            <button disabled={isSending} type="submit" className="w-full py-4 bg-gradient-to-r from-primary-container to-orange-600 text-white font-black text-lg rounded-2xl hover:shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0">
-              {isSending ? 'Sending...' : 'Send OTP'} <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
+            {/* Replace your current Send OTP button with this one: */}
+        <button 
+          disabled={isSending || mobileNumber.length !== 10} // <-- Added length check here
+          type="submit" 
+          className="w-full py-4 bg-gradient-to-r from-primary-container to-orange-600 text-white font-black text-lg rounded-2xl hover:shadow-lg shadow-orange-500/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {isSending ? 'Sending...' : 'Send OTP'} <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+        </button>
           </form>
         )}
 
@@ -165,7 +167,6 @@ const Auth = () => {
             </button>
           </form>
         )}
-
       </div>
     </div>
   );

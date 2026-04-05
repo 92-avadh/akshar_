@@ -11,13 +11,9 @@ const Cart = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // ==========================================
-  // BUG FIX: The NaN Total Price Fix
-  // We extract ONLY the numbers and decimals from the database string
-  // ==========================================
+  // Extracts ONLY the numbers and decimals from the database string to prevent NaN errors
   const getNumericPrice = (priceStr) => {
     if (!priceStr) return 0;
-    // Removes "₹", commas, and letters, leaving only pure numbers
     return Number(String(priceStr).replace(/[^0-9.-]+/g, "")) || 0;
   };
 
@@ -93,7 +89,6 @@ const Cart = () => {
                     <p className="text-zinc-500 font-bold text-sm mt-1">₹{itemPrice.toLocaleString('en-IN')}</p>
                   </div>
 
-                  {/* Quantity Controls */}
                   <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
                     <button onClick={() => handleDecrease(item)} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors">-</button>
                     <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
@@ -104,7 +99,6 @@ const Cart = () => {
                     ₹{itemTotal.toLocaleString('en-IN')}
                   </div>
 
-                  {/* Desktop absolute, Mobile relative */}
                   <button 
                     onClick={() => dispatch(removeFromCart(item._id))}
                     className="md:absolute top-4 right-4 text-zinc-400 hover:text-red-500 transition-colors p-2 bg-white rounded-full shadow-sm md:shadow-none md:bg-transparent"
@@ -112,7 +106,6 @@ const Cart = () => {
                   >
                     <span className="material-symbols-outlined text-[20px]">close</span>
                   </button>
-
                 </div>
               );
             })}

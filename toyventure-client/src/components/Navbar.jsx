@@ -6,10 +6,14 @@ const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // NEW: Grab the unseenCount instead of the total array length
+  // Grab counts from the Redux store
   const unseenFavorites = useSelector((state) => state.wishlist?.unseenCount || 0);
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
   const navigate = useNavigate();
+
+  // AUTH LOGIC: Check if the user is currently logged in
+  const userInfoStr = localStorage.getItem('userInfo');
+  const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -25,104 +29,101 @@ const Navbar = () => {
       <nav className="relative flex items-center justify-between px-6 py-4 max-w-[1440px] mx-auto">
 
         {/* Brand & Search */}
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-3xl font-black text-primary-container italic tracking-tighter">
+        <div className="flex items-center gap-8 flex-1">
+          <Link to="/" className="text-3xl font-black text-primary-container italic tracking-tighter hover:scale-105 transition-transform">
             ToyVenture
           </Link>
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center relative group">
-            <div className="absolute left-4 z-10 text-primary-container">
-              <span className="material-symbols-outlined">search</span>
-            </div>
-            <input
-              className="pl-12 pr-6 py-2.5 w-72 xl:w-96 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary-container transition-all placeholder:text-zinc-400 font-medium text-sm shadow-inner"
-              placeholder="Discover action figures, puzzles..."
-              type="text"
+          
+          <form onSubmit={handleSearch} className="hidden md:flex relative w-full max-w-md">
+            <input 
+              type="text" 
+              placeholder="Search for magical toys..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-zinc-100/80 px-5 py-2.5 rounded-full outline-none focus:ring-2 focus:ring-primary-container/20 text-sm font-medium text-zinc-800 placeholder:text-zinc-400 transition-all"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 text-zinc-400 hover:text-zinc-600 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            )}
+            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-primary-container">
+              <span className="material-symbols-outlined text-[20px]">search</span>
+            </button>
           </form>
         </div>
 
         {/* Navigation Links */}
-        <div className="hidden lg:flex items-center gap-6 text-sm">
-          <Link to="/" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Home</Link>
-
-          <button
-            onClick={() => setIsShopOpen(!isShopOpen)}
-            className={`font-black flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full ${isShopOpen ? 'bg-primary-container text-white shadow-md' : 'text-zinc-700 hover:text-primary-container hover:bg-orange-50'}`}
+        <div className="hidden lg:flex items-center gap-8 mx-8">
+          <Link to="/" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">Home</Link>
+          <button 
+            onClick={() => setIsShopOpen(!isShopOpen)} 
+            className={`font-bold flex items-center gap-1 transition-colors ${isShopOpen ? 'text-primary-container' : 'text-zinc-600 hover:text-primary-container'}`}
           >
-            Shop <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isShopOpen ? 'rotate-180' : ''}`}>expand_more</span>
+            Shop <span className={`material-symbols-outlined text-[18px] transition-transform ${isShopOpen ? 'rotate-180' : ''}`}>expand_more</span>
           </button>
-
-          <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Metal Car</Link>
-          <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Boys</Link>
-          <Link to="/shop" className="font-bold text-zinc-700 hover:text-primary-container transition-colors">Girls</Link>
+          <Link to="/about" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">About Us</Link>
+          <Link to="/contact" className="font-bold text-zinc-600 hover:text-primary-container transition-colors">Contact</Link>
         </div>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-3">
-          <Link to="/auth" className="w-10 h-10 text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
-            <span className="material-symbols-outlined">person</span>
-          </Link>
-
-          <Link to="/favorites" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-red-500 rounded-full flex items-center justify-center transition-all">
-            <span className="material-symbols-outlined">favorite</span>
-            {/* NEW: Only show badge if there are UNSEEN favorites */}
+        {/* Icons & Actions */}
+        <div className="flex items-center gap-4 md:gap-6 flex-1 justify-end">
+          
+          {/* Wishlist Icon */}
+          <Link to="/favorites" className="relative text-zinc-600 hover:text-red-500 transition-colors">
+            <span className="material-symbols-outlined text-[28px]">favorite</span>
             {unseenFavorites > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-sm">
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
                 {unseenFavorites}
               </span>
             )}
           </Link>
 
-          {/* CART BADGE */}
-          <Link to="/cart" className="w-10 h-10 relative text-zinc-700 hover:bg-surface-container hover:text-primary-container rounded-full flex items-center justify-center transition-all">
-            <span className="material-symbols-outlined">shopping_bag</span>
+          {/* Cart Icon */}
+          <Link to="/cart" className="relative text-zinc-600 hover:text-primary-container transition-colors">
+            <span className="material-symbols-outlined text-[28px]">shopping_cart</span>
             {cartItems.length > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-secondary-container text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-sm">
+              <span className="absolute -top-2 -right-2 bg-primary-container text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
                 {cartItems.length}
               </span>
             )}
           </Link>
+
+          {/* ========================================= */}
+          {/* DYNAMIC AUTH BUTTON (Login vs Profile)      */}
+          {/* ========================================= */}
+          {userInfo ? (
+            <Link 
+              to="/profile" 
+              className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-primary-container/10 text-primary-container border border-primary-container/20 rounded-full font-bold hover:bg-primary-container hover:text-white transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[20px]">person</span>
+              Profile
+            </Link>
+          ) : (
+            <Link 
+              to="/auth" 
+              className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-zinc-900 text-white rounded-full font-bold hover:bg-black hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px]">login</span>
+              Login
+            </Link>
+          )}
+
+          {/* Mobile Profile Icon (Visible only on small screens) */}
+          <Link to={userInfo ? "/profile" : "/auth"} className="md:hidden text-zinc-600 hover:text-primary-container transition-colors">
+            <span className="material-symbols-outlined text-[28px]">
+              {userInfo ? "person" : "login"}
+            </span>
+          </Link>
+
         </div>
 
         {/* Mega Menu Dropdown */}
         {isShopOpen && (
-          <div className="absolute top-[100%] left-0 w-full bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-3xl border-t border-purple-100 p-8 animate-[fadeIn_0.2s_ease-out]">
-            <div className="w-full max-w-[1440px] mx-auto flex gap-8">
-              <div className="flex-1 grid grid-cols-5 gap-6 border-r border-zinc-100 pr-8">
-
-                <div>
-                  <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Shop By Age</h4>
-                  <ul className="space-y-3">
-                    {['0-18 Months', '18-36 Months', '3-5 Years', '5-7 Years', '7-9 Years', '9-12 Years', '14+ Years'].map((item) => (
-                      <li key={item}><Link to="/shop" onClick={() => setIsShopOpen(false)} className="text-sm font-medium text-zinc-600 hover:text-primary-container hover:pl-1 transition-all block">{item}</Link></li>
-                    ))}
-                  </ul>
-                </div>
-
+          <div className="absolute top-full left-0 w-full bg-white border-t border-zinc-100 shadow-2xl z-40 animate-[fadeIn_0.2s_ease-out]">
+            <div className="max-w-[1440px] mx-auto px-6 py-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                
                 <div>
                   <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Categories</h4>
-                  <ul className="space-y-3">
-                    {['Soft Toys', 'Doll Houses', 'Bath Toys', 'Musical Toys', 'Role Play', 'Die-cast Vehicles', 'Action Figures'].map((item) => (
-                      <li key={item}><Link to="/shop" onClick={() => setIsShopOpen(false)} className="text-sm font-medium text-zinc-600 hover:text-primary-container hover:pl-1 transition-all block">{item}</Link></li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-black text-tertiary uppercase tracking-widest mb-4">Ride & Outdoor</h4>
-                  <ul className="space-y-3">
-                    {['Ride-On Toys', 'Tricycles', 'Swing Cars', 'Kick Scooters', 'Skating', 'Sports Gear'].map((item) => (
+                  <ul className="space-y-3 mb-6">
+                    {['Action Figures', 'Educational', 'Puzzles', 'Sports Gear'].map((item) => (
                       <li key={item}><Link to="/shop" onClick={() => setIsShopOpen(false)} className="text-sm font-medium text-zinc-600 hover:text-primary-container hover:pl-1 transition-all block">{item}</Link></li>
                     ))}
                   </ul>
