@@ -40,22 +40,22 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// FIX: Added 'next' into the function parameters so it doesn't crash!
-userSchema.pre('validate', function validateIdentity(next) {
+// FIX 1: Removed 'next' callback. Throw an error synchronously instead.
+userSchema.pre('validate', function () {
   if (!this.email && !this.mobileNumber) {
-    return next(new Error('Either email or mobile number is required'));
+    throw new Error('Either email or mobile number is required');
   }
-  next();
 });
 
-userSchema.pre('save', async function (next) {
+// FIX 2: Removed 'next' callback from the async function. 
+// Mongoose automatically waits for async functions to finish.
+userSchema.pre('save', async function () {
   if (!this.isModified('password') || !this.password) {
-    next();
-  } else {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  }
+    return; // Just return to exit early
+  } 
+  
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
