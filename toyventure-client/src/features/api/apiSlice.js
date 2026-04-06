@@ -14,7 +14,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }), 
-  tagTypes: ['Product', 'Order', 'User'],
+  tagTypes: ['Product', 'Order', 'User', 'Contact'],
   endpoints: (builder) => ({
     
     // ==========================================
@@ -69,7 +69,6 @@ export const apiSlice = createApi({
     // ==========================================
     // AUTHENTICATION
     // ==========================================
-    // NEW: Added Email/Password Login & Register
     login: builder.mutation({ 
       query: (data) => ({ url: '/auth/login', method: 'POST', body: data }) 
     }),
@@ -77,7 +76,6 @@ export const apiSlice = createApi({
       query: (data) => ({ url: '/auth/register', method: 'POST', body: data }) 
     }),
     
-    // Kept your existing OTP endpoints
     sendOtp: builder.mutation({ query: (data) => ({ url: '/auth/send-otp', method: 'POST', body: data }) }),
     verifyOtp: builder.mutation({ query: (data) => ({ url: '/auth/verify-otp', method: 'POST', body: data }) }),
     
@@ -145,7 +143,23 @@ export const apiSlice = createApi({
     
     verifyRazorpayPayment: builder.mutation({
       query: (data) => ({ url: '/payments/razorpay/verify', method: 'POST', body: data })
-    })
+    }),
+
+    // ==========================================
+    // CONTACT MESSAGES (NEW)
+    // ==========================================
+    submitContactMessage: builder.mutation({
+      query: (data) => ({
+        url: '/contact',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    getAllContactMessages: builder.query({
+      query: () => '/contact',
+      providesTags: ['Contact'],
+    }),
 
   }),
 });
@@ -158,11 +172,8 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
-  
-  // NEW: Exported Login and Register hooks
   useLoginMutation,
   useRegisterMutation,
-  
   useSendOtpMutation,     
   useVerifyOtpMutation,
   useGetUserProfileQuery,
@@ -172,5 +183,9 @@ export const {
   useGetAllOrdersQuery,    
   useDeliverOrderMutation,
   useCreateRazorpayOrderMutation,
-  useVerifyRazorpayPaymentMutation
+  useVerifyRazorpayPaymentMutation,
+  
+  // NEW EXPORTS FOR CONTACT MESSAGES
+  useSubmitContactMessageMutation,
+  useGetAllContactMessagesQuery
 } = apiSlice;

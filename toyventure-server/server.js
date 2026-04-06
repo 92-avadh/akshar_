@@ -14,6 +14,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const contactRoutes = require('./routes/contactRoutes'); // <-- NEW: Imported contact routes
 const { assignRequestId, requestLogger } = require('./middleware/requestContext');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
@@ -40,7 +41,10 @@ const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
 
 app.disable('x-powered-by');
 app.use(assignRequestId);
-app.use(requestLogger);
+
+// <-- FIX: Commented out the request logger to stop the massive JSON spam in terminal
+// app.use(requestLogger); 
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -102,6 +106,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/contact', contactRoutes); // <-- NEW: Added contact route endpoint
 
 app.use(notFound);
 app.use(errorHandler);

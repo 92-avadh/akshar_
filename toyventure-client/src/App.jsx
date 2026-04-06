@@ -16,7 +16,14 @@ import Contact from './Pages/Contact';
 import AdminDashboard from './Pages/AdminDashboard';
 import AdminCatalog from './Pages/AdminCatalog';
 import ScrollToTop from './components/ScrollToTop';
-import Loader from './components/Loader'; // <-- NEW: Imported your magical Loader
+import Loader from './components/Loader'; 
+
+// === NEW: Import the Footer Pages ===
+import SafetyStandards from './Pages/SafetyStandards';
+import ShippingInfo from './Pages/ShippingInfo';
+import Returns from './Pages/Returns';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import Terms from './Pages/Terms';
 
 // ==========================================
 // SECURE ADMIN ROUTE GATEKEEPER
@@ -41,11 +48,9 @@ const AdminRoute = ({ children }) => {
 };
 
 const App = () => {
-  // NEW: Initial splash screen state
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
-    // Show the beautiful loader for 1.5 seconds when the website first opens
     const splashTimer = setTimeout(() => {
       setIsAppLoading(false);
     }, 1500);
@@ -53,7 +58,6 @@ const App = () => {
     return () => clearTimeout(splashTimer);
   }, []);
 
-  // If the app is starting up, show the full-screen Loader!
   if (isAppLoading) {
     return <Loader />;
   }
@@ -94,6 +98,13 @@ const App = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
+
+          {/* === NEW: FOOTER PAGE ROUTES === */}
+          <Route path="/safety-standards" element={<SafetyStandards />} />
+          <Route path="/shipping" element={<ShippingInfo />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
 
           {/* SECURE ADMIN ROUTES */}
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
