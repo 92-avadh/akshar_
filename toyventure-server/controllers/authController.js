@@ -159,6 +159,9 @@ const sendOtp = async (req, res, next) => {
 // @desc    Verify OTP and issue token
 // @route   POST /api/auth/verify-otp
 // @access  Public
+// @desc    Verify OTP and issue token
+// @route   POST /api/auth/verify-otp
+// @access  Public
 const verifyOtp = async (req, res, next) => {
   try {
     const { email, mobileNumber, otp } = req.body;
@@ -168,22 +171,39 @@ const verifyOtp = async (req, res, next) => {
       return next(new Error('OTP is required'));
     }
 
-    const identifierKey = email || mobileNumber;
+    const identifierKeyRaw = email || mobileNumber;
 
-    if (!identifierKey) {
+    if (!identifierKeyRaw) {
       res.status(400);
       return next(new Error('Email or mobile number is required'));
     }
 
-    // Match query field against the schema
+    // FIX 1: Clean inputs to avoid strict equality/whitespace failures
+    const identifierKey = String(identifierKeyRaw).trim();
+    const incomingOtp = String(otp).trim(); 
+
     const challenge = await OtpChallenge.findOne({ identifierKey });
 
-    // Validate using otpHash since that is where we saved the OTP
-    if (!challenge || challenge.otpHash !== otp || challenge.expiresAt < new Date()) {
+    // --- DEBUG LOGGING ---
+    // You can check your server console to see exactly why it was failing
+    console.log(`\n--- OTP Verification Check ---`);
+    console.log(`Looking for user: "${identifierKey}"`);
+    if (!challenge) {
+      console.log(`❌ Challenge not found in DB`);
+    } else {
+      console.log(`DB OTP: "${challenge.otpHash}" (${typeof challenge.otpHash})`);
+      console.log(`Req OTP: "${incomingOtp}" (${typeof incomingOtp})`);
+      console.log(`Expired?: ${challenge.expiresAt < new Date()}`);
+    }
+    console.log(`------------------------------\n`);
+
+    // FIX 2: Compare against the cleaned string version of the OTP
+    if (!challenge || challenge.otpHash !== incomingOtp || challenge.expiresAt < new Date()) {
       res.status(401);
       return next(new Error('Invalid or expired OTP'));
     }
 
+    // OTP was correct! Delete the challenge so it can't be reused
     await OtpChallenge.deleteOne({ _id: challenge._id });
 
     let user = await User.findOne({

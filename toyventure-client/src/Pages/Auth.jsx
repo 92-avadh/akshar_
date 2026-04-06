@@ -4,28 +4,30 @@ import toast from 'react-hot-toast';
 import { 
     useSendOtpMutation, 
     useVerifyOtpMutation, 
-    useUpdateUserProfileMutation // <-- NEW: Imported profile updater
+    useUpdateUserProfileMutation 
 } from '../features/api/apiSlice';
 
 const Auth = () => {
-  // Step 1: Send OTP | Step 2: Verify OTP | Step 3: Capture Name (New Users Only)
   const [step, setStep] = useState(1); 
   
   const [identifier, setIdentifier] = useState(''); 
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
-  const [isNewUser, setIsNewUser] = useState(false); 
 
   const navigate = useNavigate();
   const location = useLocation();
 
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
-  const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateUserProfileMutation(); // <-- NEW
+  const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateUserProfileMutation();
 
   const redirect = new URLSearchParams(location.search).get('redirect') || '/';
 
   useEffect(() => {
+    // 1. Clear phone number and otp when the page loads
+    setIdentifier('');
+    setOtp('');
+
     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
     if (userInfo) {
       navigate(redirect);
@@ -52,7 +54,6 @@ const Auth = () => {
       const payload = isPhone ? { mobileNumber: identifier } : { email: identifier };
       const res = await sendOtp(payload).unwrap();
       
-      setIsNewUser(res.isNewUser); 
       toast.success(res.message || `OTP sent successfully!`);
       setStep(2); 
     } catch (err) {
@@ -66,22 +67,20 @@ const Auth = () => {
     try {
       const payload = isPhone ? { mobileNumber: identifier, otp } : { email: identifier, otp };
       
-      if (isNewUser) payload.isRegister = true;
-      else payload.isLogin = true;
-
       const res = await verifyOtp(payload).unwrap();
       
       // Save credentials & token IMMEDIATELY so the next Step 3 API call is authenticated
       localStorage.setItem('userInfo', JSON.stringify(res));
       localStorage.setItem('token', res.token); 
       
-      if (isNewUser) {
-          // If they are new, move them to Step 3 instead of redirecting!
+      // BUG FIX: Check res.isNewUser directly from the backend response
+      if (res.isNewUser) {
           setStep(3);
           toast.success("OTP Verified! Let's set up your profile.");
       } else {
-          // If they are an existing user, welcome them and redirect
-          toast.success(`Welcome back, ${res.name.split(' ')[0]}!`);
+          // Extra safety check in case a returning user's name is somehow missing
+          const firstName = res.name ? res.name.split(' ')[0] : 'User';
+          toast.success(`Welcome back, ${firstName}!`);
           setTimeout(() => {
               navigate(redirect);
               window.location.reload(); 
@@ -90,10 +89,14 @@ const Auth = () => {
 
     } catch (err) {
       toast.error(err?.data?.message || 'Invalid OTP. Please check the code and try again.');
+      
+      // 2. Clear phone number and otp when OTP is wrong/invalid, and reset to step 1
+      setOtp('');
+      setIdentifier('');
+      setStep(1);
     }
   };
 
-  // NEW: Step 3 Handler to save their name
   const handleCompleteProfile = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -102,10 +105,8 @@ const Auth = () => {
     }
 
     try {
-        // Send the name to the backend using your existing Profile API
         await updateProfile({ name }).unwrap();
 
-        // Update the LocalStorage so the Navbar knows their name immediately
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         userInfo.name = name;
         localStorage.setItem('userInfo', JSON.stringify(userInfo));
@@ -118,7 +119,6 @@ const Auth = () => {
         }, 1000);
     } catch (err) {
         toast.error(err?.data?.message || 'Failed to save name. You can update it later in your profile.');
-        // Even if it fails, they are logged in, so we still redirect them
         setTimeout(() => { navigate(redirect); window.location.reload(); }, 1500);
     }
   };
@@ -194,7 +194,7 @@ const Auth = () => {
             </button>
 
             <div className="text-center mt-4">
-              <button type="button" onClick={() => setStep(1)} className="text-sm font-bold text-zinc-500 hover:text-zinc-800 transition-colors">
+              <button type="button" onClick={() => { setStep(1); setOtp(''); }} className="text-sm font-bold text-zinc-500 hover:text-zinc-800 transition-colors">
                 &larr; Change {isPhone ? 'mobile number' : 'email address'}
               </button>
             </div>
