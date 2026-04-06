@@ -10,6 +10,7 @@ const getUserProfile = async (req, res) => {
             res.json({
                 _id: user._id,
                 name: user.name,
+                email: user.email,
                 mobileNumber: user.mobileNumber,
                 role: user.role, // <-- ADDED: Now the frontend knows the role
                 addresses: user.addresses,
@@ -44,6 +45,7 @@ const updateUserProfile = async (req, res) => {
             res.json({
                 _id: updatedUser._id,
                 name: updatedUser.name,
+                email: updatedUser.email,
                 mobileNumber: updatedUser.mobileNumber,
                 role: updatedUser.role, // <-- ADDED: Keep role synced on update
                 addresses: updatedUser.addresses,

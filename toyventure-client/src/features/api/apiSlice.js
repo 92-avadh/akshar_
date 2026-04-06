@@ -1,9 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'http://localhost:5000/api',
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem('token'); 
       if (token) {
@@ -99,7 +101,14 @@ export const apiSlice = createApi({
     // ==========================================
     // ORDERS (USER)
     // ==========================================
-    createOrder: builder.mutation({ query: (data) => ({ url: '/orders', method: 'POST', body: data }) }),
+    createOrder: builder.mutation({
+      query: ({ idempotencyKey, ...data }) => ({
+        url: '/orders',
+        method: 'POST',
+        body: data,
+        headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+      }),
+    }),
 
     getMyOrders: builder.query({
       query: () => '/orders/myorders',
@@ -126,7 +135,12 @@ export const apiSlice = createApi({
     // RAZORPAY PAYMENTS
     // ==========================================
     createRazorpayOrder: builder.mutation({
-      query: (data) => ({ url: '/payments/razorpay/order', method: 'POST', body: data })
+      query: ({ idempotencyKey, ...data }) => ({
+        url: '/payments/razorpay/order',
+        method: 'POST',
+        body: data,
+        headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+      })
     }),
     
     verifyRazorpayPayment: builder.mutation({

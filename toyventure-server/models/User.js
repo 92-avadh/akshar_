@@ -9,10 +9,22 @@ const addressSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-    mobileNumber: { type: String, required: true, unique: true },
+    mobileNumber: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
     name: { type: String, default: '' },
     addresses: [addressSchema],
     role: { type: String, default: 'user' }
 }, { timestamps: true });
+
+userSchema.pre('validate', function validateIdentity(next) {
+    if (!this.mobileNumber && !this.email) {
+        this.invalidate('mobileNumber', 'Either mobile number or email is required.');
+    }
+
+    next();
+});
+
+userSchema.index({ mobileNumber: 1 }, { unique: true, sparse: true });
+userSchema.index({ email: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

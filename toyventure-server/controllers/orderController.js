@@ -1,55 +1,12 @@
 const Order = require('../models/Order');
-const Product = require('../models/Product');
 
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Private
 const createOrder = async (req, res) => {
-    try {
-        const { orderItems, shippingDetails, totalPrice } = req.body;
-
-        if (orderItems && orderItems.length === 0) {
-            return res.status(400).json({ message: 'No order items provided' });
-        }
-
-        // 1. Validate Stock Before Proceeding
-        for (const item of orderItems) {
-            const product = await Product.findById(item._id || item.product);
-            
-            if (!product) {
-                return res.status(404).json({ message: `Product ${item.title} not found.` });
-            }
-            
-            if (product.countInStock < item.qty) {
-                return res.status(400).json({ 
-                    message: `Insufficient stock for ${product.title}. Only ${product.countInStock} left.` 
-                });
-            }
-        }
-
-        // 2. Deduct Stock from Inventory
-        for (const item of orderItems) {
-            const product = await Product.findById(item._id || item.product);
-            product.countInStock -= item.qty;
-            await product.save();
-        }
-
-        // 3. Create the Order
-        const order = new Order({
-            user: req.user._id,
-            orderItems,
-            shippingDetails,
-            totalPrice,
-            isPaid: true 
-        });
-
-        const createdOrder = await order.save();
-        res.status(201).json(createdOrder);
-
-    } catch (error) {
-        console.error("Order Error:", error);
-        res.status(500).json({ message: 'Server error: Failed to create order' });
-    }
+    res.status(400).json({
+        message: 'Direct order creation is disabled. Start checkout through Razorpay order creation.',
+    });
 };
 
 // @desc    Get logged in user orders
@@ -86,8 +43,13 @@ const updateOrderToDelivered = async (req, res) => {
         const order = await Order.findById(req.params.id);
 
         if (order) {
+            if (!order.isPaid || order.orderStatus === 'payment_review') {
+                return res.status(400).json({ message: 'Only paid orders can be fulfilled.' });
+            }
+
             order.isDelivered = true;
             order.deliveredAt = Date.now();
+            order.orderStatus = 'fulfilled';
 
             const updatedOrder = await order.save();
             res.json(updatedOrder);

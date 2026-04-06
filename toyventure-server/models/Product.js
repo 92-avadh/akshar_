@@ -15,9 +15,15 @@ const productSchema = new mongoose.Schema({
     oldPrice: { type: Number },
     discount: { type: String },
     clubPrice: { type: Number },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     img: { type: String, required: true },
     images: [{ type: String }], // NEW: Added images array for max 7 files
     tag: { type: String },
+    category: { type: String },
+    countInStock: { type: Number, required: true, default: 0, min: 0 },
     
     // NEW REVIEW FIELDS:
     reviews: [reviewSchema],
@@ -25,5 +31,7 @@ const productSchema = new mongoose.Schema({
     numReviews: { type: Number, required: true, default: 0 },
     
 }, { timestamps: true });
+
+productSchema.index({ title: 'text', tag: 1, category: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -135,19 +135,19 @@ const updateProduct = async (req, res) => {
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            product.title = title || product.title;
-            product.price = price || product.price;
-            product.description = description || product.description;
-            product.tag = tag || product.tag;
-            product.oldPrice = oldPrice || product.oldPrice;
-            product.countInStock = countInStock || product.countInStock;
+            product.title = title ?? product.title;
+            product.price = price ?? product.price;
+            product.description = description ?? product.description;
+            product.tag = tag ?? product.tag;
+            product.oldPrice = oldPrice ?? product.oldPrice;
+            product.countInStock = countInStock ?? product.countInStock;
             
             // NEW: Handle images array and fallback main img
             if (images && images.length > 0) {
                 product.images = images;
                 product.img = images[0]; // Set cover image to first uploaded
             } else {
-                product.img = img || product.img;
+                product.img = img ?? product.img;
             }
 
             const updatedProduct = await product.save();

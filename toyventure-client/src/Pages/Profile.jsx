@@ -2,10 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGetMyOrdersQuery, useGetUserProfileQuery, useUpdateUserProfileMutation } from '../features/api/apiSlice';
 
+const getOrderStatusMeta = (order) => {
+  if (order.orderStatus === 'fulfilled') {
+    return {
+      label: 'Delivered',
+      className: 'bg-green-100 text-green-700 border border-green-200',
+    };
+  }
+
+  if (order.orderStatus === 'payment_review') {
+    return {
+      label: 'Paid - Review',
+      className: 'bg-amber-100 text-amber-700 border border-amber-200',
+    };
+  }
+
+  if (order.paymentStatus === 'refunded' || order.orderStatus === 'refunded') {
+    return {
+      label: 'Refunded',
+      className: 'bg-slate-100 text-slate-700 border border-slate-200',
+    };
+  }
+
+  if (order.paymentStatus === 'paid') {
+    return {
+      label: 'Paid',
+      className: 'bg-green-100 text-green-700 border border-green-200',
+    };
+  }
+
+  if (order.paymentStatus === 'failed') {
+    return {
+      label: 'Payment Retry Needed',
+      className: 'bg-red-100 text-red-700 border border-red-200',
+    };
+  }
+
+  return {
+    label: 'Pending Payment',
+    className: 'bg-orange-100 text-orange-700 border border-orange-200',
+  };
+};
+
 const Profile = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' or 'edit'
-  
+  const [activeTab, setActiveTab] = useState('orders');
   const [name, setName] = useState('');
   const [addresses, setAddresses] = useState([]);
 
@@ -23,10 +64,10 @@ const Profile = () => {
     if (profile) {
       setName(profile.name || '');
       setAddresses(profile.addresses || []);
-      
+
       const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-      if(userInfo) {
-          localStorage.setItem('userInfo', JSON.stringify({ ...userInfo, name: profile.name }));
+      if (userInfo) {
+        localStorage.setItem('userInfo', JSON.stringify({ ...userInfo, name: profile.name }));
       }
     }
   }, [profile]);
@@ -41,47 +82,50 @@ const Profile = () => {
     e.preventDefault();
     try {
       await updateProfile({ name, addresses }).unwrap();
-      alert("Profile updated successfully!");
+      alert('Profile updated successfully!');
     } catch (error) {
-      alert(error?.data?.message || "Failed to update profile");
+      alert(error?.data?.message || 'Failed to update profile');
     }
   };
 
   const handleAddAddress = () => {
-    if (addresses.length >= 3) return alert("You can only save up to 3 addresses.");
+    if (addresses.length >= 3) {
+      return alert('You can only save up to 3 addresses.');
+    }
+
     setAddresses([...addresses, { flatNumber: '', street: '', landmark: '', city: '', pincode: '' }]);
   };
 
   const handleAddressChange = (index, field, value) => {
-    const newAddresses = [...addresses];
-    newAddresses[index] = { ...newAddresses[index], [field]: value };
-    setAddresses(newAddresses);
+    const nextAddresses = [...addresses];
+    nextAddresses[index] = { ...nextAddresses[index], [field]: value };
+    setAddresses(nextAddresses);
   };
 
   const handleRemoveAddress = (index) => {
-    const newAddresses = addresses.filter((_, i) => i !== index);
-    setAddresses(newAddresses);
+    setAddresses(addresses.filter((_, addressIndex) => addressIndex !== index));
   };
 
-  if (loadingProfile) return <div className="pt-32 text-center font-bold">Loading...</div>;
+  if (loadingProfile) {
+    return <div className="pt-32 text-center font-bold">Loading...</div>;
+  }
 
   return (
     <main className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative fade-in">
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       <div className="max-w-[1100px] mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8">
-        
-        {/* LEFT COLUMN: USER AVATAR & TABS */}
         <div className="md:col-span-4 flex flex-col gap-6">
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft text-center border border-white">
-            
             <div className="w-24 h-24 bg-primary-container text-white rounded-full flex items-center justify-center text-4xl font-black mx-auto mb-4 shadow-inner uppercase">
               {profile?.name ? profile.name.charAt(0) : 'U'}
             </div>
-            
+
             <h2 className="text-2xl font-black text-zinc-800 mb-1">{profile?.name || 'Magical Guest'}</h2>
-            <p className="text-zinc-500 font-bold mb-6">+91 {profile?.mobileNumber}</p>
-            
+            <p className="text-zinc-500 font-bold mb-6">
+              {profile?.mobileNumber ? `+91 ${profile.mobileNumber}` : profile?.email || 'No phone number'}
+            </p>
+
             <div className="space-y-3 mb-6">
               <button onClick={() => setActiveTab('orders')} className={`w-full py-3 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-900 text-white shadow-md' : 'bg-white/60 text-zinc-600 hover:bg-white border border-white'}`}>
                 <span className="material-symbols-outlined">inventory_2</span> Order History
@@ -97,10 +141,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: DYNAMIC CONTENT */}
         <div className="md:col-span-8">
-          
-          {/* TAB 1: ORDER HISTORY */}
           {activeTab === 'orders' && (
             <div className="card-surface p-8 rounded-[2.5rem] shadow-soft border border-white min-h-[400px] animate-[fadeIn_0.3s_ease-out]">
               <h1 className="text-3xl font-black text-zinc-800 mb-8 border-b border-white pb-4">Order History</h1>
@@ -108,19 +149,30 @@ const Profile = () => {
                 <div className="flex justify-center py-10"><p className="font-bold text-zinc-500">Loading orders...</p></div>
               ) : orders && orders.length > 0 ? (
                 <div className="space-y-6">
-                  {orders.map((order) => (
-                    <div key={order._id} className="bg-white/60 p-6 rounded-3xl border border-white shadow-sm flex flex-col md:flex-row justify-between gap-4 hover:shadow-md transition-all">
-                      <div>
-                        <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Order: <span className="text-zinc-600 font-mono">{order._id.substring(order._id.length - 8)}</span></p>
-                        <p className="text-sm font-bold text-zinc-800 mb-2">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
-                        <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full border border-green-200">Paid</span>
+                  {orders.map((order) => {
+                    const statusMeta = getOrderStatusMeta(order);
+
+                    return (
+                      <div key={order._id} className="bg-white/60 p-6 rounded-3xl border border-white shadow-sm flex flex-col md:flex-row justify-between gap-4 hover:shadow-md transition-all">
+                        <div>
+                          <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">
+                            Order: <span className="text-zinc-600 font-mono">{order._id.substring(order._id.length - 8)}</span>
+                          </p>
+                          <p className="text-sm font-bold text-zinc-800 mb-2">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
+                          <span className={`${statusMeta.className} text-xs font-bold px-3 py-1 rounded-full`}>
+                            {statusMeta.label}
+                          </span>
+                          {order.inventoryIssue && (
+                            <p className="text-xs text-amber-700 font-bold mt-3">{order.inventoryIssue}</p>
+                          )}
+                        </div>
+                        <div className="text-left md:text-right">
+                          <p className="text-xs text-zinc-500 font-bold mb-1">{order.orderItems.length} Item(s)</p>
+                          <p className="text-2xl font-black text-primary-container">Rs {order.totalPrice.toLocaleString('en-IN')}</p>
+                        </div>
                       </div>
-                      <div className="text-left md:text-right">
-                        <p className="text-xs text-zinc-500 font-bold mb-1">{order.orderItems.length} Item(s)</p>
-                        <p className="text-2xl font-black text-primary-container">₹{order.totalPrice.toLocaleString('en-IN')}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-10">
@@ -132,13 +184,11 @@ const Profile = () => {
             </div>
           )}
 
-          {/* TAB 2: EDIT PROFILE */}
           {activeTab === 'edit' && (
             <div className="card-surface p-8 rounded-[2.5rem] shadow-soft border border-white min-h-[400px] animate-[fadeIn_0.3s_ease-out]">
               <h1 className="text-3xl font-black text-zinc-800 mb-8 border-b border-white pb-4">Edit Profile</h1>
-              
+
               <form onSubmit={handleUpdateProfile} className="space-y-8">
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-zinc-600 ml-1">Full Name</label>
@@ -146,7 +196,7 @@ const Profile = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-zinc-600 ml-1">Mobile Number</label>
-                    <input type="text" value={`+91 ${profile?.mobileNumber}`} disabled className="w-full bg-zinc-100/50 text-zinc-400 p-4 border border-white rounded-2xl outline-none font-medium cursor-not-allowed shadow-inner" title="Mobile number cannot be changed" />
+                    <input type="text" value={profile?.mobileNumber ? `+91 ${profile.mobileNumber}` : profile?.email || ''} disabled className="w-full bg-zinc-100/50 text-zinc-400 p-4 border border-white rounded-2xl outline-none font-medium cursor-not-allowed shadow-inner" title="Primary login identifier cannot be changed" />
                   </div>
                 </div>
 
@@ -162,9 +212,13 @@ const Profile = () => {
                     {addresses.map((address, index) => (
                       <div key={index} className="bg-white/40 p-5 rounded-3xl border border-white relative shadow-sm">
                         <div className="absolute top-4 right-4">
-                           <button type="button" onClick={() => handleRemoveAddress(index)} className="text-red-400 hover:text-red-600 bg-white p-1.5 rounded-full shadow-sm border border-zinc-100 transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                          <button type="button" onClick={() => handleRemoveAddress(index)} className="text-red-400 hover:text-red-600 bg-white p-1.5 rounded-full shadow-sm border border-zinc-100 transition-colors">
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
                         </div>
-                        <h4 className="font-bold text-zinc-700 mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-zinc-400 text-[18px]">home_pin</span> Address #{index + 1}</h4>
+                        <h4 className="font-bold text-zinc-700 mb-4 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-zinc-400 text-[18px]">home_pin</span> Address #{index + 1}
+                        </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <input type="text" placeholder="Flat / Block No." value={address.flatNumber} onChange={(e) => handleAddressChange(index, 'flatNumber', e.target.value)} required className="w-full bg-white/80 p-3 rounded-xl outline-none border border-white shadow-inner text-sm font-medium text-zinc-800 focus:ring-2 focus:ring-primary-container/20" />
                           <input type="text" placeholder="Street / Locality" value={address.street} onChange={(e) => handleAddressChange(index, 'street', e.target.value)} required className="w-full bg-white/80 p-3 rounded-xl outline-none border border-white shadow-inner text-sm font-medium text-zinc-800 focus:ring-2 focus:ring-primary-container/20" />
@@ -191,7 +245,6 @@ const Profile = () => {
               </form>
             </div>
           )}
-
         </div>
       </div>
     </main>

@@ -7,6 +7,9 @@ import {
   useDeleteProductMutation
 } from '../features/api/apiSlice';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const ASSET_BASE_URL = import.meta.env.VITE_ASSET_BASE_URL || API_BASE_URL.replace(/\/api\/?$/, '');
+
 const AdminCatalog = () => {
 
   // --- STATE ---
@@ -84,8 +87,10 @@ const AdminCatalog = () => {
 
     setUploading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
+        headers: token ? { authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
@@ -107,7 +112,7 @@ const AdminCatalog = () => {
 
   const resolveImage = (imgSrc) => {
     if (!imgSrc) return '';
-    return imgSrc.startsWith('/uploads') ? `http://localhost:5000${imgSrc}` : imgSrc;
+    return imgSrc.startsWith('/uploads') ? `${ASSET_BASE_URL}${imgSrc}` : imgSrc;
   };
 
   if (isLoading) return <div className="pt-32 text-center font-bold text-zinc-500">Loading Catalog...</div>;

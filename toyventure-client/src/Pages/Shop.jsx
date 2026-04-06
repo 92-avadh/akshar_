@@ -15,17 +15,21 @@ const ageCategories = [
   '12–14 Years', '14+ Years'
 ];
 
-// FIX: Extracted default filters so we can easily reset them without duplicating code
 const defaultFilters = {
   availability: { inStock: false, outOfStock: false },
   minPrice: 0,
-  maxPrice: 10000, // FIX: Increased max default to 10,000 so expensive toys don't disappear
+  maxPrice: 10000, 
   selectedAges: []
 };
 
+// FIX 1: Stable empty array created outside component lifecycle
+const EMPTY_ARRAY = []; 
+
 const Shop = () => {
   const dispatch = useDispatch();
-  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
+  
+  // FIX 2: Use stable EMPTY_ARRAY to prevent constant useSelector re-renders
+  const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || EMPTY_ARRAY);
   
   const prefetchProduct = apiSlice.usePrefetch('getProductById');
 
@@ -53,16 +57,19 @@ const Shop = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [localSearch, setSearchParams, searchQuery]);
 
-  const { data: responseData, isLoading, error } = useGetProductsQuery({ 
-      keyword: searchQuery,
-      page, 
-      limit: 12 
-  });
+  // FIX 3: Memoize query arguments to prevent RTK Query from firing unnecessarily
+  const queryArgs = useMemo(() => ({
+    keyword: searchQuery,
+    page, 
+    limit: 12 
+  }), [searchQuery, page]);
 
-  const baseProducts = responseData?.products || [];
+  const { data: responseData, isLoading, error } = useGetProductsQuery(queryArgs);
+
+  // FIX 4: Use stable EMPTY_ARRAY for base products
+  const baseProducts = responseData?.products || EMPTY_ARRAY;
   const totalPages = responseData?.pages || 1;
 
-  // FIX: Helper to safely convert formatted strings like "1,500" to real numbers
   const getNumericPrice = (priceStr) => {
     if (!priceStr) return 0;
     return Number(String(priceStr).replace(/[^0-9.-]+/g, "")) || 0;
@@ -70,13 +77,11 @@ const Shop = () => {
 
   const filteredProducts = useMemo(() => {
     return baseProducts.filter(product => {
-      // 1. Price Filter (FIX: Now safely handles commas and symbols)
       const productPrice = getNumericPrice(product.price);
       if (productPrice < activeFilters.minPrice || productPrice > activeFilters.maxPrice) {
         return false;
       }
 
-      // 2. Availability Filter (FIX: Uses countInStock instead of generic inStock)
       const { inStock, outOfStock } = activeFilters.availability;
       if (inStock !== outOfStock) { 
         const isProductInStock = product.countInStock > 0; 
@@ -84,7 +89,6 @@ const Shop = () => {
         if (outOfStock && isProductInStock) return false;
       }
 
-      // 3. Age/Tag Filter (FIX: Much smarter matching that checks all possible category fields)
       if (activeFilters.selectedAges.length > 0) {
         const pAge = String(product.ageGroup || '').toLowerCase();
         const pTag = String(product.tag || '').toLowerCase();
@@ -123,7 +127,6 @@ const Shop = () => {
   const closeSidebar = () => { setIsSidebarOpen(false); document.body.style.overflow = 'unset'; };
   const applyFilters = () => { setActiveFilters(tempFilters); setPage(1); closeSidebar(); };
   
-  // FIX: Resetting now correctly pulls from the new defaultFilters object
   const clearFilters = () => {
     setTempFilters(defaultFilters); 
     setActiveFilters(defaultFilters); 
