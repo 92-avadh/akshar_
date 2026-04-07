@@ -21,7 +21,7 @@ const SafetyStandards = () => {
           Safe for them. <br/><span className="text-slate-400">Peace of mind for you.</span>
         </h1>
         <p className="text-xl text-slate-600 font-medium mb-16 leading-relaxed">
-          At ToyVenture, we believe play should be completely worry-free. Every toy we curate goes through rigorous testing to exceed global safety standards.
+          At ToyBlix, we believe play should be completely worry-free. Every toy we curate goes through rigorous testing to exceed global safety standards.
         </p>
 
         <div className="space-y-12">

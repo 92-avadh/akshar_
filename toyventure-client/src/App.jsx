@@ -29,7 +29,7 @@ import Terms from './Pages/Terms';
 // SECURE ADMIN ROUTE GATEKEEPER
 // ==========================================
 const AdminRoute = ({ children }) => {
-  const userInfoData = localStorage.getItem('userInfo');
+  const userInfoData = sessionStorage.getItem('userInfo');
   let userInfo = null;
   
   try {

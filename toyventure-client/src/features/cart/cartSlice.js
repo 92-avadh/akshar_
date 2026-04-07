@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   // THIS LINE IS CRITICAL: It loads the saved cart from the browser memory
-  cartItems: localStorage.getItem('cartItems') ? JSON.parse(localStorage.getItem('cartItems')) : [],
+  cartItems: sessionStorage.getItem('cartItems') ? JSON.parse(sessionStorage.getItem('cartItems')) : [],
 };
 
 export const cartSlice = createSlice({
@@ -20,7 +20,7 @@ export const cartSlice = createSlice({
       }
       
       // CRITICAL: Save to local storage after adding
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     updateQuantity: (state, action) => {
       const { id, qty } = action.payload;
@@ -28,15 +28,15 @@ export const cartSlice = createSlice({
       if (item) {
         item.qty = qty;
       }
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     removeFromCart: (state, action) => {
       state.cartItems = state.cartItems.filter((x) => x._id !== action.payload);
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     clearCart: (state) => {
       state.cartItems = [];
-      localStorage.removeItem('cartItems');
+      sessionStorage.removeItem('cartItems');
     }
   },
 });

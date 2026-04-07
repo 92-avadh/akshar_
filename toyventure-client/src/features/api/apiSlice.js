@@ -7,7 +7,7 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({ 
     baseUrl: API_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
-      const token = localStorage.getItem('token'); 
+      const token = sessionStorage.getItem('token'); 
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
       }

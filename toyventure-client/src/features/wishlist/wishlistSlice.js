@@ -2,11 +2,11 @@ import { createSlice } from '@reduxjs/toolkit';
 
 // Check if there are saved favorites and unseen counts in the browser memory
 const initialState = {
-  wishlistItems: localStorage.getItem('wishlist') 
-    ? JSON.parse(localStorage.getItem('wishlist')) 
+  wishlistItems: sessionStorage.getItem('wishlist') 
+    ? JSON.parse(sessionStorage.getItem('wishlist')) 
     : [],
-  unseenCount: localStorage.getItem('wishlistUnseen') 
-    ? JSON.parse(localStorage.getItem('wishlistUnseen')) 
+  unseenCount: sessionStorage.getItem('wishlistUnseen') 
+    ? JSON.parse(sessionStorage.getItem('wishlistUnseen')) 
     : 0,
 };
 
@@ -30,19 +30,19 @@ const wishlistSlice = createSlice({
       }
 
       // Save to browser storage
-      localStorage.setItem('wishlist', JSON.stringify(state.wishlistItems));
-      localStorage.setItem('wishlistUnseen', JSON.stringify(state.unseenCount));
+      sessionStorage.setItem('wishlist', JSON.stringify(state.wishlistItems));
+      sessionStorage.setItem('wishlistUnseen', JSON.stringify(state.unseenCount));
     },
     // NEW: Action to mark all favorites as "read"
     markFavoritesSeen: (state) => {
       state.unseenCount = 0;
-      localStorage.setItem('wishlistUnseen', JSON.stringify(0));
+      sessionStorage.setItem('wishlistUnseen', JSON.stringify(0));
     },
     clearWishlist: (state) => {
       state.wishlistItems = [];
       state.unseenCount = 0;
-      localStorage.removeItem('wishlist');
-      localStorage.removeItem('wishlistUnseen');
+      sessionStorage.removeItem('wishlist');
+      sessionStorage.removeItem('wishlistUnseen');
     }
   },
 });

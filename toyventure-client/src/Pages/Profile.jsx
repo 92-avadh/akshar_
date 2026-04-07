@@ -33,8 +33,8 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userInfoData = localStorage.getItem('userInfo');
+    const token = sessionStorage.getItem('token');
+    const userInfoData = sessionStorage.getItem('userInfo');
     
     if (!token) {
       navigate('/auth');
@@ -53,17 +53,17 @@ const Profile = () => {
       setName(profile.name || '');
       setAddresses(profile.addresses || []);
 
-      const userInfoData = localStorage.getItem('userInfo');
+      const userInfoData = sessionStorage.getItem('userInfo');
       if (userInfoData && userInfoData !== 'undefined') {
         const userInfo = JSON.parse(userInfoData);
-        localStorage.setItem('userInfo', JSON.stringify({ ...userInfo, name: profile.name }));
+        sessionStorage.setItem('userInfo', JSON.stringify({ ...userInfo, name: profile.name }));
       }
     }
   }, [profile]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userInfo');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('userInfo');
     navigate('/');
   };
 

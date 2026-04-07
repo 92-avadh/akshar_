@@ -8,7 +8,7 @@ const Cart = () => {
   const dispatch = useDispatch();
   
   // Bulletproof check to ensure we don't accidentally read "null" as a logged-in user
-  const userInfoData = localStorage.getItem('userInfo');
+  const userInfoData = sessionStorage.getItem('userInfo');
   const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
                    ? JSON.parse(userInfoData) 
                    : null;

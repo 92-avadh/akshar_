@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-16">Last Updated: October 2024</p>
 
         <div className="prose prose-slate max-w-none text-slate-600 font-medium space-y-8">
-          <p>At ToyVenture, we take your privacy and your family's privacy very seriously. This policy describes how your personal information is collected, used, and shared when you visit or make a purchase from our store.</p>
+          <p>At ToyBlix, we take your privacy and your family's privacy very seriously. This policy describes how your personal information is collected, used, and shared when you visit or make a purchase from our store.</p>
 
           <h2 className="text-2xl font-bold text-slate-900 pt-8 border-t border-slate-200">1. Information We Collect</h2>
           <p>When you make a purchase, we collect certain information from you, including your name, billing address, shipping address, payment information, email address, and phone number. We refer to this as "Order Information."</p>

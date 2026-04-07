@@ -86,7 +86,7 @@ app.use('/uploads', express.static(uploadsDir));
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    service: 'ToyVenture API',
+    service: 'ToyBlix API',
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
@@ -95,7 +95,7 @@ app.get('/health', (req, res) => {
 
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Welcome to the ToyVenture API!',
+    message: 'Welcome to the ToyBlix API!',
     health: '/health',
   });
 });

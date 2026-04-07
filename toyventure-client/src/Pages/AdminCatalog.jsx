@@ -87,7 +87,7 @@ const AdminCatalog = () => {
 
     setUploading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         headers: token ? { authorization: `Bearer ${token}` } : {},

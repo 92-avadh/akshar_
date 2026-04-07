@@ -96,13 +96,13 @@ const Checkout = () => {
     }
 
     const prefillPhone = shippingDetails.phone || profile?.mobileNumber || '';
-    const userInfo = JSON.parse(localStorage.getItem('userInfo') || 'null');
+    const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || 'null');
 
     const razorpay = new window.Razorpay({
       key: keyId,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      name: 'ToyVenture',
+      name: 'ToyBlix',
       description: `Order #${String(order._id).slice(-8)}`,
       order_id: razorpayOrder.id,
       image: '/favicon.svg',
@@ -298,7 +298,7 @@ const Checkout = () => {
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined text-primary-container text-[26px]">shield_lock</span>
                 <div>
-                  <p className="font-black text-zinc-800">ToyVenture does not collect card numbers or CVV.</p>
+                  <p className="font-black text-zinc-800">ToyBlix does not collect card numbers or CVV.</p>
                   <p className="text-sm text-zinc-500 font-medium mt-2">
                     When you click pay, Razorpay opens its secure hosted checkout so payment details stay inside the payment gateway.
                   </p>

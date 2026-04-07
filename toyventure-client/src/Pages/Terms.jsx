@@ -14,7 +14,7 @@ const Terms = () => {
         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-16">Last Updated: October 2024</p>
 
         <div className="prose prose-slate max-w-none text-slate-600 font-medium space-y-8">
-          <p>Welcome to ToyVenture. By accessing or using our website, you agree to be bound by these Terms of Service. Please read them carefully.</p>
+          <p>Welcome to ToyBlix. By accessing or using our website, you agree to be bound by these Terms of Service. Please read them carefully.</p>
 
           <h2 className="text-2xl font-bold text-slate-900 pt-8 border-t border-slate-200">1. Online Store Terms</h2>
           <p>By agreeing to these Terms, you represent that you are at least the age of majority in your state or province of residence. You may not use our products for any illegal or unauthorized purpose.</p>
@@ -26,7 +26,7 @@ const Terms = () => {
           <p>We reserve the right to refuse any order you place with us. We may, in our sole discretion, limit or cancel quantities purchased per person, per household or per order. In the event that we make a change to or cancel an order, we will attempt to notify you.</p>
 
           <h2 className="text-2xl font-bold text-slate-900 pt-8">4. Intellectual Property</h2>
-          <p>All content included on this site, such as text, graphics, logos, images, and software, is the property of ToyVenture or its content suppliers and protected by international copyright laws.</p>
+          <p>All content included on this site, such as text, graphics, logos, images, and software, is the property of ToyBlix or its content suppliers and protected by international copyright laws.</p>
         </div>
       </motion.div>
     </main>

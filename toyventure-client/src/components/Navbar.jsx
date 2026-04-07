@@ -17,7 +17,7 @@ const Navbar = () => {
   const wishlistItemsRaw = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   // Bulletproof user check
-  const userInfoData = localStorage.getItem('userInfo');
+  const userInfoData = sessionStorage.getItem('userInfo');
   const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') 
                    ? JSON.parse(userInfoData) 
                    : null;
@@ -42,8 +42,8 @@ const Navbar = () => {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
-      localStorage.removeItem('userInfo');
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('userInfo');
+      sessionStorage.removeItem('token');
       // Optional: you can dispatch an action here to completely wipe Redux state if you want
       // dispatch(clearCart()); 
       
@@ -76,7 +76,7 @@ const Navbar = () => {
                  <span className="material-symbols-outlined text-[24px]">toys</span>
               </div>
               <span className="font-black text-2xl tracking-tight text-zinc-900">
-                Toy<span className="text-primary-container">Venture</span>
+                Toy<span className="text-primary-container">Blix</span>
               </span>
             </Link>
 
@@ -146,7 +146,7 @@ const Navbar = () => {
                 {isProfileDropdownOpen && userInfo && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-xl border border-zinc-100 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 py-2">
                     <div className="px-5 py-4 border-b border-zinc-50 bg-zinc-50/50">
-                      <p className="font-black text-zinc-800 line-clamp-1">{userInfo.name || 'ToyVenture User'}</p>
+                      <p className="font-black text-zinc-800 line-clamp-1">{userInfo.name || 'ToyBlix User'}</p>
                       <p className="text-xs font-bold text-zinc-400 mt-0.5 break-all">{userInfo.email || userInfo.mobileNumber}</p>
                     </div>
                     

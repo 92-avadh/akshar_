@@ -28,7 +28,7 @@ const Auth = () => {
     setIdentifier('');
     setOtp('');
 
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
     if (userInfo) {
       navigate(redirect);
     }
@@ -70,8 +70,8 @@ const Auth = () => {
       const res = await verifyOtp(payload).unwrap();
       
       // Save credentials & token IMMEDIATELY so the next Step 3 API call is authenticated
-      localStorage.setItem('userInfo', JSON.stringify(res));
-      localStorage.setItem('token', res.token); 
+      sessionStorage.setItem('userInfo', JSON.stringify(res));
+      sessionStorage.setItem('token', res.token); 
       
       // BUG FIX: Check res.isNewUser directly from the backend response
       if (res.isNewUser) {
@@ -107,11 +107,11 @@ const Auth = () => {
     try {
         await updateProfile({ name }).unwrap();
 
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
         userInfo.name = name;
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
 
-        toast.success(`Welcome to ToyVenture, ${name.split(' ')[0]}!`);
+        toast.success(`Welcome to ToyBlix, ${name.split(' ')[0]}!`);
         
         setTimeout(() => {
             navigate(redirect);

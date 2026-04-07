@@ -33,7 +33,7 @@ const Returns = () => {
 
         <h2 className="text-2xl font-bold text-slate-900 mb-4">Damaged or Defective Items</h2>
         <p className="text-slate-600 font-medium">
-          If your toy arrives damaged or breaks prematurely, please contact our support team immediately at <span className="font-bold text-orange-500">support@toyventure.com</span> with photos of the defect. We will issue a replacement at no cost to you.
+          If your toy arrives damaged or breaks prematurely, please contact our support team immediately at <span className="font-bold text-orange-500">support@toyblix.com</span> with photos of the defect. We will issue a replacement at no cost to you.
         </p>
       </motion.div>
     </main>

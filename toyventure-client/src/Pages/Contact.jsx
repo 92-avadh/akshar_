@@ -36,7 +36,7 @@ const Contact = () => {
             Let's <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500 italic">Connect!</span>
           </h1>
           <p className="text-slate-600 font-medium text-lg mb-10 leading-relaxed">
-            Have a question about an order, a specific toy, or just want to say hello? Our friendly team at ToyVenture is always here to help you out.
+            Have a question about an order, a specific toy, or just want to say hello? Our friendly team at ToyBlix is always here to help you out.
           </p>
 
           <div className="space-y-6">
@@ -46,7 +46,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-bold text-slate-900">Our Store</h4>
-                <p className="text-sm font-medium text-slate-500">ToyVenture, Surat, Gujarat</p>
+                <p className="text-sm font-medium text-slate-500">ToyBlix, Surat, Gujarat</p>
               </div>
             </div>
 
@@ -66,7 +66,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-bold text-slate-900">Email Us</h4>
-                <p className="text-sm font-medium text-slate-500">support@toyventure.com</p>
+                <p className="text-sm font-medium text-slate-500">support@toyblix.com</p>
               </div>
             </div>
           </div>
