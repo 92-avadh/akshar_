@@ -74,6 +74,11 @@ const loginUser = async (req, res, next) => {
       $or: [{ email: identifier }, { mobileNumber: identifier }],
     }).select('+password');
 
+    if (user && user.isBanned) {
+      res.status(403);
+      return next(new Error('Your account has been banned. Please contact support.'));
+    }
+
     if (user && (await user.matchPassword(password))) {
       res.json({
         _id: user._id,
@@ -209,6 +214,11 @@ const verifyOtp = async (req, res, next) => {
     let user = await User.findOne({
       $or: [{ email: identifierKey }, { mobileNumber: identifierKey }],
     });
+
+    if (user && user.isBanned) {
+      res.status(403);
+      return next(new Error('Your account has been banned. Please contact support.'));
+    }
 
     if (!user) {
       user = await User.create({

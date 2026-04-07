@@ -19,7 +19,7 @@ const AdminCatalog = () => {
   const [uploading, setUploading] = useState(false);
   
   const [editingProduct, setEditingProduct] = useState({
-    title: '', price: 0, oldPrice: 0, description: '', img: '', images: [], tag: '', countInStock: 0
+    title: '', price: 0, oldPrice: 0, description: '', img: '', images: [], tag: '', category: '', countInStock: 0
   });
 
   // --- API HOOKS ---
@@ -183,9 +183,27 @@ const AdminCatalog = () => {
                       <input type="number" name="countInStock" value={editingProduct.countInStock} onChange={handleEditChange} required className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 font-black text-zinc-800 text-xl transition-all" />
                     </div>
 
+                    {/* EXACT CATEGORY DROPDOWN */}
                     <div className="space-y-2">
-                      <label className="text-sm font-black text-zinc-400 uppercase tracking-widest ml-1">Category Tag</label>
-                      <input type="text" name="tag" value={editingProduct.tag} onChange={handleEditChange} placeholder="e.g. Educational" className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 font-bold text-zinc-800 transition-all" />
+                      <label className="text-sm font-black text-zinc-400 uppercase tracking-widest ml-1">Toy Category</label>
+                      <select name="tag" value={editingProduct.tag || ''} onChange={handleEditChange} className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 font-bold text-zinc-800 transition-all cursor-pointer">
+                        <option value="">Select Category...</option>
+                        <option value="Unique">Unique</option>
+                        <option value="Educational">Educational</option>
+                        <option value="Soft Toys">Soft Toys</option>
+                      </select>
+                    </div>
+
+                    {/* EXACT AGE GROUP DROPDOWN */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-black text-zinc-400 uppercase tracking-widest ml-1">Age Group</label>
+                      <select name="category" value={editingProduct.category || ''} onChange={handleEditChange} className="w-full bg-white p-4 rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none border border-zinc-200 font-bold text-zinc-800 transition-all cursor-pointer">
+                        <option value="">Select Age Group...</option>
+                        <option value="0-2 Years">0-2 Years</option>
+                        <option value="3-5 Years">3-5 Years</option>
+                        <option value="6-8 Years">6-8 Years</option>
+                        <option value="9+ Years">9+ Years</option>
+                      </select>
                     </div>
 
                     <div className="space-y-2">
@@ -283,7 +301,7 @@ const AdminCatalog = () => {
                       <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Product Name</th>
                       <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Price</th>
                       <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Stock Status</th>
-                      <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Category</th>
+                      <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Tags / Age</th>
                       <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider pr-8 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -319,7 +337,9 @@ const AdminCatalog = () => {
                           )}
                         </td>
                         <td className="p-5">
-                          <span className="bg-zinc-100 text-zinc-600 text-xs font-bold px-3 py-1 rounded-full">{product.tag || 'Uncategorized'}</span>
+                          <span className="bg-zinc-100 text-zinc-600 text-xs font-bold px-3 py-1 rounded-full border border-zinc-200">{product.tag || 'No Category'}</span>
+                          <br />
+                          <span className="bg-orange-50 text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full border border-orange-200 mt-1.5 inline-block">{product.category || 'No Age Set'}</span>
                         </td>
                         <td className="p-5 pr-8 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">

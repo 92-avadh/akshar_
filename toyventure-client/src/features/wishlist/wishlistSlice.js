@@ -43,9 +43,15 @@ const wishlistSlice = createSlice({
       state.unseenCount = 0;
       sessionStorage.removeItem('wishlist');
       sessionStorage.removeItem('wishlistUnseen');
+    },
+    // NEW: Cloud Hydration Reducer
+    setWishlist: (state, action) => {
+      state.wishlistItems = action.payload;
+      // We do not overwrite unseen count here so user isn't startled by sudden badges
+      sessionStorage.setItem('wishlist', JSON.stringify(state.wishlistItems));
     }
   },
 });
 
-export const { toggleFavorite, markFavoritesSeen, clearWishlist } = wishlistSlice.actions;
+export const { toggleFavorite, markFavoritesSeen, clearWishlist, setWishlist } = wishlistSlice.actions;
 export default wishlistSlice.reducer;

@@ -35,7 +35,13 @@ const userSchema = new mongoose.Schema({
     city: String,
     pincode: String,
     isDefault: { type: Boolean, default: false }
-  }]
+  }],
+  
+  // NEW: Cloud Sync Arrays for Persistent Storage
+  cart: { type: Array, default: [] },
+  wishlist: { type: Array, default: [] },
+  isBanned: { type: Boolean, default: false }
+  
 }, {
   timestamps: true,
 });

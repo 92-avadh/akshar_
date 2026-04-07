@@ -17,8 +17,9 @@ import AdminDashboard from './Pages/AdminDashboard';
 import AdminCatalog from './Pages/AdminCatalog';
 import ScrollToTop from './components/ScrollToTop';
 import Loader from './components/Loader'; 
+import CloudSyncManager from './components/CloudSyncManager'; // <-- NEW IMPORT
 
-// === NEW: Import the Footer Pages ===
+// Footer Pages
 import SafetyStandards from './Pages/SafetyStandards';
 import ShippingInfo from './Pages/ShippingInfo';
 import Returns from './Pages/Returns';
@@ -64,6 +65,7 @@ const App = () => {
 
   return (
     <Router>
+      <CloudSyncManager /> {/* <-- ADDED: Invisible Cloud Sync Engine */}
       <ScrollToTop />
       
       {/* Global Toast Notification Container */}
@@ -99,7 +101,7 @@ const App = () => {
           <Route path="/profile" element={<Profile />} />
           <Route path="/auth" element={<Auth />} />
 
-          {/* === NEW: FOOTER PAGE ROUTES === */}
+          {/* FOOTER PAGE ROUTES */}
           <Route path="/safety-standards" element={<SafetyStandards />} />
           <Route path="/shipping" element={<ShippingInfo />} />
           <Route path="/returns" element={<Returns />} />

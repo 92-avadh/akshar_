@@ -16,6 +16,7 @@ const sendEmail = async (options) => {
         to: options.email, // Receiver address
         subject: options.subject, // Subject line
         html: options.html, // HTML body
+        attachments: options.attachments || [], // Support for PDF invoices
     };
 
     // 3. Actually send the email

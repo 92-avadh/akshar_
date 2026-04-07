@@ -13,7 +13,10 @@ import {
   useDeleteCouponMutation,
   useToggleCouponMutation,
   useGetProductsQuery,
-  useDeleteReviewMutation
+  useDeleteReviewMutation,
+  useGetAllUsersQuery,
+  useToggleUserBanStatusMutation,
+  useUpdateUserRoleMutation
 } from '../features/api/apiSlice';
 
 const getFulfillmentMeta = (status) => {
@@ -112,6 +115,9 @@ const OrderDetailsModal = ({ order, onClose }) => {
 const AdminDashboard = () => {
   const { data: orders, isLoading } = useGetAllOrdersQuery(undefined, { pollingInterval: 5000 });
   const [updateOrderStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
+  const { data: users, isLoading: usersLoading } = useGetAllUsersQuery();
+  const [toggleBanStatus] = useToggleUserBanStatusMutation();
+  const [updateUserRole] = useUpdateUserRoleMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
   
   // Default to the new Analytics Tab!
@@ -283,6 +289,10 @@ const AdminDashboard = () => {
         <div className="flex gap-2 mb-8 bg-white/60 backdrop-blur-sm p-2 rounded-2xl border border-white shadow-sm w-max flex-wrap">
           <button onClick={() => setActiveTab('analytics')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
             <span className="material-symbols-outlined text-[18px]">bar_chart</span> Analytics
+          </button>
+          <button onClick={() => setActiveTab('customers')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'customers' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
+            <span className="material-symbols-outlined text-[18px]">group</span> Customers
+            {users?.length > 0 && <span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">{users.length}</span>}
           </button>
           <button onClick={() => setActiveTab('orders')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
             <span className="material-symbols-outlined text-[18px]">local_shipping</span> Orders
@@ -598,6 +608,106 @@ const AdminDashboard = () => {
                     <td colSpan="6" className="text-center py-16">
                       <span className="material-symbols-outlined text-[48px] text-zinc-300 mb-2 block">sell</span>
                       <p className="text-zinc-500 font-bold">No promo codes yet. Click "New Code" to get started!</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        )}
+
+        {/* ============= CUSTOMERS TAB ============= */}
+        {activeTab === 'customers' && (
+        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden fade-in">
+          <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
+            <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary-container text-[28px]">group</span>
+              Customer Directory
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[900px]">
+              <thead>
+                <tr className="bg-zinc-50/50 border-b border-zinc-100">
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider pl-8">Customer</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Contact</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider text-center">Orders</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider text-center">Total Spend</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Status</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider pr-8 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users?.map((user) => (
+                  <tr key={user._id} className={`hover:bg-white transition-colors border-b border-zinc-50 group ${user.isBanned ? 'opacity-50 grayscale' : ''}`}>
+                    <td className="p-5 pl-8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-slate-200">
+                           {user.name ? user.name.charAt(0).toUpperCase() : <span className="material-symbols-outlined text-[18px]">person</span>}
+                        </div>
+                        <div>
+                          <p className="font-bold text-zinc-800 text-sm flex items-center gap-1">
+                            {user.name || 'Anonymous User'} 
+                            {user.role === 'admin' && <span className="material-symbols-outlined text-primary-container text-[14px]" title="Admin">shield</span>}
+                          </p>
+                          <p className="text-[10px] text-zinc-400 font-bold">Joined: {new Date(user.createdAt).toLocaleDateString('en-IN')}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-5">
+                      <p className="text-sm font-medium text-zinc-600 truncate max-w-[150px]" title={user.email}>{user.email || '—'}</p>
+                      <p className="text-xs text-zinc-500 font-medium">{user.mobileNumber || '—'}</p>
+                    </td>
+                    <td className="p-5 text-center">
+                      <span className="font-black text-zinc-800">{user.orderCount || 0}</span>
+                    </td>
+                    <td className="p-5 text-center">
+                      <span className="font-black text-zinc-800">Rs {(user.totalSpend || 0).toLocaleString('en-IN')}</span>
+                    </td>
+                    <td className="p-5">
+                      {user.isBanned ? (
+                        <span className="text-xs font-black bg-red-50 text-red-600 border border-red-200 px-3 py-1.5 rounded-full flex items-center gap-1 w-max"><span className="material-symbols-outlined text-[12px]">block</span> Banned</span>
+                      ) : user.role === 'admin' ? (
+                        <span className="text-xs font-black bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1.5 rounded-full flex items-center gap-1 w-max"><span className="material-symbols-outlined text-[12px]">admin_panel_settings</span> Admin</span>
+                      ) : (
+                        <span className="text-xs font-black bg-green-50 text-green-600 border border-green-200 px-3 py-1.5 rounded-full flex items-center gap-1 w-max"><span className="material-symbols-outlined text-[12px]">check_circle</span> Active</span>
+                      )}
+                    </td>
+                    <td className="p-5 pr-8 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to ${user.isBanned ? 'unban' : 'ban'} this user?`)) {
+                              try { await toggleBanStatus(user._id).unwrap(); toast.success(`User successfully ${user.isBanned ? 'unbanned' : 'banned'}.`); } catch(e) { toast.error(e?.data?.message || 'Action failed.'); }
+                            }
+                          }}
+                          className={`p-2 rounded-lg transition-colors ${user.isBanned ? 'bg-zinc-800 text-white hover:bg-black' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'}`} 
+                          title={user.isBanned ? 'Unban User' : 'Ban User'}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">{user.isBanned ? 'lock_open' : 'block'}</span>
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to ${user.role === 'admin' ? 'remove admin rights from' : 'promote'} this user?`)) {
+                              try { await updateUserRole(user._id).unwrap(); toast.success('User role updated.'); } catch(e) { toast.error(e?.data?.message || 'Action failed.'); }
+                            }
+                          }}
+                          className={`p-2 rounded-lg flex items-center transition-colors ${user.role === 'admin' ? 'bg-zinc-100 text-zinc-500 hover:text-zinc-800' : 'bg-purple-50 text-purple-500 hover:bg-purple-500 hover:text-white'}`} 
+                          title={user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {(!users || users.length === 0) && (
+                  <tr>
+                    <td colSpan="6" className="text-center py-16">
+                      <span className="material-symbols-outlined text-[48px] text-zinc-300 mb-2 block">group_off</span>
+                      <p className="text-zinc-500 font-bold">No registered customers found.</p>
                     </td>
                   </tr>
                 )}

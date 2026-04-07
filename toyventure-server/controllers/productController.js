@@ -1,7 +1,7 @@
 const sendEmail = require('../utils/sendEmail');
 const Product = require('../models/Product');
 
-// @desc    Fetch all products with Search, Filter, and Pagination
+// @desc    Fetch all products with Advanced Filter, Sort, and Pagination
 // @route   GET /api/products
 // @access  Public
 const getProducts = async (req, res) => {
@@ -9,18 +9,66 @@ const getProducts = async (req, res) => {
         const pageSize = Number(req.query.limit) || 12; 
         const page = Number(req.query.page) || 1;
 
-        const keyword = req.query.keyword ? {
-            title: {
-                $regex: req.query.keyword,
-                $options: 'i', 
-            },
-        } : {};
+        const queryFilter = {};
+        const andConditions = [];
 
-        const tag = req.query.tag ? { tag: req.query.tag } : {};
-        const queryFilter = { ...keyword, ...tag };
+        // 1. Keyword Search
+        if (req.query.keyword) {
+            andConditions.push({ title: { $regex: req.query.keyword, $options: 'i' } });
+        }
 
+        // 2. Multi-Tag / Age Filter (Matches Tag, Category, or AgeGroup)
+        if (req.query.tags) {
+            // Safely escape strings and create regex array for case-insensitive matching
+            const tagsArray = req.query.tags.split(',').map(t => new RegExp(t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
+            andConditions.push({
+                $or: [
+                    { tag: { $in: tagsArray } },
+                    { category: { $in: tagsArray } },
+                    { ageGroup: { $in: tagsArray } }
+                ]
+            });
+        }
+
+        // 3. Price Range Filter 
+        if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
+            const priceFilter = {};
+            if (req.query.minPrice !== undefined && req.query.minPrice !== '') priceFilter.$gte = Number(req.query.minPrice);
+            if (req.query.maxPrice !== undefined && req.query.maxPrice !== '') priceFilter.$lte = Number(req.query.maxPrice);
+            
+            if (Object.keys(priceFilter).length > 0) {
+                andConditions.push({ price: priceFilter });
+            }
+        }
+
+        // 4. Rating Filter
+        if (req.query.minRating) {
+            andConditions.push({ rating: { $gte: Number(req.query.minRating) } });
+        }
+
+        // 5. Stock Availability Filter
+        if (req.query.inStock === 'true' && req.query.outOfStock !== 'true') {
+             andConditions.push({ countInStock: { $gt: 0 } });
+        } else if (req.query.outOfStock === 'true' && req.query.inStock !== 'true') {
+             andConditions.push({ countInStock: { $eq: 0 } });
+        }
+
+        // Apply all AND conditions if any exist
+        if (andConditions.length > 0) {
+            queryFilter.$and = andConditions;
+        }
+
+        // 6. Determine Sort Order
+        let sortOption = { createdAt: -1 }; // Default to Newest
+        if (req.query.sort === 'price_asc') sortOption = { price: 1 };
+        if (req.query.sort === 'price_desc') sortOption = { price: -1 };
+        if (req.query.sort === 'rating_desc') sortOption = { rating: -1 };
+        if (req.query.sort === 'newest') sortOption = { createdAt: -1 };
+
+        // Execute Query
         const count = await Product.countDocuments(queryFilter);
         const products = await Product.find(queryFilter)
+            .sort(sortOption)
             .limit(pageSize)
             .skip(pageSize * (page - 1));
 
@@ -122,19 +170,14 @@ const deleteProductReview = async (req, res) => {
 };
 
 // ==========================================
-// NEW: "Notify Me" Waitlist Feature
+// "Notify Me" Waitlist Feature
 // ==========================================
-
-// @desc    Add Email to Product Notify List
-// @route   POST /api/products/:id/notify
-// @access  Public
 const notifyMeWhenAvailable = async (req, res) => {
     try {
         const { email } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            // Check if email is already on the list to avoid duplicates
             if (!product.notifyList.includes(email)) {
                 product.notifyList.push(email);
                 await product.save();
@@ -160,11 +203,12 @@ const createProduct = async (req, res) => {
             user: req.user._id,
             img: 'https://via.placeholder.com/400x400?text=Upload+Image',
             images: [],
-            tag: 'General',
+            tag: '',         // INITIALIZE AS EMPTY
+            category: '',    // INITIALIZE AS EMPTY
             countInStock: 0,
             numReviews: 0,
             description: 'Enter a magical description here...',
-            notifyList: [] // Initialize empty
+            notifyList: [] 
         });
 
         const createdProduct = await product.save();
@@ -176,7 +220,8 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { title, price, description, img, tag, oldPrice, countInStock, images } = req.body; 
+        // EXACT CATEGORY EXTRACTED HERE
+        const { title, price, description, img, tag, category, oldPrice, countInStock, images } = req.body; 
         const product = await Product.findById(req.params.id);
 
         if (product) {
@@ -187,7 +232,11 @@ const updateProduct = async (req, res) => {
             product.title = title ?? product.title;
             product.price = price ?? product.price;
             product.description = description ?? product.description;
+            
+            // SAVE STRICT CATEGORIES
             product.tag = tag ?? product.tag;
+            product.category = category ?? product.category; 
+            
             product.oldPrice = oldPrice ?? product.oldPrice;
             product.countInStock = countInStock ?? product.countInStock;
             
@@ -198,15 +247,9 @@ const updateProduct = async (req, res) => {
                 product.img = img ?? product.img;
             }
 
-            // ==========================================
-            // 🔥 ACTUALLY SEND RESTOCK EMAILS HERE
-            // ==========================================
+            // TRIGGER RESTOCK EMAILS
             if (wasOutOfStock && isRestocked && product.notifyList && product.notifyList.length > 0) {
-                
-                // Get your frontend URL from env, or default to localhost for testing
                 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-
-                // Send an email to EVERY person on the notify list
                 const emailPromises = product.notifyList.map(async (userEmail) => {
                     try {
                         await sendEmail({
@@ -216,17 +259,12 @@ const updateProduct = async (req, res) => {
                                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
                                     <h2 style="color: #18181b;">Great news! 🚀</h2>
                                     <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
-                                        You asked us to let you know when the <strong>${product.title}</strong> was back in stock. 
-                                        Well, the wait is over! We just added fresh inventory to our store.
+                                        You asked us to let you know when the <strong>${product.title}</strong> was back in stock. Well, the wait is over! We just added fresh inventory to our store.
                                     </p>
-                                    <div style="text-align: center; margin: 30px 0;">
-                                        <img src="${product.img}" alt="${product.title}" style="max-width: 250px; border-radius: 10px;" />
-                                    </div>
+                                    <div style="text-align: center; margin: 30px 0;"><img src="${product.img}" alt="${product.title}" style="max-width: 250px; border-radius: 10px;" /></div>
                                     <p style="color: #52525b; font-size: 16px;">Hurry and grab yours before it sells out again!</p>
                                     <div style="text-align: center; margin-top: 30px;">
-                                        <a href="${clientUrl}/product/${product._id}" style="background-color: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
-                                            Shop Now
-                                        </a>
+                                        <a href="${clientUrl}/product/${product._id}" style="background-color: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Shop Now</a>
                                     </div>
                                 </div>
                             `
@@ -235,11 +273,7 @@ const updateProduct = async (req, res) => {
                         console.error(`Failed to send email to ${userEmail}:`, emailErr);
                     }
                 });
-
-                // Wait for all emails to finish sending
                 await Promise.all(emailPromises);
-
-                // Clear the list after successfully sending emails so they don't get spammed next time
                 product.notifyList = [];
             }
 
@@ -273,7 +307,7 @@ module.exports = {
     getProductById, 
     createProductReview,
     deleteProductReview,
-    notifyMeWhenAvailable, // Export new hook
+    notifyMeWhenAvailable, 
     createProduct, 
     updateProduct, 
     deleteProduct 

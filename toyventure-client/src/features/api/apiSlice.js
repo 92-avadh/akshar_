@@ -21,24 +21,22 @@ export const apiSlice = createApi({
     // PRODUCTS
     // ==========================================
     getProducts: builder.query({
-      query: ({ keyword = '', tag = '', page = 1, limit = 12 } = {}) => {
-        return `/products?keyword=${keyword}&tag=${tag}&page=${page}&limit=${limit}`;
+      query: ({ keyword = '', tags = '', minPrice = '', maxPrice = '', minRating = '', sort = 'newest', inStock = '', outOfStock = '', page = 1, limit = 12 } = {}) => {
+        let url = `/products?page=${page}&limit=${limit}`;
+        if (keyword) url += `&keyword=${keyword}`;
+        if (tags) url += `&tags=${tags}`;
+        
+        // FIXED: Explicitly check for empty strings so '0' is not ignored!
+        if (minPrice !== '' && minPrice !== undefined) url += `&minPrice=${minPrice}`;
+        if (maxPrice !== '' && maxPrice !== undefined) url += `&maxPrice=${maxPrice}`;
+        if (minRating !== '' && minRating !== undefined) url += `&minRating=${minRating}`;
+        if (sort) url += `&sort=${sort}`;
+        if (inStock) url += `&inStock=${inStock}`;
+        if (outOfStock) url += `&outOfStock=${outOfStock}`;
+        
+        return url;
       },
       providesTags: ['Product'],
-    }),
-    
-    getProductById: builder.query({
-      query: (id) => `/products/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Product', id }],
-    }),
-
-    createReview: builder.mutation({
-      query: (data) => ({
-          url: `/products/${data.productId}/reviews`,
-          method: 'POST',
-          body: data,
-      }),
-      invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
     }),
 
     // Delete Review (Admin Moderation)
@@ -110,6 +108,30 @@ export const apiSlice = createApi({
         url: '/users/profile',
         method: 'PUT',
         body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
+
+    // ==========================================
+    // ADMIN USER MANAGEMENT
+    // ==========================================
+    getAllUsers: builder.query({
+      query: () => '/users',
+      providesTags: ['User'],
+    }),
+
+    toggleUserBanStatus: builder.mutation({
+      query: (id) => ({
+        url: `/users/${id}/ban`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['User'],
+    }),
+
+    updateUserRole: builder.mutation({
+      query: (id) => ({
+        url: `/users/${id}/role`,
+        method: 'PUT',
       }),
       invalidatesTags: ['User'],
     }),
@@ -236,6 +258,9 @@ export const {
   useVerifyOtpMutation,
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,
+  useGetAllUsersQuery,
+  useToggleUserBanStatusMutation,
+  useUpdateUserRoleMutation,
   useCreateOrderMutation,
   useGetMyOrdersQuery, 
   useGetAllOrdersQuery,    

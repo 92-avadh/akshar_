@@ -9,8 +9,46 @@ const {
 } = require('../utils/orderInventory');
 const { getRazorpayClient } = require('../utils/razorpay');
 const { incrementCouponUsage } = require('../controllers/couponController');
+const sendEmail = require('../utils/sendEmail');
+const generateInvoice = require('../utils/generateInvoice');
 
 const formatBadRequest = (message, res) => res.status(400).json({ message });
+
+const sendOrderConfirmationAndInvoice = async (orderId) => {
+  try {
+    const order = await Order.findById(orderId).populate('user', 'name email mobileNumber');
+    if (!order || !order.user || !order.user.email) return;
+
+    const pdfBuffer = await generateInvoice(order, order.user);
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+    await sendEmail({
+      email: order.user.email,
+      subject: `Order Confirmation - ToyBlix #${String(order._id).slice(-8).toUpperCase()}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
+          <h2 style="color: #18181b;">Thank you for your order! 🎉</h2>
+          <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
+            Hi ${order.user.name}, your payment was successful and your order <strong>#${String(order._id).slice(-8).toUpperCase()}</strong> is now being processed.
+          </p>
+          <p style="color: #52525b; font-size: 16px;">We have securely attached your PDF invoice to this email for your records.</p>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${clientUrl}/profile" style="background-color: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
+                View Order Status
+            </a>
+          </div>
+        </div>
+      `,
+      attachments: [{
+        filename: `Invoice_${String(order._id).slice(-8).toUpperCase()}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }]
+    });
+  } catch (error) {
+    console.error('Failed to send invoice email:', error);
+  }
+};
 
 const safeEqual = (left, right) => {
   const leftBuffer = Buffer.from(left || '', 'utf8');
@@ -245,6 +283,9 @@ const createDemoOrder = async (req, res, next) => {
       localOrderId: localOrder._id,
     });
 
+    // Fire and forget invoice email
+    sendOrderConfirmationAndInvoice(localOrder._id).catch(console.error);
+
     res.status(201).json({
       message: 'Demo order processed successfully.',
       order: localOrder,
@@ -313,6 +354,9 @@ const verifyRazorpayPayment = async (req, res, next) => {
       razorpayPaymentId,
       paymentReviewed: paymentResult.paymentReviewed,
     });
+
+    // Fire and forget invoice email
+    sendOrderConfirmationAndInvoice(order._id).catch(console.error);
 
     res.status(200).json({
       message: paymentResult.paymentReviewed

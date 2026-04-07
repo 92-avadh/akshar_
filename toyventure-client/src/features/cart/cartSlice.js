@@ -37,9 +37,14 @@ export const cartSlice = createSlice({
     clearCart: (state) => {
       state.cartItems = [];
       sessionStorage.removeItem('cartItems');
+    },
+    // NEW: Cloud Hydration Reducer
+    setCart: (state, action) => {
+      state.cartItems = action.payload;
+      sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     }
   },
 });
 
-export const { addToCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
+export const { addToCart, updateQuantity, removeFromCart, clearCart, setCart } = cartSlice.actions;
 export default cartSlice.reducer;
