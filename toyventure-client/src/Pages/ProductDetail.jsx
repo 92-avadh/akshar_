@@ -3,7 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion'; 
 import toast from 'react-hot-toast'; 
-import { useGetProductByIdQuery, useGetProductsQuery, useCreateReviewMutation } from '../features/api/apiSlice';
+import { 
+  useGetProductByIdQuery, 
+  useGetProductsQuery, 
+  useCreateReviewMutation, 
+  useGetMyOrdersQuery,
+  useNotifyMeWhenAvailableMutation 
+} from '../features/api/apiSlice';
 import { addToCart } from '../features/cart/cartSlice';
 import { toggleFavorite } from '../features/wishlist/wishlistSlice'; 
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
@@ -13,14 +19,19 @@ const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
+  // User Check
+  const userInfoData = sessionStorage.getItem('userInfo');
+  const userInfo = userInfoData && userInfoData !== 'undefined' ? JSON.parse(userInfoData) : null;
+
   const { data: responseData, isLoading, error } = useGetProductByIdQuery(id);
   const product = responseData?.data || (Array.isArray(responseData) ? responseData[0] : responseData);
 
-  const { data: allProductsData } = useGetProductsQuery({ limit: 8 }, {
-    skip: !product, 
-  }); 
+  const { data: allProductsData } = useGetProductsQuery({ limit: 8 }, { skip: !product }); 
+  const { data: myOrders } = useGetMyOrdersQuery(undefined, { skip: !userInfo });
   
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
+  const [notifyMeWhenAvailable, { isLoading: isNotifying }] = useNotifyMeWhenAvailableMutation(); // NEW
+  
   const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -30,9 +41,17 @@ const ProductDetail = () => {
   
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-  const [name, setName] = useState('');
+
+  // Notify Me State
+  const [notifyEmail, setNotifyEmail] = useState('');
 
   const relatedProducts = allProductsData?.products?.filter(p => p._id !== id).slice(0, 4) || [];
+
+  // Determine if User can leave a review
+  const hasBoughtAndDelivered = myOrders?.some(order => 
+    ['delivered', 'fulfilled'].includes(order.orderStatus) && 
+    order.orderItems.some(item => (item.product === id || item._id === id || item.title === product?.title))
+  );
 
   useEffect(() => { 
     if (product?.img) {
@@ -40,11 +59,16 @@ const ProductDetail = () => {
     }
   }, [id, product]);
 
+  // Pre-fill email if logged in
+  useEffect(() => {
+    if (userInfo && userInfo.email && !notifyEmail) {
+      setNotifyEmail(userInfo.email);
+    }
+  }, [userInfo]);
+
   const displayPrice = (price) => {
     if (price === undefined || price === null) return '₹0';
-    const num = Number(price);
-    if (isNaN(num)) return '₹0';
-    return '₹' + num.toLocaleString('en-IN');
+    return '₹' + Number(price).toLocaleString('en-IN');
   };
 
   const getDiscountPercent = (price, oldPrice) => {
@@ -56,7 +80,6 @@ const ProductDetail = () => {
   };
 
   if (isLoading) return <SkeletonProductDetail />;
-
   if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
@@ -65,13 +88,24 @@ const ProductDetail = () => {
     );
   }
 
-  const galleryImages = product.images?.length > 0 
-    ? product.images 
-    : [product.img, product.img, product.img]; 
+  const galleryImages = product.images?.length > 0 ? product.images : [product.img, product.img, product.img]; 
 
   const handleAddToCart = () => {
     dispatch(addToCart({ ...product, qty: 1 }));
     toast.success(`${product.title} magically added to your cart!`); 
+  };
+
+  // Submit Notify Email Handler
+  const handleNotifySubmit = async (e) => {
+    e.preventDefault();
+    if (!notifyEmail) return toast.error("Please enter an email address.");
+    try {
+      const res = await notifyMeWhenAvailable({ productId: id, email: notifyEmail }).unwrap();
+      toast.success(res.message || "You're on the list! We'll email you when it's back.");
+      setNotifyEmail('');
+    } catch (err) {
+      toast.error("Failed to sign up for notifications.");
+    }
   };
 
   const handleMouseMove = (e) => {
@@ -84,11 +118,11 @@ const ProductDetail = () => {
   const submitReviewHandler = async (e) => {
     e.preventDefault();
     try {
-      await createReview({ productId: id, rating, comment, name }).unwrap();
+      await createReview({ productId: id, rating, comment }).unwrap();
       toast.success('🎉 Review submitted successfully!'); 
-      setRating(5); setComment(''); setName('');
+      setRating(5); setComment('');
     } catch (err) {
-      toast.error(err?.data?.message || 'Failed to submit review. Please try again.');
+      toast.error(err?.data?.message || 'Failed to submit review.');
     }
   };
 
@@ -104,13 +138,7 @@ const ProductDetail = () => {
   const discountPercent = getDiscountPercent(product.price, product.oldPrice);
 
   return (
-    // NEW: We removed the heavy `y: 20` movement. Now it just fades in instantly, eliminating graphics lag!
-    <motion.main 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      transition={{ duration: 0.3 }}
-      className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative"
-    >
+    <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative">
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       {isImageModalOpen && (
@@ -143,7 +171,7 @@ const ProductDetail = () => {
               <img
                 src={mainImage || product.img}
                 alt={product.title}
-                decoding="async" // <-- NEW: Tells browser to paint image without freezing the page
+                decoding="async"
                 className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear transform-gpu ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
                 style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center', willChange: 'transform' }}
               />
@@ -209,25 +237,50 @@ const ProductDetail = () => {
             </p>
 
             <div className="flex gap-4">
-              <button 
-                onClick={handleAddToCart} 
-                disabled={product.countInStock === 0}
-                className={`flex-1 py-5 font-black text-xl rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-xl group ${
-                  product.countInStock === 0 
-                  ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed opacity-70' 
-                  : 'bg-zinc-900 text-white hover:bg-black hover:-translate-y-1 active:scale-95'
-                }`}
-              >
-                {product.countInStock === 0 ? 'Out of Stock' : 'Add to Cart'} 
-                {product.countInStock > 0 && <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>}
-              </button>
+              {/* ========================================== */}
+              {/* NEW DYNAMIC BUTTON: ADD TO CART vs NOTIFY ME */}
+              {/* ========================================== */}
+              {product.countInStock === 0 ? (
+                <div className="flex-1 bg-red-50 p-4 md:p-5 rounded-[2rem] border border-red-100 flex flex-col justify-center shadow-inner">
+                  <p className="text-red-600 font-black text-sm mb-3 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                    Out of stock! Be the first to know when it's back:
+                  </p>
+                  <form onSubmit={handleNotifySubmit} className="flex flex-col sm:flex-row gap-2 w-full">
+                    <input 
+                      type="email" 
+                      value={notifyEmail} 
+                      onChange={(e) => setNotifyEmail(e.target.value)} 
+                      required 
+                      placeholder="Your email address" 
+                      className="flex-1 px-4 py-3.5 rounded-xl border border-red-200 outline-none focus:ring-2 focus:ring-red-400 font-bold text-sm bg-white shadow-sm"
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={isNotifying}
+                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-3.5 rounded-xl font-black text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-1 shrink-0"
+                    >
+                      {isNotifying ? 'Wait...' : 'Notify Me'}
+                      {!isNotifying && <span className="material-symbols-outlined text-[18px]">send</span>}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleAddToCart} 
+                  className="flex-1 py-5 font-black text-xl rounded-[2rem] bg-zinc-900 text-white hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl hover:-translate-y-1 active:scale-95 group"
+                >
+                  Add to Cart
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>
+                </button>
+              )}
               
               <button 
                 onClick={() => {
                     dispatch(toggleFavorite(product));
                     isMainProductFavorited ? toast.error('Removed from favorites') : toast.success('Added to favorites!');
                 }} 
-                className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md ${isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'}`} 
+                className={`w-20 rounded-[2rem] border-2 transition-all flex items-center justify-center hover:-translate-y-1 active:scale-95 shadow-md shrink-0 ${isMainProductFavorited ? 'border-red-500 bg-red-50 text-red-500' : 'border-white bg-white/60 text-zinc-400 hover:border-red-200 hover:text-red-400'}`} 
                 title="Add to Wishlist"
               >
                 <span className={`material-symbols-outlined text-[32px] ${isMainProductFavorited ? 'filled' : ''}`}>favorite</span>
@@ -264,7 +317,12 @@ const ProductDetail = () => {
                           {review.name?.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <h4 className="font-bold text-zinc-800">{review.name}</h4>
+                          <h4 className="font-bold text-zinc-800 flex items-center gap-1.5">
+                            {review.name}
+                            <span className="bg-green-50 text-green-600 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-green-200 flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-[10px]">verified</span> Verified
+                            </span>
+                          </h4>
                           <p className="text-xs text-zinc-400 font-medium">{review.createdAt ? review.createdAt.substring(0, 10) : 'Just now'}</p>
                         </div>
                       </div>
@@ -278,32 +336,49 @@ const ProductDetail = () => {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="card-surface p-8 rounded-[2.5rem] shadow-soft sticky top-32 border border-white">
-              <h3 className="text-xl font-black text-zinc-800 mb-6">Write a Review</h3>
-              <form onSubmit={submitReviewHandler} className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-600 ml-1">Your Name</label>
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-600 ml-1">Rating</label>
-                  <select value={rating} onChange={(e) => setRating(Number(e.target.value))} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-bold text-zinc-800 cursor-pointer">
-                    <option value="5">5 - Excellent (⭐⭐⭐⭐⭐)</option>
-                    <option value="4">4 - Very Good (⭐⭐⭐⭐)</option>
-                    <option value="3">3 - Good (⭐⭐⭐)</option>
-                    <option value="2">2 - Fair (⭐⭐)</option>
-                    <option value="1">1 - Poor (⭐)</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-600 ml-1">Your Experience</label>
-                  <textarea required rows="4" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="What did you love about this toy?" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800 resize-none"></textarea>
-                </div>
-                <button type="submit" disabled={isReviewLoading} className="w-full py-4 mt-2 bg-primary-container text-white font-black text-lg rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-1 disabled:opacity-50">
-                  {isReviewLoading ? 'Submitting...' : 'Submit Review'}
-                </button>
-              </form>
-            </div>
+            {hasBoughtAndDelivered ? (
+              <div className="card-surface p-8 rounded-[2.5rem] shadow-soft sticky top-32 border border-white">
+                <h3 className="text-xl font-black text-zinc-800 mb-6">Write a Review</h3>
+                <form onSubmit={submitReviewHandler} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-600 ml-1">Rating</label>
+                    <select value={rating} onChange={(e) => setRating(Number(e.target.value))} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-bold text-zinc-800 cursor-pointer">
+                      <option value="5">5 - Excellent (⭐⭐⭐⭐⭐)</option>
+                      <option value="4">4 - Very Good (⭐⭐⭐⭐)</option>
+                      <option value="3">3 - Good (⭐⭐⭐)</option>
+                      <option value="2">2 - Fair (⭐⭐)</option>
+                      <option value="1">1 - Poor (⭐)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-600 ml-1">Your Experience</label>
+                    <textarea required rows="4" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="What did you love about this toy?" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800 resize-none"></textarea>
+                  </div>
+                  <button type="submit" disabled={isReviewLoading} className="w-full py-4 mt-2 bg-primary-container text-white font-black text-lg rounded-2xl hover:bg-orange-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:-translate-y-1 disabled:opacity-50">
+                    {isReviewLoading ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </form>
+              </div>
+            ) : userInfo ? (
+              <div className="card-surface p-8 rounded-[2.5rem] shadow-soft border border-white text-center sticky top-32">
+                <span className="material-symbols-outlined text-[48px] text-orange-400 mb-4 block">local_shipping</span>
+                <h3 className="text-xl font-black text-zinc-800 mb-2">Verified Buyers Only</h3>
+                <p className="text-zinc-500 font-medium text-sm">
+                  You unlock the ability to leave a glowing 1-5 Star review once your order for this magical toy has been delivered!
+                </p>
+              </div>
+            ) : (
+              <div className="card-surface p-8 rounded-[2.5rem] shadow-soft border border-white text-center sticky top-32">
+                <span className="material-symbols-outlined text-[48px] text-zinc-300 mb-4 block">lock</span>
+                <h3 className="text-xl font-black text-zinc-800 mb-2">Login to Review</h3>
+                <p className="text-zinc-500 font-medium text-sm mb-6">
+                  Please sign in to leave a review for your purchases.
+                </p>
+                <Link to="/auth" className="inline-block w-full py-3 bg-zinc-900 text-white font-black text-sm rounded-xl hover:bg-black transition-all shadow-md">
+                  Log In or Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

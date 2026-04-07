@@ -41,6 +41,24 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
     }),
 
+    // Delete Review (Admin Moderation)
+    deleteReview: builder.mutation({
+      query: ({ productId, reviewId }) => ({
+        url: `/products/${productId}/reviews/${reviewId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }, 'Product'],
+    }),
+
+    // NEW: Waitlist / Notify Feature
+    notifyMeWhenAvailable: builder.mutation({
+      query: (data) => ({
+          url: `/products/${data.productId}/notify`,
+          method: 'POST',
+          body: { email: data.email },
+      }),
+    }),
+
     // ==========================================
     // ADMIN PRODUCTS (CRUD)
     // ==========================================
@@ -122,10 +140,10 @@ export const apiSlice = createApi({
     }),
 
     updateOrderStatus: builder.mutation({
-      query: ({ id, status }) => ({
+      query: ({ id, status, courierName, trackingLink }) => ({
         url: `/orders/${id}/status`,
         method: 'PUT',
-        body: { status }
+        body: { status, courierName, trackingLink }
       }),
       invalidatesTags: ['Order'], 
     }),
@@ -157,7 +175,7 @@ export const apiSlice = createApi({
     }),
 
     // ==========================================
-    // CONTACT MESSAGES (NEW)
+    // CONTACT MESSAGES 
     // ==========================================
     submitContactMessage: builder.mutation({
       query: (data) => ({
@@ -207,6 +225,8 @@ export const {
   useGetProductsQuery, 
   useGetProductByIdQuery,
   useCreateReviewMutation,
+  useDeleteReviewMutation, 
+  useNotifyMeWhenAvailableMutation, // NEW: Export the Waitlist Hook
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
@@ -223,12 +243,8 @@ export const {
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
   useCreateDemoOrderMutation,
-  
-  // NEW EXPORTS FOR CONTACT MESSAGES
   useSubmitContactMessageMutation,
   useGetAllContactMessagesQuery,
-
-  // COUPON EXPORTS
   useGetAllCouponsQuery,
   useCreateCouponMutation,
   useDeleteCouponMutation,

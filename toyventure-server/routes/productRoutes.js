@@ -4,6 +4,8 @@ const {
     getProducts, 
     getProductById, 
     createProductReview,
+    deleteProductReview,
+    notifyMeWhenAvailable, // Import new hook
     createProduct,
     updateProduct,
     deleteProduct
@@ -21,7 +23,13 @@ router.route('/:id')
     .put(protect, admin, updateProduct)
     .delete(protect, admin, deleteProduct);
 
-// Route to add a review
-router.route('/:id/reviews').post(createProductReview);
+// Route to add a review (Must be Logged In to Verify)
+router.route('/:id/reviews').post(protect, createProductReview);
+
+// Route to delete a review (Admin Moderation)
+router.route('/:id/reviews/:reviewId').delete(protect, admin, deleteProductReview);
+
+// NEW: Notify Me Waitlist Route (Public)
+router.route('/:id/notify').post(notifyMeWhenAvailable);
 
 module.exports = router;

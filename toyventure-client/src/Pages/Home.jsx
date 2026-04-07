@@ -29,8 +29,8 @@ const MagneticButton = ({ children, className, variant = 'dark', onClick }) => {
 
   const baseStyles = "relative overflow-hidden group px-8 py-4 rounded-full font-bold uppercase tracking-widest text-xs transition-shadow";
   const variants = {
-    dark: "bg-slate-900 text-white shadow-lg hover:shadow-xl",
-    light: "bg-white text-slate-900 border border-slate-200 shadow-sm hover:shadow-md",
+    dark: "bg-zinc-900 text-white shadow-lg hover:shadow-xl",
+    light: "bg-white text-zinc-900 border border-zinc-200 shadow-sm hover:shadow-md",
   };
 
   return (
@@ -105,24 +105,23 @@ const Home = () => {
   };
 
   return (
-    <main ref={containerRef} className="bg-[#fff9f5] text-slate-900 min-h-screen font-sans overflow-x-hidden selection:bg-orange-200">
+    <main ref={containerRef} className="bg-surface bg-hero-glow text-zinc-900 min-h-screen font-sans overflow-x-hidden selection:bg-orange-200 relative fade-in">
       
-      {/* Background Gradients */}
-      <div className="fixed top-[-20%] left-[-20%] w-[60vw] h-[60vw] rounded-full pointer-events-none opacity-40 z-0 will-change-transform transform-gpu" style={{ background: 'radial-gradient(circle, rgba(253,186,116,0.5) 0%, rgba(253,186,116,0) 70%)' }}></div>
-      <div className="fixed bottom-[-20%] right-[-20%] w-[60vw] h-[60vw] rounded-full pointer-events-none opacity-30 z-0 will-change-transform transform-gpu" style={{ background: 'radial-gradient(circle, rgba(191,219,254,0.6) 0%, rgba(191,219,254,0) 70%)' }}></div>
+      {/* Unified Pattern Overlay */}
+      <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       {/* ================= HERO SECTION ================= */}
       <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
           <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } }} className="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left z-20">
-            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mb-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-widest shadow-sm">
+            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mb-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-sm text-zinc-700 text-xs font-bold uppercase tracking-widest">
               <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span></span>
               Fresh Arrivals
             </motion.div>
-            <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 leading-[1.05] mb-6">
+            <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-5xl md:text-7xl font-black tracking-tighter text-zinc-900 leading-[1.05] mb-6">
               Dive into the <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500">Universe of Play.</span>
             </motion.h1>
-            <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg text-slate-500 font-medium max-w-lg mb-10 leading-relaxed">
+            <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg text-zinc-500 font-medium max-w-lg mb-10 leading-relaxed">
               Step into a world of bubbly, sustainable, and wonderfully engaging toys designed to nurture creativity.
             </motion.p>
             <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -130,14 +129,13 @@ const Home = () => {
             </motion.div>
           </motion.div>
           <div className="lg:col-span-7 relative h-[500px] lg:h-[650px] w-full flex items-center justify-center">
-            {/* Same Hero cards... */}
-            <motion.div initial={{ opacity: 0, y: 50, rotate: -3 }} animate={{ opacity: 1, y: 0, rotate: -2 }} transition={{ duration: 0.8, delay: 0.2 }} className="absolute z-10 w-[280px] sm:w-[320px] bg-white p-4 rounded-[3rem] shadow-xl border border-slate-100 group hover:rotate-0 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300">
+            <motion.div initial={{ opacity: 0, y: 50, rotate: -3 }} animate={{ opacity: 1, y: 0, rotate: -2 }} transition={{ duration: 0.8, delay: 0.2 }} className="absolute z-10 w-[280px] sm:w-[320px] bg-white/90 backdrop-blur-md p-4 rounded-[3rem] shadow-xl border border-white group hover:rotate-0 hover:scale-[1.02] hover:shadow-2xl transition-all duration-300">
               <div className="bg-orange-50 rounded-[2.5rem] h-[280px] p-6 mb-4 flex items-center justify-center relative overflow-hidden">
                 <img loading="eager" src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" alt="Wooden Toy" className="w-full h-full object-contain mix-blend-multiply" />
-                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase shadow-sm">Eco-Friendly</div>
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-zinc-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase shadow-sm">Eco-Friendly</div>
               </div>
               <div className="px-4 pb-2 text-center">
-                <h3 className="font-bold text-lg text-slate-900">Wooden Rail Express</h3>
+                <h3 className="font-bold text-lg text-zinc-900">Wooden Rail Express</h3>
                 <p className="text-orange-500 font-black text-xl mt-1">₹899</p>
               </div>
             </motion.div>
@@ -149,9 +147,9 @@ const Home = () => {
       <WavyDivider fill="#ffffff" />
       <section className="bg-white py-16 relative z-20">
         <div className="max-w-[1440px] mx-auto px-6 text-center mb-12">
-          <h2 className="text-slate-400 font-black uppercase tracking-widest text-sm mb-2">Find The Perfect Toy</h2>
-          <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">Shop by Age</h3>
-          <p className="text-slate-500 mt-4 font-medium">Toys curated for every stage of childhood.</p>
+          <h2 className="text-zinc-400 font-black uppercase tracking-widest text-sm mb-2">Find The Perfect Toy</h2>
+          <h3 className="text-4xl md:text-5xl font-black text-zinc-900 tracking-tighter">Shop by Age</h3>
+          <p className="text-zinc-500 mt-4 font-medium">Toys curated for every stage of childhood.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-6 px-6 max-w-[1440px] mx-auto">
           {shopByAgeData.map((item, idx) => (
@@ -168,30 +166,30 @@ const Home = () => {
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
           <div>
-            <h2 className="text-slate-500 font-black uppercase tracking-widest text-sm mb-2">Editor's Picks</h2>
-            <h3 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">Explore Popular Toy Set</h3>
+            <h2 className="text-zinc-500 font-black uppercase tracking-widest text-sm mb-2">Editor's Picks</h2>
+            <h3 className="text-5xl md:text-6xl font-black tracking-tighter text-zinc-900">Explore Popular Toy Set</h3>
           </div>
-          <Link to="/shop" className="text-slate-900 font-bold uppercase tracking-widest text-sm border-b-2 border-slate-900 pb-1 hover:text-orange-500 hover:border-orange-500 transition-colors">See All Favorites</Link>
+          <Link to="/shop" className="text-zinc-900 font-bold uppercase tracking-widest text-sm border-b-2 border-zinc-900 pb-1 hover:text-orange-500 hover:border-orange-500 transition-colors">See All Favorites</Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group bg-white rounded-[3rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 relative flex flex-col">
+            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group bg-white/60 backdrop-blur-sm rounded-[3rem] overflow-hidden border border-white shadow-sm hover:shadow-xl transition-all duration-300 relative flex flex-col">
               {/* Product Image Section */}
               <div className={`relative h-64 p-8 flex items-center justify-center ${product.color} rounded-t-[3rem] opacity-90 group-hover:opacity-100 transition-opacity`}>
                 <img loading="lazy" src={product.img} alt={product.title} className="w-full h-full object-contain group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 ease-out will-change-transform transform-gpu" />
-                <div className="absolute top-4 left-4 bg-white/90 text-slate-900 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-sm border border-slate-200">
+                <div className="absolute top-4 left-4 bg-white/90 text-zinc-900 text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-sm border border-white">
                   {product.tag}
                 </div>
               </div>
               
               {/* Product Details */}
               <div className="p-8 pb-10 flex-1 flex flex-col justify-between bg-white z-10 relative">
-                <h3 className="text-xl font-bold leading-tight mb-4 text-slate-900">{product.title}</h3>
+                <h3 className="text-xl font-bold leading-tight mb-4 text-zinc-900">{product.title}</h3>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-2xl font-black text-slate-900">₹{product.price}</span>
-                    <span className="text-sm font-medium text-slate-400 line-through">₹{product.originalPrice}</span>
+                    <span className="text-2xl font-black text-zinc-900">₹{product.price}</span>
+                    <span className="text-sm font-medium text-zinc-400 line-through">₹{product.originalPrice}</span>
                   </div>
                   <p className="text-teal-600 font-bold text-xs uppercase tracking-wider">Club Prices <span className="opacity-70">(-{Math.round((1 - product.price / product.originalPrice) * 100)}%)</span></p>
                 </div>
@@ -199,7 +197,7 @@ const Home = () => {
 
               {/* Hover Add To Bag Drawer */}
               <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-20">
-                <button onClick={() => handleAddToCart(product)} className="w-full bg-slate-900 text-white rounded-[2rem] py-4 font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-500 transition-colors shadow-lg">
+                <button onClick={() => handleAddToCart(product)} className="w-full bg-zinc-900 text-white rounded-[2rem] py-4 font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-500 transition-colors shadow-lg">
                   <span className="material-symbols-outlined text-[18px]">shopping_bag</span> Add to Bag
                 </button>
               </div>
@@ -212,18 +210,18 @@ const Home = () => {
       <WavyDivider fill="#f8fafc" />
 
       {/* ================= BENTO CATEGORIES ================= */}
-      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20 bg-slate-50 rounded-[4rem]">
+      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20 bg-slate-50/80 backdrop-blur-md rounded-[4rem] border border-white shadow-sm">
         <div className="mb-12 text-center">
-             <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">Universes of Play.</h2>
+             <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-zinc-900">Universes of Play.</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {categories.map((cat, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[3rem] overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300 ${cat.size}`}>
+            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[3rem] overflow-hidden bg-zinc-100 cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300 ${cat.size}`}>
               <img loading="lazy" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform transform-gpu" />
-              <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 bg-white p-5 md:p-6 rounded-[2.5rem] flex justify-between items-center shadow-lg border border-slate-100 group-hover:-translate-y-2 transition-transform duration-300 will-change-transform">
+              <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 bg-white/90 backdrop-blur-md p-5 md:p-6 rounded-[2.5rem] flex justify-between items-center shadow-lg border border-white group-hover:-translate-y-2 transition-transform duration-300 will-change-transform">
                 <div>
-                  <h3 className="text-xl md:text-2xl font-bold text-slate-900">{cat.name}</h3>
-                  <p className="text-slate-500 font-medium text-xs md:text-sm mt-1">{cat.desc}</p>
+                  <h3 className="text-xl md:text-2xl font-bold text-zinc-900">{cat.name}</h3>
+                  <p className="text-zinc-500 font-medium text-xs md:text-sm mt-1">{cat.desc}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300 shrink-0">
                   <span className="material-symbols-outlined -rotate-45">arrow_forward</span>
@@ -236,14 +234,14 @@ const Home = () => {
 
       {/* ================= EDITORIAL PARALLAX ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20 mt-12">
-        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative h-[80vh] rounded-[4rem] overflow-hidden bg-slate-900 transform-gpu isolate border-4 border-white shadow-xl">
+        <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative h-[80vh] rounded-[4rem] overflow-hidden bg-zinc-900 transform-gpu isolate border-4 border-white shadow-xl">
           <motion.div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3')] bg-cover bg-center opacity-80 will-change-transform transform-gpu" initial={{ scale: 1.1 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ duration: 1.5, ease: "easeOut" }}></motion.div>
           <div className="absolute inset-0 p-8 md:p-24 flex flex-col justify-end">
             <div className="bg-white/95 backdrop-blur-md p-8 md:p-14 rounded-[3rem] max-w-2xl shadow-xl border border-white/50">
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 leading-tight text-slate-900">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 leading-tight text-zinc-900">
                 The Art of <br /><span className="text-orange-500">Unplugged</span> Joy.
               </h2>
-              <p className="text-lg text-slate-600 font-medium mb-8 leading-relaxed">
+              <p className="text-lg text-zinc-600 font-medium mb-8 leading-relaxed">
                 In a world of screens, we champion the physical. Toys that demand touch, inspire storytelling, and withstand the test of time.
               </p>
               <MagneticButton variant="dark" className="w-max">Read Our Manifesto</MagneticButton>
@@ -255,17 +253,17 @@ const Home = () => {
       {/* ================= INFINITE MARQUEE ================= */}
       <WavyDivider fill="#fafafa" />
       <section className="py-20 relative z-20 overflow-hidden bg-[#fafafa]">
-        <h2 className="text-4xl font-black tracking-tighter text-center mb-12 text-slate-900 px-6">Loved by Families</h2>
+        <h2 className="text-4xl font-black tracking-tighter text-center mb-12 text-zinc-900 px-6">Loved by Families</h2>
         <div className="relative w-full flex items-center">
           <div className="absolute left-0 top-0 w-16 md:w-32 h-full bg-gradient-to-r from-[#fafafa] to-transparent z-10 pointer-events-none"></div>
           <div className="absolute right-0 top-0 w-16 md:w-32 h-full bg-gradient-to-l from-[#fafafa] to-transparent z-10 pointer-events-none"></div>
           <div className="flex gap-6 w-max px-6 will-change-transform transform-gpu" style={{ animation: "marquee 35s linear infinite" }}>
             <style>{`@keyframes marquee { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }`}</style>
             {infiniteReviews.map((review, idx) => (
-              <div key={idx} className="w-[320px] md:w-[450px] shrink-0 bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-300">
+              <div key={idx} className="w-[320px] md:w-[450px] shrink-0 bg-white p-8 md:p-10 rounded-[3rem] shadow-sm border border-zinc-100 hover:shadow-lg transition-shadow duration-300">
                 <div className="flex text-amber-400 mb-6">{[...Array(5)].map((_, i) => <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>)}</div>
-                <p className="text-lg text-slate-600 font-medium mb-8 leading-relaxed line-clamp-3">"{review.text}"</p>
-                <p className="font-bold text-slate-900 tracking-wide">— {review.author}</p>
+                <p className="text-lg text-zinc-600 font-medium mb-8 leading-relaxed line-clamp-3">"{review.text}"</p>
+                <p className="font-bold text-zinc-900 tracking-wide">— {review.author}</p>
               </div>
             ))}
           </div>
@@ -279,20 +277,20 @@ const Home = () => {
           whileInView={{ opacity: 1, y: 0 }} 
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-[800px] bg-white rounded-[3rem] p-10 md:p-14 flex flex-col items-center justify-center gap-8 shadow-2xl text-center mx-auto"
+          className="w-full max-w-[800px] bg-white/80 backdrop-blur-md border border-white rounded-[3rem] p-10 md:p-14 flex flex-col items-center justify-center gap-8 shadow-xl text-center mx-auto"
         >
           <div className="flex flex-col items-center">
-            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">Stay Connected</h3>
-            <p className="text-sm md:text-base text-slate-500 font-bold mt-2 text-center">Get the latest toys & offers directly in your inbox.</p>
+            <h3 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter">Stay Connected</h3>
+            <p className="text-sm md:text-base text-zinc-500 font-bold mt-2 text-center">Get the latest toys & offers directly in your inbox.</p>
           </div>
-          <form className="flex w-full max-w-[500px] bg-slate-50 rounded-full p-2 items-center mx-auto shadow-inner">
+          <form className="flex w-full max-w-[500px] bg-white rounded-full p-2 items-center mx-auto shadow-inner border border-zinc-100">
             <input 
               type="email" 
               placeholder="Your email here" 
-              className="flex-1 bg-transparent px-6 py-3 outline-none font-bold text-slate-600 placeholder:text-slate-400 placeholder:font-medium"
+              className="flex-1 bg-transparent px-6 py-3 outline-none font-bold text-zinc-600 placeholder:text-zinc-400 placeholder:font-medium"
               style={{ border: 'none', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
             />
-            <button type="button" className="w-12 h-12 md:w-14 md:h-14 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 hover:bg-amber-500 hover:scale-105 transition-all shadow-md shrink-0">
+            <button type="button" className="w-12 h-12 md:w-14 md:h-14 bg-amber-400 rounded-full flex items-center justify-center text-zinc-900 hover:bg-amber-500 hover:scale-105 transition-all shadow-md shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-[24px] font-bold">arrow_forward</span>
             </button>
           </form>

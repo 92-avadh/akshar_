@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  LineChart, Line, CartesianGrid, PieChart, Pie, Cell
+} from 'recharts';
 import {
   useGetAllOrdersQuery,
   useUpdateOrderStatusMutation,
@@ -8,6 +12,8 @@ import {
   useCreateCouponMutation,
   useDeleteCouponMutation,
   useToggleCouponMutation,
+  useGetProductsQuery,
+  useDeleteReviewMutation
 } from '../features/api/apiSlice';
 
 const getFulfillmentMeta = (status) => {
@@ -40,6 +46,7 @@ const getNextAction = (orderStatus) => {
   return null;
 };
 
+// ... Order Details Modal Component
 const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -106,10 +113,12 @@ const AdminDashboard = () => {
   const { data: orders, isLoading } = useGetAllOrdersQuery(undefined, { pollingInterval: 5000 });
   const [updateOrderStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [activeTab, setActiveTab] = useState('orders');
+  
+  // Default to the new Analytics Tab!
+  const [activeTab, setActiveTab] = useState('analytics');
 
   // Coupon state
-  const { data: coupons, isLoading: isCouponsLoading } = useGetAllCouponsQuery();
+  const { data: coupons } = useGetAllCouponsQuery();
   const [createCoupon] = useCreateCouponMutation();
   const [deleteCoupon] = useDeleteCouponMutation();
   const [toggleCoupon] = useToggleCouponMutation();
@@ -117,6 +126,20 @@ const AdminDashboard = () => {
   const [couponForm, setCouponForm] = useState({
     code: '', discountType: 'percentage', discountValue: '', minOrderAmount: '', maxDiscount: '', usageLimit: '', expiresAt: '',
   });
+
+  // Review State (Fetches top 100 products to extract reviews)
+  const { data: productsData } = useGetProductsQuery({ limit: 100 });
+  const [deleteReview] = useDeleteReviewMutation();
+  
+  const allReviews = productsData?.products?.reduce((acc, product) => {
+    const productReviews = product.reviews.map(r => ({
+      ...r,
+      productId: product._id,
+      productTitle: product.title,
+      productImage: product.img
+    }));
+    return [...acc, ...productReviews];
+  }, []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) || [];
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -134,17 +157,77 @@ const AdminDashboard = () => {
     if (window.confirm(`Are you sure you want to advance this order to ${nextStatus.toUpperCase()}?`)) {
       try {
         await updateOrderStatus({ id, status: nextStatus }).unwrap();
+        toast.success(`Order advanced to ${nextStatus}!`);
       } catch (err) {
-        alert(err?.data?.message || 'Failed to update order');
+        toast.error(err?.data?.message || 'Failed to update order');
       }
     }
   };
+
+  const handleDeleteReview = async (productId, reviewId) => {
+    if (window.confirm('Delete this user review? This action cannot be undone.')) {
+      try {
+        await deleteReview({ productId, reviewId }).unwrap();
+        toast.success('Review successfully deleted.');
+      } catch (err) {
+        toast.error('Failed to delete review.');
+      }
+    }
+  };
+
+  // ====================================================
+  // 📊 ANALYTICS DATA PROCESSING LOGIC
+  // ====================================================
+  const analyticsData = useMemo(() => {
+    if (!orders) return null;
+
+    // 1. Last 7 Days Revenue
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }).reverse();
+
+    const revenueData = last7Days.map(dateLabel => {
+      const dailyRevenue = orders.filter(order => {
+        const orderDate = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        // Include paid orders and Cash on Delivery
+        return orderDate === dateLabel && (order.paymentStatus === 'paid' || order.paymentMethod === 'cod');
+      }).reduce((acc, order) => acc + order.totalPrice, 0);
+      return { date: dateLabel, Revenue: dailyRevenue };
+    });
+
+    // 2. Top Selling Toys
+    const topToysMap = {};
+    orders.forEach(order => {
+      if (order.paymentStatus === 'paid' || order.paymentMethod === 'cod') {
+        order.orderItems?.forEach(item => {
+          topToysMap[item.title] = (topToysMap[item.title] || 0) + item.qty;
+        });
+      }
+    });
+    const topToysData = Object.keys(topToysMap)
+      .map(key => ({ name: key, Sales: topToysMap[key] }))
+      .sort((a,b) => b.Sales - a.Sales)
+      .slice(0, 5); // Top 5 for chart
+
+    // 3. Fulfillment Pipeline (Pie Chart)
+    const fulfillmentData = [
+      { name: 'Pending', value: orders.filter(o => o.orderStatus === 'created' || o.orderStatus === 'pending_payment').length, color: '#f43f5e' }, // Rose
+      { name: 'Confirmed', value: orders.filter(o => o.orderStatus === 'confirmed').length, color: '#8b5cf6' }, // Violet
+      { name: 'Packed', value: orders.filter(o => o.orderStatus === 'packed').length, color: '#3b82f6' }, // Blue
+      { name: 'Dispatched', value: orders.filter(o => o.orderStatus === 'dispatched').length, color: '#f97316' }, // Orange
+    ].filter(item => item.value > 0); // Only show active stages
+
+    return { revenueData, topToysData, fulfillmentData };
+  }, [orders]);
+
 
   if (isLoading) {
     return <div className="pt-32 text-center font-bold text-zinc-500">Loading Command Center...</div>;
   }
 
-  const totalRevenue = orders?.reduce((acc, order) => acc + (order.paymentStatus === 'paid' ? order.totalPrice : 0), 0) || 0;
+  const totalRevenue = orders?.reduce((acc, order) => acc + (order.paymentStatus === 'paid' || order.paymentMethod === 'cod' ? order.totalPrice : 0), 0) || 0;
   const totalOrders = orders?.length || 0;
   const pendingOrders = orders?.filter((order) => order.orderStatus !== 'delivered' && order.orderStatus !== 'fulfilled' && order.orderStatus !== 'cancelled').length || 0;
 
@@ -153,7 +236,7 @@ const AdminDashboard = () => {
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       <div className="max-w-[1300px] mx-auto px-6 relative z-10">
-        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/60 p-6 md:p-8 rounded-[2.5rem] border border-white shadow-sm">
+        <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/60 backdrop-blur-md p-6 md:p-8 rounded-[2.5rem] border border-white shadow-sm">
           <div>
             <h1 className="text-3xl md:text-4xl font-black text-zinc-800 tracking-tight">Admin Dashboard</h1>
             <p className="text-zinc-500 font-bold mt-2">Overview of your sales, revenue, and fulfillment queue.</p>
@@ -197,18 +280,119 @@ const AdminDashboard = () => {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex gap-2 mb-8 bg-white/60 p-2 rounded-2xl border border-white shadow-sm w-max">
+        <div className="flex gap-2 mb-8 bg-white/60 backdrop-blur-sm p-2 rounded-2xl border border-white shadow-sm w-max flex-wrap">
+          <button onClick={() => setActiveTab('analytics')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'analytics' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
+            <span className="material-symbols-outlined text-[18px]">bar_chart</span> Analytics
+          </button>
           <button onClick={() => setActiveTab('orders')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
             <span className="material-symbols-outlined text-[18px]">local_shipping</span> Orders
           </button>
           <button onClick={() => setActiveTab('promos')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'promos' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
             <span className="material-symbols-outlined text-[18px]">sell</span> Promo Codes
-            {coupons?.length > 0 && <span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">{coupons.length}</span>}
+            {coupons?.length > 0 && <span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">{coupons.length}</span>}
+          </button>
+          <button onClick={() => setActiveTab('reviews')} className={`px-6 py-3 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${activeTab === 'reviews' ? 'bg-zinc-900 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-800 hover:bg-white/80'}`}>
+            <span className="material-symbols-outlined text-[18px]">rate_review</span> Moderation
+            {allReviews.length > 0 && <span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">{allReviews.length}</span>}
           </button>
         </div>
 
+        {/* ============= 📊 NEW ANALYTICS TAB ============= */}
+        {activeTab === 'analytics' && analyticsData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in">
+            
+            {/* Revenue Line Chart */}
+            <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft lg:col-span-2">
+              <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-green-500">trending_up</span> 7-Day Revenue Trend
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analyticsData.revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 12, fontWeight: 700}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 12, fontWeight: 700}} dx={-10} tickFormatter={(value) => `₹${value}`} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }}
+                      itemStyle={{ color: '#F97316', fontWeight: 900 }}
+                    />
+                    <Line type="monotone" dataKey="Revenue" stroke="#F97316" strokeWidth={4} dot={{r: 6, fill: '#F97316', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 8}} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Toys Bar Chart */}
+            <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft">
+              <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-yellow-500">star</span> Best Selling Toys
+              </h3>
+              <div className="h-[250px] w-full">
+                {analyticsData.topToysData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analyticsData.topToysData} layout="vertical" margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e4e4e7" />
+                      <XAxis type="number" hide />
+                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#71717a', fontSize: 11, fontWeight: 700}} width={120} />
+                      <Tooltip cursor={{fill: '#f4f4f5'}} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }} />
+                      <Bar dataKey="Sales" fill="#3b82f6" radius={[0, 8, 8, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-zinc-400 font-bold">No sales data yet.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Fulfillment Pie Chart */}
+            <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft">
+              <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
+                <span className="material-symbols-outlined text-purple-500">pie_chart</span> Active Bottlenecks
+              </h3>
+              <div className="h-[250px] w-full flex items-center justify-center relative">
+                {analyticsData.fulfillmentData.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={analyticsData.fulfillmentData}
+                          cx="50%" cy="50%"
+                          innerRadius={60} outerRadius={90}
+                          paddingAngle={5} dataKey="value"
+                          stroke="none"
+                        >
+                          {analyticsData.fulfillmentData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Custom Legend */}
+                    <div className="absolute top-1/2 -translate-y-1/2 right-0 flex flex-col gap-3">
+                      {analyticsData.fulfillmentData.map((entry, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs font-bold text-zinc-600">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                          {entry.name} ({entry.value})
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-zinc-400 font-bold text-center">
+                    <span className="material-symbols-outlined text-4xl block mb-2 opacity-50">done_all</span><br/>
+                    Queue is empty!
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ============= ORDERS TAB ============= */}
         {activeTab === 'orders' && (
-        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden">
+        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden fade-in">
           <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
             <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary-container text-[28px]">local_shipping</span>
@@ -296,7 +480,7 @@ const AdminDashboard = () => {
 
         {/* ============= PROMOS TAB ============= */}
         {activeTab === 'promos' && (
-        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden">
+        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden fade-in">
           <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
             <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary-container text-[28px]">sell</span>
@@ -414,6 +598,77 @@ const AdminDashboard = () => {
                     <td colSpan="6" className="text-center py-16">
                       <span className="material-symbols-outlined text-[48px] text-zinc-300 mb-2 block">sell</span>
                       <p className="text-zinc-500 font-bold">No promo codes yet. Click "New Code" to get started!</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        )}
+
+        {/* ============= REVIEWS MODERATION TAB ============= */}
+        {activeTab === 'reviews' && (
+        <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden fade-in">
+          <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
+            <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary-container text-[28px]">rate_review</span>
+              Review Moderation
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[900px]">
+              <thead>
+                <tr className="bg-zinc-50/50 border-b border-zinc-100">
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider pl-8 w-[250px]">Product</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider w-[150px]">User & Rating</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider">Comment</th>
+                  <th className="p-5 text-xs font-black text-zinc-400 uppercase tracking-wider pr-8 text-right w-[100px]">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allReviews.map((review) => (
+                  <tr key={review._id} className="hover:bg-white transition-colors border-b border-zinc-50 group">
+                    <td className="p-5 pl-8 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                        <img src={review.productImage} alt="" className="w-full h-full object-cover mix-blend-multiply" />
+                      </div>
+                      <Link to={`/product/${review.productId}`} className="font-bold text-sm text-zinc-800 hover:text-primary-container transition-colors line-clamp-2">
+                        {review.productTitle}
+                      </Link>
+                    </td>
+                    <td className="p-5">
+                      <p className="font-bold text-zinc-800 text-sm flex items-center gap-1">
+                        {review.name}
+                        <span className="material-symbols-outlined text-blue-500 text-[14px]" title="Verified Buyer">verified</span>
+                      </p>
+                      <div className="flex gap-0.5 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className={`material-symbols-outlined text-[14px] ${i < review.rating ? 'text-yellow-400 filled' : 'text-zinc-300'}`}>star</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-5">
+                      <p className="text-sm font-medium text-zinc-600 line-clamp-3">{review.comment}</p>
+                      <p className="text-[10px] text-zinc-400 font-bold mt-1">{new Date(review.createdAt).toLocaleDateString('en-IN')}</p>
+                    </td>
+                    <td className="p-5 pr-8 text-right">
+                      <button 
+                        onClick={() => handleDeleteReview(review.productId, review._id)}
+                        className="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-xl transition-all shadow-sm flex items-center justify-center w-max ml-auto"
+                        title="Delete Review"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {allReviews.length === 0 && (
+                  <tr>
+                    <td colSpan="4" className="text-center py-16">
+                      <span className="material-symbols-outlined text-[48px] text-zinc-300 mb-2 block">rate_review</span>
+                      <p className="text-zinc-500 font-bold">No reviews have been submitted yet.</p>
                     </td>
                   </tr>
                 )}

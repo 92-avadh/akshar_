@@ -99,7 +99,7 @@ const Navbar = () => {
       const topMessageId = adminMessages[0]._id;
       if (latestMessageId && topMessageId !== latestMessageId) {
         import('react-hot-toast').then(({ default: toast }) => {
-          toast("New Customer Message! 💌", {
+          toast("New Customer Message! 💬", {
             duration: 6000,
             position: 'top-right',
             style: { border: '2px solid #38BDF8', padding: '16px', color: '#18181B', fontWeight: '900' }
@@ -270,20 +270,56 @@ const Navbar = () => {
                 )}
               </Link>
 
-              {/* Profile / Auth Button */}
-              <div className="relative ml-2">
+              {/* Profile / Auth Button with Dropdown */}
+              <div className="relative ml-2 z-50">
                 {userInfo ? (
-                  <button 
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 bg-white border border-zinc-200 pl-2 pr-4 py-1.5 rounded-full hover:border-red-300 hover:shadow-sm transition-all focus:ring-2 focus:ring-red-200 outline-none group"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-fixed to-orange-100 flex items-center justify-center text-primary-container font-black text-sm shadow-inner">
-                      {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <span className="material-symbols-outlined text-[18px] text-zinc-400 group-hover:text-red-500 transition-colors">logout</span>
-                  </button>
+                  <>
+                    <button 
+                      onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                      className="flex items-center gap-2 bg-white border border-zinc-200 pl-2 pr-3 py-1.5 rounded-full hover:border-primary-container/30 hover:shadow-sm transition-all focus:ring-2 focus:ring-primary-container/20 outline-none group relative z-50"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-fixed to-orange-100 flex items-center justify-center text-primary-container font-black text-sm shadow-inner">
+                        {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <span className={`material-symbols-outlined text-[18px] text-zinc-400 transition-transform duration-300 ${isProfileDropdownOpen ? 'rotate-180' : ''}`}>
+                        expand_more
+                      </span>
+                    </button>
+
+                    {/* Profile Dropdown */}
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-zinc-100 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50">
+                        <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50/50">
+                          <p className="text-xs font-bold text-zinc-500 mb-0.5">Signed in as</p>
+                          <p className="text-sm font-black text-zinc-800 truncate">{userInfo.name || 'User'}</p>
+                        </div>
+                        
+                        <div className="py-2">
+                          {/* ONLY CUSTOMERS see this link (Admins have it in the main Navbar) */}
+                          {!isAdmin && (
+                            <Link 
+                              to="/profile" 
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center gap-3 px-5 py-3 text-sm font-bold text-zinc-600 hover:bg-orange-50 hover:text-primary-container transition-colors"
+                            >
+                              <span className="material-symbols-outlined text-[20px]">person</span>
+                              My Profile & Orders
+                            </Link>
+                          )}
+                          
+                          <button 
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-5 py-3 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">logout</span>
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <Link to="/auth" className="flex items-center gap-2 bg-zinc-900 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:shadow-md transition-all">
+                  <Link to="/auth" className="flex items-center gap-2 bg-zinc-900 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-black hover:shadow-md transition-all relative z-50">
                     <span className="material-symbols-outlined text-[18px] hidden sm:block">login</span>
                     Log In
                   </Link>
@@ -293,7 +329,7 @@ const Navbar = () => {
               {/* Mobile Menu Toggle Button */}
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors ml-1"
+                className="md:hidden p-2 text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors ml-1 z-50 relative"
               >
                 <span className="material-symbols-outlined text-[28px]">
                   {isMobileMenuOpen ? 'close' : 'menu_open'}
@@ -305,7 +341,7 @@ const Navbar = () => {
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden absolute top-[110%] left-4 right-4 bg-white/95 backdrop-blur-xl border border-zinc-100 shadow-xl rounded-[2rem] p-4 flex flex-col gap-2 animate-[slideDown_0.3s_ease-out] overflow-hidden">
+            <div className="md:hidden absolute top-[110%] left-4 right-4 bg-white/95 backdrop-blur-xl border border-zinc-100 shadow-xl rounded-[2rem] p-4 flex flex-col gap-2 animate-[slideDown_0.3s_ease-out] overflow-hidden z-40">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
