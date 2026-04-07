@@ -39,12 +39,12 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['razorpay', 'manual'],
+        enum: ['razorpay', 'manual', 'demo'],
         default: 'razorpay'
     },
     orderStatus: {
         type: String,
-        enum: ['created', 'pending_payment', 'paid', 'fulfilled', 'refunded', 'cancelled', 'payment_review'],
+        enum: ['created', 'pending_payment', 'paid', 'confirmed', 'packed', 'dispatched', 'delivered', 'fulfilled', 'refunded', 'cancelled', 'payment_review'],
         default: 'created'
     },
     paymentStatus: {
@@ -59,6 +59,10 @@ const orderSchema = new mongoose.Schema({
     inventoryCommitted: {
         type: Boolean,
         default: false
+    },
+    couponCode: {
+        type: String,
+        default: null,
     },
     inventoryIssue: {
         type: String,
@@ -77,20 +81,30 @@ const orderSchema = new mongoose.Schema({
         default: null
     },
     razorpay: {
-        orderId: { type: String, default: null },
-        paymentId: { type: String, default: null },
-        signature: { type: String, default: null },
-        receipt: { type: String, default: null },
-        refundId: { type: String, default: null },
-        amount: { type: Number, default: null },
-        lastWebhookEvent: { type: String, default: null },
-        lastWebhookAt: { type: Date, default: null }
+        orderId: { type: String },
+        paymentId: { type: String },
+        signature: { type: String },
+        receipt: { type: String },
+        refundId: { type: String },
+        amount: { type: Number },
+        lastWebhookEvent: { type: String },
+        lastWebhookAt: { type: Date }
     },
     // NEW FIELDS FOR ADMIN PANEL
     isDelivered: {
         type: Boolean,
         required: true,
         default: false
+    },
+    courier: {
+        name: { type: String, default: null },
+        trackingLink: { type: String, default: null },
+    },
+    statusTimestamps: {
+        confirmedAt: { type: Date },
+        packedAt: { type: Date },
+        dispatchedAt: { type: Date },
+        deliveredAt: { type: Date },
     },
     deliveredAt: {
         type: Date

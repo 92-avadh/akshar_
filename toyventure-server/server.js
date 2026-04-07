@@ -15,6 +15,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const contactRoutes = require('./routes/contactRoutes'); // <-- NEW: Imported contact routes
+const couponRoutes = require('./routes/couponRoutes');
 const { assignRequestId, requestLogger } = require('./middleware/requestContext');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
@@ -107,6 +108,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/contact', contactRoutes); // <-- NEW: Added contact route endpoint
+app.use('/api/coupons', couponRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

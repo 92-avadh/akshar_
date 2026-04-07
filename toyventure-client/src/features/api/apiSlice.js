@@ -14,7 +14,7 @@ export const apiSlice = createApi({
       return headers;
     },
   }), 
-  tagTypes: ['Product', 'Order', 'User', 'Contact'],
+  tagTypes: ['Product', 'Order', 'User', 'Contact', 'Coupon'],
   endpoints: (builder) => ({
     
     // ==========================================
@@ -121,16 +121,17 @@ export const apiSlice = createApi({
       providesTags: ['Order'],
     }),
 
-    deliverOrder: builder.mutation({
-      query: (orderId) => ({
-        url: `/orders/${orderId}/deliver`,
+    updateOrderStatus: builder.mutation({
+      query: ({ id, status }) => ({
+        url: `/orders/${id}/status`,
         method: 'PUT',
+        body: { status }
       }),
       invalidatesTags: ['Order'], 
     }),
 
     // ==========================================
-    // RAZORPAY PAYMENTS
+    // RAZORPAY PAYMENTS & DEMO
     // ==========================================
     createRazorpayOrder: builder.mutation({
       query: ({ idempotencyKey, ...data }) => ({
@@ -143,6 +144,16 @@ export const apiSlice = createApi({
     
     verifyRazorpayPayment: builder.mutation({
       query: (data) => ({ url: '/payments/razorpay/verify', method: 'POST', body: data })
+    }),
+
+    createDemoOrder: builder.mutation({
+      query: ({ idempotencyKey, ...data }) => ({
+        url: '/payments/demo',
+        method: 'POST',
+        body: data,
+        headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+      }),
+      invalidatesTags: ['Order'], // Invalidate orders so admin/user order lists refresh automatically
     }),
 
     // ==========================================
@@ -159,6 +170,33 @@ export const apiSlice = createApi({
     getAllContactMessages: builder.query({
       query: () => '/contact',
       providesTags: ['Contact'],
+    }),
+
+    // ==========================================
+    // COUPONS / PROMO CODES
+    // ==========================================
+    getAllCoupons: builder.query({
+      query: () => '/coupons',
+      providesTags: ['Coupon'],
+    }),
+
+    createCoupon: builder.mutation({
+      query: (data) => ({ url: '/coupons', method: 'POST', body: data }),
+      invalidatesTags: ['Coupon'],
+    }),
+
+    deleteCoupon: builder.mutation({
+      query: (id) => ({ url: `/coupons/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Coupon'],
+    }),
+
+    toggleCoupon: builder.mutation({
+      query: (id) => ({ url: `/coupons/${id}/toggle`, method: 'PUT' }),
+      invalidatesTags: ['Coupon'],
+    }),
+
+    validateCoupon: builder.mutation({
+      query: (data) => ({ url: '/coupons/validate', method: 'POST', body: data }),
     }),
 
   }),
@@ -181,11 +219,19 @@ export const {
   useCreateOrderMutation,
   useGetMyOrdersQuery, 
   useGetAllOrdersQuery,    
-  useDeliverOrderMutation,
+  useUpdateOrderStatusMutation,
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
+  useCreateDemoOrderMutation,
   
   // NEW EXPORTS FOR CONTACT MESSAGES
   useSubmitContactMessageMutation,
-  useGetAllContactMessagesQuery
+  useGetAllContactMessagesQuery,
+
+  // COUPON EXPORTS
+  useGetAllCouponsQuery,
+  useCreateCouponMutation,
+  useDeleteCouponMutation,
+  useToggleCouponMutation,
+  useValidateCouponMutation,
 } = apiSlice;

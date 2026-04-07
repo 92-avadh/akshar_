@@ -7,13 +7,24 @@ import {
   useGetAllContactMessagesQuery // <-- Import the new hook
 } from '../features/api/apiSlice';
 
-const getOrderStatusMeta = (order) => {
-  if (order.orderStatus === 'fulfilled') return { label: 'Delivered', className: 'bg-green-100 text-green-700 border border-green-200' };
-  if (order.orderStatus === 'payment_review') return { label: 'Paid - Review', className: 'bg-amber-100 text-amber-700 border border-amber-200' };
-  if (order.paymentStatus === 'refunded' || order.orderStatus === 'refunded') return { label: 'Refunded', className: 'bg-slate-100 text-slate-700 border border-slate-200' };
-  if (order.paymentStatus === 'paid') return { label: 'Paid', className: 'bg-green-100 text-green-700 border border-green-200' };
-  if (order.paymentStatus === 'failed') return { label: 'Payment Retry Needed', className: 'bg-red-100 text-red-700 border border-red-200' };
-  return { label: 'Pending Payment', className: 'bg-orange-100 text-orange-700 border border-orange-200' };
+const getFulfillmentMeta = (status) => {
+  switch(status) {
+    case 'confirmed': return { label: 'Confirmed', className: 'bg-indigo-50 border-indigo-200 text-indigo-700', icon: 'thumb_up' };
+    case 'packed': return { label: 'Packed', className: 'bg-purple-50 border-purple-200 text-purple-700', icon: 'inventory_2' };
+    case 'dispatched': return { label: 'Dispatched', className: 'bg-orange-50 border-orange-200 text-orange-700', icon: 'local_shipping' };
+    case 'delivered': 
+    case 'fulfilled': return { label: 'Delivered', className: 'bg-green-50 border-green-200 text-green-700', icon: 'check_circle' };
+    default: return { label: 'Processing', className: 'bg-slate-50 border-slate-200 text-slate-700', icon: 'hourglass_empty' };
+  }
+};
+
+const getPaymentMeta = (status) => {
+  switch(status) {
+    case 'paid': return { label: 'Paid', className: 'bg-green-50 border-green-200 text-green-700', icon: 'check_circle' };
+    case 'failed': return { label: 'Failed', className: 'bg-red-50 border-red-200 text-red-700', icon: 'error' };
+    case 'refunded': return { label: 'Refunded', className: 'bg-slate-50 border-slate-200 text-slate-700', icon: 'replay' };
+    default: return { label: 'Pending Payment', className: 'bg-orange-50 border-orange-200 text-orange-700', icon: 'timer' };
+  }
 };
 
 const Profile = () => {
@@ -23,7 +34,7 @@ const Profile = () => {
   const [addresses, setAddresses] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false); // To track if user is admin
 
-  const { data: orders, isLoading: loadingOrders } = useGetMyOrdersQuery();
+  const { data: orders, isLoading: loadingOrders } = useGetMyOrdersQuery(undefined, { pollingInterval: 5000 });
   const { data: profile, isLoading: loadingProfile } = useGetUserProfileQuery();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
   
@@ -131,10 +142,6 @@ const Profile = () => {
                 <span className="material-symbols-outlined text-[20px]">edit</span> Edit Profile
               </button>
             </div>
-
-            <button onClick={handleLogout} className="w-full py-3 bg-red-50 text-red-600 font-bold rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-100">
-              <span className="material-symbols-outlined text-[20px]">logout</span> Sign Out
-            </button>
           </div>
         </div>
 
@@ -150,17 +157,23 @@ const Profile = () => {
               ) : orders && orders.length > 0 ? (
                 <div className="space-y-6">
                   {orders.map((order) => {
-                    const statusMeta = getOrderStatusMeta(order);
+                    const fulfillMeta = getFulfillmentMeta(order.orderStatus);
+                    const payMeta = getPaymentMeta(order.paymentStatus);
                     return (
                       <div key={order._id} className="bg-slate-50 p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between gap-4 hover:shadow-md transition-all">
                         <div>
                           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                             Order: <span className="text-slate-600 font-mono">{order._id.substring(order._id.length - 8)}</span>
                           </p>
-                          <p className="text-sm font-bold text-slate-800 mb-2">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
-                          <span className={`${statusMeta.className} text-xs font-bold px-3 py-1 rounded-full`}>
-                            {statusMeta.label}
-                          </span>
+                          <p className="text-sm font-bold text-slate-800 mb-3">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`${payMeta.className} text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 border shadow-sm`}>
+                              <span className="material-symbols-outlined text-[14px]">{payMeta.icon}</span> {payMeta.label}
+                            </span>
+                            <span className={`${fulfillMeta.className} text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 border shadow-sm`}>
+                              <span className="material-symbols-outlined text-[14px]">{fulfillMeta.icon}</span> {fulfillMeta.label}
+                            </span>
+                          </div>
                         </div>
                         <div className="text-left md:text-right">
                           <p className="text-xs text-slate-500 font-bold mb-1">{order.orderItems.length} Item(s)</p>

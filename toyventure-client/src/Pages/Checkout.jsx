@@ -6,6 +6,9 @@ import {
   useCreateRazorpayOrderMutation,
   useVerifyRazorpayPaymentMutation,
   useGetUserProfileQuery,
+  useCreateDemoOrderMutation,
+  useUpdateUserProfileMutation,
+  useValidateCouponMutation,
 } from '../features/api/apiSlice';
 import { clearCart } from '../features/cart/cartSlice';
 
@@ -48,7 +51,9 @@ const Checkout = () => {
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
   const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVerifyRazorpayPaymentMutation();
+  const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
   const { data: profile } = useGetUserProfileQuery();
+  const [updateProfile] = useUpdateUserProfileMutation();
 
   const [shippingDetails, setShippingDetails] = useState({
     fullName: '',
@@ -60,16 +65,57 @@ const Checkout = () => {
     pincode: '',
   });
 
+  React.useEffect(() => {
+    if (profile?.addresses?.length > 0 && shippingDetails.street === '') {
+      handleSelectSavedAddress(profile.addresses[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [checkoutRequestKey] = useState(() => createCheckoutRequestKey());
 
-  const totalPrice = cartItems.reduce((acc, item) => {
+  // Coupon State
+  const [validateCoupon, { isLoading: isValidatingCoupon }] = useValidateCouponMutation();
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [showCouponDetails, setShowCouponDetails] = useState(false);
+
+  const subtotalPrice = cartItems.reduce((acc, item) => {
     const price = parseFloat(item.price) || 0;
     const qty = parseInt(item.qty, 10) || 1;
     return acc + price * qty;
   }, 0);
 
-  const isBusy = isCreatingOrder || isVerifyingPayment;
+  const totalPrice = appliedCoupon ? appliedCoupon.finalTotal : subtotalPrice;
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) { toast.error('Please enter a promo code.'); return; }
+    try {
+      const result = await validateCoupon({ code: couponInput.trim(), cartTotal: subtotalPrice }).unwrap();
+      setAppliedCoupon({
+        code: result.code,
+        discount: result.discount,
+        finalTotal: result.finalTotal,
+        discountType: result.discountType,
+        discountValue: result.discountValue,
+        terms: result.terms || {},
+      });
+      setShowCouponDetails(false);
+      toast.success(result.message);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Invalid coupon code.');
+      setAppliedCoupon(null);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    toast('Coupon removed.', { icon: '🗑️' });
+  };
+
+  const isBusy = isCreatingOrder || isVerifyingPayment || isCreatingDemoOrder;
 
   const handleInputChange = (e) => {
     setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
@@ -85,6 +131,30 @@ const Checkout = () => {
       city: addressObj.city,
       pincode: addressObj.pincode,
     });
+  };
+
+  const handleAutoSaveAddress = async () => {
+    if (!profile) return;
+    const { flatNumber, street, landmark, city, pincode } = shippingDetails;
+    const currentAddresses = profile.addresses || [];
+    
+    // Check if exactly this address is already saved
+    const exists = currentAddresses.some(a => 
+      a.flatNumber === flatNumber && 
+      a.street === street && 
+      a.city === city && 
+      a.pincode === pincode
+    );
+
+    if (!exists) {
+      // Append and keep only the latest 3
+      const newAddresses = [...currentAddresses, { flatNumber, street, landmark, city, pincode }].slice(-3);
+      try {
+        await updateProfile({ name: profile.name, addresses: newAddresses }).unwrap();
+      } catch (err) {
+        console.error("Failed to auto-save address", err);
+      }
+    }
   };
 
   const launchRazorpayCheckout = async ({ order, razorpayOrder, razorpayKeyId }) => {
@@ -128,6 +198,7 @@ const Checkout = () => {
           }).unwrap();
 
           dispatch(clearCart());
+          await handleAutoSaveAddress();
           toast.success(verification.message || 'Payment verified successfully!');
           navigate('/profile');
         } catch (error) {
@@ -161,6 +232,23 @@ const Checkout = () => {
     }
 
     try {
+      if (paymentMethod === 'demo') {
+        const demoOrder = await createDemoOrder({
+          orderItems: cartItems,
+          shippingDetails,
+          totalPrice,
+          paymentMethod: 'demo',
+          idempotencyKey: checkoutRequestKey,
+          couponCode: appliedCoupon?.code || null,
+        }).unwrap();
+        
+        dispatch(clearCart());
+        await handleAutoSaveAddress();
+        toast.success(demoOrder.message || 'Demo Order placed successfully!');
+        navigate('/profile');
+        return;
+      }
+
       const checkoutSession = await createRazorpayOrder({
         orderItems: cartItems,
         shippingDetails,
@@ -264,6 +352,19 @@ const Checkout = () => {
                   <label className="text-sm font-bold text-zinc-600 ml-1">Pincode</label>
                   <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="400001" />
                 </div>
+                <div className="md:col-span-2 flex justify-end border-t border-zinc-200/50 pt-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShippingDetails({
+                      fullName: profile?.name || '',
+                      phone: profile?.mobileNumber || '',
+                      flatNumber: '', street: '', landmark: '', city: '', pincode: ''
+                    })}
+                    className="flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-primary-container transition-colors px-3 py-2 rounded-lg hover:bg-primary-container/10"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">add_circle</span> Clear and Enter a New Address
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -274,7 +375,7 @@ const Checkout = () => {
               <h1 className="text-2xl font-black text-zinc-800">Secure Payment</h1>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'card' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                 <div className="flex items-center justify-between">
                   <span className="material-symbols-outlined text-primary-container text-[28px]">credit_card</span>
@@ -291,6 +392,17 @@ const Checkout = () => {
                 </div>
                 <span className="font-black text-zinc-800 text-lg">UPI</span>
                 <span className="text-xs text-zinc-500 font-medium">Use GPay, PhonePe, Paytm, or any UPI app inside Razorpay.</span>
+              </label>
+            </div>
+
+            <div className="mb-6">
+              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'demo' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="material-symbols-outlined text-primary-container text-[28px]">bug_report</span>
+                  <input type="radio" name="payment" value="demo" checked={paymentMethod === 'demo'} onChange={() => setPaymentMethod('demo')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
+                </div>
+                <span className="font-black text-zinc-800 text-lg">Demo Payment (Testing)</span>
+                <span className="text-xs text-zinc-500 font-medium">Bypass Razorpay and automatically process a fulfilled testing transaction.</span>
               </label>
             </div>
 
@@ -329,18 +441,114 @@ const Checkout = () => {
               ))}
             </div>
 
-            <div className="border-t border-white mt-6 pt-6 space-y-3">
+            {/* Promo Code Input */}
+            <div className="border-t border-white mt-6 pt-5">
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">sell</span> Promo Code
+              </p>
+              {appliedCoupon ? (
+                <div>
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+                      <span className="font-black text-green-700 text-sm">{appliedCoupon.code}</span>
+                      <span className="text-green-600 text-xs font-bold">- Rs {appliedCoupon.discount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setShowCouponDetails(!showCouponDetails)} className="text-green-500 hover:text-green-700 transition-colors" title="View Details">
+                        <span className="material-symbols-outlined text-[18px]">{showCouponDetails ? 'expand_less' : 'info'}</span>
+                      </button>
+                      <button type="button" onClick={handleRemoveCoupon} className="text-red-400 hover:text-red-600 transition-colors">
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+                  </div>
+                  {showCouponDetails && (
+                    <div className="mt-2 bg-white/60 border border-zinc-200/60 rounded-xl p-4 space-y-2 text-xs">
+                      <p className="font-black text-zinc-600 uppercase tracking-wider text-[10px] mb-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">gavel</span> Terms & Conditions
+                      </p>
+                      <div className="space-y-1.5 text-zinc-600 font-medium">
+                        <p className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[14px] text-primary-container">sell</span>
+                          Discount: <strong className="text-zinc-800">{appliedCoupon.discountType === 'percentage' ? `${appliedCoupon.discountValue}% off` : `Flat Rs ${appliedCoupon.discountValue} off`}</strong>
+                        </p>
+                        {appliedCoupon.terms.minOrderAmount > 0 && (
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[14px] text-primary-container">shopping_cart</span>
+                            Minimum order: <strong className="text-zinc-800">Rs {appliedCoupon.terms.minOrderAmount}</strong>
+                          </p>
+                        )}
+                        {appliedCoupon.terms.maxDiscount && (
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[14px] text-primary-container">vertical_align_top</span>
+                            Max discount capped at: <strong className="text-zinc-800">Rs {appliedCoupon.terms.maxDiscount}</strong>
+                          </p>
+                        )}
+                        {appliedCoupon.terms.expiresAt && (
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[14px] text-primary-container">event</span>
+                            Valid until: <strong className="text-zinc-800">{new Date(appliedCoupon.terms.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                          </p>
+                        )}
+                        {appliedCoupon.terms.usageLimit !== null && (
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[14px] text-primary-container">group</span>
+                            Limited to <strong className="text-zinc-800">{appliedCoupon.terms.usageLimit}</strong> uses ({appliedCoupon.terms.usageLimit - appliedCoupon.terms.usedCount} remaining)
+                          </p>
+                        )}
+                        {!appliedCoupon.terms.expiresAt && !appliedCoupon.terms.usageLimit && appliedCoupon.terms.minOrderAmount === 0 && !appliedCoupon.terms.maxDiscount && (
+                          <p className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[14px] text-green-500">check</span>
+                            No restrictions. Enjoy your discount!
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Enter code e.g. SUMMER20"
+                    className="flex-1 bg-white/60 p-3 border border-white rounded-xl focus:ring-2 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-bold text-sm text-zinc-800 uppercase placeholder:normal-case placeholder:text-zinc-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={isValidatingCoupon}
+                    className="px-5 py-3 bg-zinc-800 text-white font-black text-xs rounded-xl hover:bg-black transition-all disabled:opacity-50 uppercase tracking-wider"
+                  >
+                    {isValidatingCoupon ? '...' : 'Apply'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-white mt-4 pt-4 space-y-3">
               <div className="flex justify-between text-sm font-bold text-zinc-600">
                 <span>Subtotal</span>
-                <span>Rs {totalPrice.toLocaleString('en-IN')}</span>
+                <span>Rs {subtotalPrice.toLocaleString('en-IN')}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm font-bold text-green-600">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span>- Rs {appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm font-bold text-zinc-600">
                 <span>Shipping</span>
                 <span className="text-green-600">Free</span>
               </div>
               <div className="flex justify-between items-end pt-4">
                 <span className="text-lg font-bold text-zinc-800">Total Due</span>
-                <span className="text-3xl font-black text-primary-container">Rs {totalPrice.toLocaleString('en-IN')}</span>
+                <div className="text-right">
+                  {appliedCoupon && <span className="text-sm text-zinc-400 line-through block">Rs {subtotalPrice.toLocaleString('en-IN')}</span>}
+                  <span className="text-3xl font-black text-primary-container">Rs {totalPrice.toLocaleString('en-IN')}</span>
+                </div>
               </div>
             </div>
 

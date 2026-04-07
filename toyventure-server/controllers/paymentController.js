@@ -8,6 +8,7 @@ const {
   commitInventoryForOrder,
 } = require('../utils/orderInventory');
 const { getRazorpayClient } = require('../utils/razorpay');
+const { incrementCouponUsage } = require('../controllers/couponController');
 
 const formatBadRequest = (message, res) => res.status(400).json({ message });
 
@@ -185,6 +186,73 @@ const createRazorpayOrder = async (req, res, next) => {
       return formatBadRequest(error.message, res);
     }
 
+    next(error);
+  }
+};
+
+const createDemoOrder = async (req, res, next) => {
+  try {
+    const { orderItems, shippingDetails, totalPrice, couponCode } = req.body;
+    const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
+
+    validateOrderPayload({ orderItems, shippingDetails, totalPrice });
+
+    if (!idempotencyKey) {
+      return formatBadRequest('Missing Idempotency-Key for checkout.', res);
+    }
+
+    const existingOrder = await Order.findOne({ user: req.user._id, idempotencyKey }).sort({ createdAt: -1 });
+    if (existingOrder) {
+      return res.status(existingOrder.isPaid ? 200 : 201).json({
+        message: 'Existing demo checkout session found.',
+        order: existingOrder,
+      });
+    }
+
+    const normalizedOrderItems = normalizeOrderItems(orderItems);
+    await assertInventoryAvailable(normalizedOrderItems);
+    
+    // Deduct inventory formally
+    const inventoryResult = await commitInventoryForOrder(normalizedOrderItems);
+    if (!inventoryResult.committed) {
+       return res.status(400).json({ message: inventoryResult.reason });
+    }
+
+    const localOrder = await Order.create({
+      user: req.user._id,
+      orderItems: normalizedOrderItems,
+      shippingDetails,
+      totalPrice: Number(totalPrice),
+      currency: 'INR',
+      paymentMethod: 'demo',
+      orderStatus: 'paid', // Immediately set to paid
+      paymentStatus: 'paid', // Immediately set to paid
+      isPaid: true,
+      paidAt: new Date(),
+      inventoryCommitted: true,
+      idempotencyKey,
+      couponCode: couponCode || null,
+    });
+
+    // Increment coupon usage if a code was applied
+    if (couponCode) {
+      await incrementCouponUsage(couponCode);
+    }
+
+    logPaymentEvent({
+      requestId: req.requestId,
+      action: 'create_demo_order',
+      localOrderId: localOrder._id,
+    });
+
+    res.status(201).json({
+      message: 'Demo order processed successfully.',
+      order: localOrder,
+    });
+  } catch (error) {
+    if (error.message.includes('stock') || error.message.includes('quantity') || error.message.includes('Missing')) {
+      return formatBadRequest(error.message, res);
+    }
     next(error);
   }
 };
@@ -370,6 +438,7 @@ const handleRazorpayWebhook = async (req, res, next) => {
 
 module.exports = {
   createRazorpayOrder,
+  createDemoOrder,
   verifyRazorpayPayment,
   handleRazorpayWebhook,
 };

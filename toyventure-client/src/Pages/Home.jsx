@@ -271,6 +271,33 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* ================= STAY CONNECTED NEWSLETTER ================= */}
+      <section className="py-16 px-6 max-w-[1440px] mx-auto relative z-20 flex justify-center items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} 
+          whileInView={{ opacity: 1, y: 0 }} 
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-[800px] bg-white rounded-[3rem] p-10 md:p-14 flex flex-col items-center justify-center gap-8 shadow-2xl text-center mx-auto"
+        >
+          <div className="flex flex-col items-center">
+            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">Stay Connected</h3>
+            <p className="text-sm md:text-base text-slate-500 font-bold mt-2 text-center">Get the latest toys & offers directly in your inbox.</p>
+          </div>
+          <form className="flex w-full max-w-[500px] bg-slate-50 rounded-full p-2 items-center mx-auto shadow-inner">
+            <input 
+              type="email" 
+              placeholder="Your email here" 
+              className="flex-1 bg-transparent px-6 py-3 outline-none font-bold text-slate-600 placeholder:text-slate-400 placeholder:font-medium"
+              style={{ border: 'none', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
+            />
+            <button type="button" className="w-12 h-12 md:w-14 md:h-14 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 hover:bg-amber-500 hover:scale-105 transition-all shadow-md shrink-0">
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] font-bold">arrow_forward</span>
+            </button>
+          </form>
+        </motion.div>
+      </section>
       
     </main>
   );

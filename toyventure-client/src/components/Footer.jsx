@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Logo from './Logo';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
@@ -36,41 +37,17 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* ================= TOYCKER INSPIRED NEWSLETTER BOX ================= */}
-      {/* Floating rounded gray box over the hills transition */}
-      <motion.div 
-        initial={{ opacity: 0, y: 50 }} 
-        whileInView={{ opacity: 1, y: 0 }} 
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
-        className="absolute left-1/2 -top-[200px] md:-top-[240px] -translate-x-1/2 w-[90%] max-w-[800px] z-30 pointer-events-auto"
-      >
-         <div className="bg-white/40 backdrop-blur-xl rounded-[3rem] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-           <div className="text-center md:text-left">
-             <h3 className="text-2xl font-black text-slate-900 tracking-tighter">Stay Connected</h3>
-             <p className="text-sm text-slate-500 font-bold mt-1">Get the latest toys & offers directly in your inbox.</p>
-           </div>
-           <form className="flex w-full md:w-auto bg-white rounded-full p-2 shadow-sm">
-             <input type="email" placeholder="Your email here" className="flex-1 bg-transparent px-6 py-2 outline-none font-bold text-slate-600 placeholder:text-slate-400 placeholder:font-medium min-w-[200px]" />
-             <button type="button" className="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center text-slate-900 hover:bg-amber-500 hover:scale-105 transition-all shadow-md shrink-0">
-                <span className="material-symbols-outlined text-[20px] font-bold">arrow_forward</span>
-             </button>
-           </form>
-         </div>
-      </motion.div>
 
       {/* ================= FOOTER CONTENT ================= */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-12 py-16 md:py-20 w-full max-w-[1440px] mx-auto relative z-10 pb-8">
         
         <div className="space-y-6">
-          <div className="flex items-center gap-2 group z-20">
-             <div className="w-10 h-10 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center shadow-sm">
-                <span className="material-symbols-outlined text-[24px]">toys</span>
-             </div>
-             <div className="text-3xl font-black text-slate-900 tracking-tighter">Toy<span className="text-orange-500">Blix</span></div>
+          <div className="flex items-center gap-2 mb-4">
+            <Logo className="w-10 h-10" />
+            <div className="text-3xl font-black text-slate-900 tracking-tighter">Toy<span className="text-orange-500">Blix</span></div>
           </div>
           
-          <p className="text-slate-500 font-bold leading-relaxed text-sm">
+          <p className="text-sm font-bold text-slate-500 mb-6 leading-relaxed">
             Making every childhood moment a magical adventure through wonderfully crafted physical play.
           </p>
           <div className="flex gap-3">

@@ -35,21 +35,49 @@ const getOrders = async (req, res) => {
     }
 };
 
-// @desc    Update order to delivered
-// @route   PUT /api/orders/:id/deliver
+// @desc    Update order status progressively
+// @route   PUT /api/orders/:id/status
 // @access  Private/Admin
-const updateOrderToDelivered = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
 
         if (order) {
-            if (!order.isPaid || order.orderStatus === 'payment_review') {
-                return res.status(400).json({ message: 'Only paid orders can be fulfilled.' });
+            const { status, courierName, trackingLink } = req.body;
+            
+            // Validate sequence to prevent regressions if needed, though admin has authority
+            const validStatuses = ['paid', 'confirmed', 'packed', 'dispatched', 'delivered', 'cancelled'];
+            if (!validStatuses.includes(status)) {
+                return res.status(400).json({ message: 'Invalid order status provided.' });
             }
 
-            order.isDelivered = true;
-            order.deliveredAt = Date.now();
-            order.orderStatus = 'fulfilled';
+            order.orderStatus = status;
+
+            // Record status timestamps
+            if (!order.statusTimestamps) order.statusTimestamps = {};
+            const timestampMap = {
+                confirmed: 'confirmedAt',
+                packed: 'packedAt',
+                dispatched: 'dispatchedAt',
+                delivered: 'deliveredAt',
+            };
+            if (timestampMap[status]) {
+                order.statusTimestamps[timestampMap[status]] = new Date();
+            }
+
+            // Save courier details on dispatch
+            if (status === 'dispatched' && (courierName || trackingLink)) {
+                order.courier = {
+                    name: courierName || null,
+                    trackingLink: trackingLink || null,
+                };
+            }
+
+            // Deliver triggers final flags
+            if (status === 'delivered') {
+                order.isDelivered = true;
+                order.deliveredAt = Date.now();
+            }
 
             const updatedOrder = await order.save();
             res.json(updatedOrder);
@@ -61,4 +89,4 @@ const updateOrderToDelivered = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getMyOrders, getOrders, updateOrderToDelivered };
+module.exports = { createOrder, getMyOrders, getOrders, updateOrderStatus };
