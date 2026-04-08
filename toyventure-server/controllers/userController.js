@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const OtpChallenge = require('../models/OtpChallenge');
+const sendEmail = require('../utils/sendEmail');
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -12,10 +14,10 @@ const getUserProfile = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 mobileNumber: user.mobileNumber,
-                role: user.role, // <-- ADDED: Now the frontend knows the role
+                role: user.role,
                 addresses: user.addresses,
-                cart: user.cart,         // <-- ADDED: Return Cloud Cart
-                wishlist: user.wishlist  // <-- ADDED: Return Cloud Wishlist
+                cart: user.cart,
+                wishlist: user.wishlist
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -42,7 +44,6 @@ const updateUserProfile = async (req, res) => {
                 user.addresses = req.body.addresses;
             }
 
-            // SILENT SYNC: Save Cart & Wishlist to Database
             if (req.body.cart !== undefined) user.cart = req.body.cart;
             if (req.body.wishlist !== undefined) user.wishlist = req.body.wishlist;
 
@@ -53,7 +54,7 @@ const updateUserProfile = async (req, res) => {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 mobileNumber: updatedUser.mobileNumber,
-                role: updatedUser.role, // <-- ADDED: Keep role synced on update
+                role: updatedUser.role,
                 addresses: updatedUser.addresses,
                 cart: updatedUser.cart,
                 wishlist: updatedUser.wishlist
@@ -128,7 +129,6 @@ const toggleUserBanStatus = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (user) {
-            // Protect against banning yourself
             if (user._id.toString() === req.user._id.toString()) {
                 return res.status(400).json({ message: 'You cannot ban yourself.' });
             }
@@ -150,7 +150,6 @@ const updateUserRole = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
         if (user) {
-            // Protect against demoting yourself to prevent an empty admin dashboard lock
             if (user._id.toString() === req.user._id.toString()) {
                 return res.status(400).json({ message: 'You cannot change your own role.' });
             }
@@ -165,4 +164,112 @@ const updateUserRole = async (req, res) => {
     }
 };
 
-module.exports = { getUserProfile, updateUserProfile, getAllUsers, toggleUserBanStatus, updateUserRole };
+// @desc    Request OTP to promote/add a new admin
+// @route   POST /api/users/admin/request-promotion
+// @access  Private/Admin
+const requestAdminPromotion = async (req, res, next) => {
+  try {
+    const admin = req.user;
+    const adminIdentifier = admin.email || admin.mobileNumber;
+
+    if (!adminIdentifier) {
+      return res.status(400).json({ message: 'Your admin account lacks an email or mobile number for verification.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60000); 
+    const channel = admin.email ? 'email' : 'mobile';
+
+    await OtpChallenge.findOneAndUpdate(
+      { identifierKey: adminIdentifier },
+      {
+        identifierKey: adminIdentifier,
+        channel,
+        otpHash: otp,
+        expiresAt,
+        isUsed: false,
+        attempts: 0
+      },
+      { upsert: true, new: true }
+    );
+
+    if (channel === 'email') {
+      await sendEmail({
+        email: admin.email,
+        subject: 'Security Alert: Admin Promotion Verification',
+        html: `
+          <div style="font-family: sans-serif; padding: 20px;">
+            <h2 style="color: #dc2626;">Admin Security Verification</h2>
+            <p>You have initiated a request to add or promote a user to an Admin role.</p>
+            <p>To confirm this is you, please enter the following OTP:</p>
+            <h2>${otp}</h2>
+          </div>
+        `
+      });
+      console.log(`📧 Admin security OTP sent to: ${admin.email}`);
+    } else {
+      console.log(`\n=== 🛡️ ADMIN SECURITY OTP (SMS MOCK) ===`);
+      console.log(`To Admin: ${adminIdentifier}`);
+      console.log(`OTP: ${otp}`);
+      console.log(`==========================================\n`);
+    }
+
+    res.status(200).json({ message: 'Security OTP sent to your registered admin contact.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify OTP and promote/add the new admin
+// @route   POST /api/users/admin/confirm-promotion
+// @access  Private/Admin
+const confirmAdminPromotion = async (req, res, next) => {
+  try {
+    const admin = req.user;
+    const adminIdentifier = admin.email || admin.mobileNumber;
+    const { targetEmail, targetMobile, otp } = req.body;
+
+    if (!otp) return res.status(400).json({ message: 'Admin verification OTP is required.' });
+    if (!targetEmail && !targetMobile) return res.status(400).json({ message: 'Target user email or mobile is required.' });
+
+    const challenge = await OtpChallenge.findOne({ identifierKey: adminIdentifier });
+    if (!challenge || challenge.otpHash !== String(otp).trim() || challenge.expiresAt < new Date()) {
+      return res.status(401).json({ message: 'Invalid or expired Admin Security OTP.' });
+    }
+
+    await OtpChallenge.deleteOne({ _id: challenge._id });
+
+    const targetIdentifier = targetEmail || targetMobile;
+    let targetUser = await User.findOne({
+      $or: [{ email: targetIdentifier }, { mobileNumber: targetIdentifier }]
+    });
+
+    if (targetUser) {
+      targetUser.role = 'admin';
+      await targetUser.save();
+    } else {
+      targetUser = await User.create({
+        email: targetEmail || undefined,
+        mobileNumber: targetMobile || undefined,
+        role: 'admin'
+      });
+    }
+
+    res.status(200).json({ 
+      message: 'User successfully promoted to Admin.',
+      user: { _id: targetUser._id, role: targetUser.role, email: targetUser.email } 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { 
+    getUserProfile, 
+    updateUserProfile, 
+    getAllUsers, 
+    toggleUserBanStatus, 
+    updateUserRole,
+    requestAdminPromotion,
+    confirmAdminPromotion
+};

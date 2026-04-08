@@ -1,5 +1,5 @@
 const Order = require('../models/Order');
-
+const sendEmail = require('../utils/sendEmail');
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Private

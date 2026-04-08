@@ -26,7 +26,6 @@ export const apiSlice = createApi({
         if (keyword) url += `&keyword=${keyword}`;
         if (tags) url += `&tags=${tags}`;
         
-        // FIXED: Explicitly check for empty strings so '0' is not ignored!
         if (minPrice !== '' && minPrice !== undefined) url += `&minPrice=${minPrice}`;
         if (maxPrice !== '' && maxPrice !== undefined) url += `&maxPrice=${maxPrice}`;
         if (minRating !== '' && minRating !== undefined) url += `&minRating=${minRating}`;
@@ -39,7 +38,20 @@ export const apiSlice = createApi({
       providesTags: ['Product'],
     }),
 
-    // Delete Review (Admin Moderation)
+    getProductById: builder.query({
+      query: (productId) => `/products/${productId}`,
+      providesTags: (result, error, id) => [{ type: 'Product', id }],
+    }),
+
+    createReview: builder.mutation({
+      query: (data) => ({
+        url: `/products/${data.productId}/reviews`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }],
+    }),
+
     deleteReview: builder.mutation({
       query: ({ productId, reviewId }) => ({
         url: `/products/${productId}/reviews/${reviewId}`,
@@ -48,7 +60,6 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, arg) => [{ type: 'Product', id: arg.productId }, 'Product'],
     }),
 
-    // NEW: Waitlist / Notify Feature
     notifyMeWhenAvailable: builder.mutation({
       query: (data) => ({
           url: `/products/${data.productId}/notify`,
@@ -62,7 +73,7 @@ export const apiSlice = createApi({
     // ==========================================
     createProduct: builder.mutation({
       query: () => ({ url: '/products', method: 'POST' }),
-      invalidatesTags: ['Product'], // Auto-refreshes your product table!
+      invalidatesTags: ['Product'], 
     }),
     
     updateProduct: builder.mutation({
@@ -136,6 +147,22 @@ export const apiSlice = createApi({
       invalidatesTags: ['User'],
     }),
 
+    requestAdminPromotion: builder.mutation({
+      query: () => ({
+        url: '/users/admin/request-promotion',
+        method: 'POST',
+      }),
+    }),
+
+    confirmAdminPromotion: builder.mutation({
+      query: (data) => ({
+        url: '/users/admin/confirm-promotion',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['User'], 
+    }),
+
     // ==========================================
     // ORDERS (USER)
     // ==========================================
@@ -193,7 +220,7 @@ export const apiSlice = createApi({
         body: data,
         headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
       }),
-      invalidatesTags: ['Order'], // Invalidate orders so admin/user order lists refresh automatically
+      invalidatesTags: ['Order'], 
     }),
 
     // ==========================================
@@ -248,7 +275,7 @@ export const {
   useGetProductByIdQuery,
   useCreateReviewMutation,
   useDeleteReviewMutation, 
-  useNotifyMeWhenAvailableMutation, // NEW: Export the Waitlist Hook
+  useNotifyMeWhenAvailableMutation, 
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
@@ -261,6 +288,8 @@ export const {
   useGetAllUsersQuery,
   useToggleUserBanStatusMutation,
   useUpdateUserRoleMutation,
+  useRequestAdminPromotionMutation,
+  useConfirmAdminPromotionMutation, 
   useCreateOrderMutation,
   useGetMyOrdersQuery, 
   useGetAllOrdersQuery,    

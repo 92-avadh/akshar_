@@ -16,7 +16,9 @@ import {
   useDeleteReviewMutation,
   useGetAllUsersQuery,
   useToggleUserBanStatusMutation,
-  useUpdateUserRoleMutation
+  useUpdateUserRoleMutation,
+  useRequestAdminPromotionMutation,
+  useConfirmAdminPromotionMutation
 } from '../features/api/apiSlice';
 
 const getFulfillmentMeta = (status) => {
@@ -49,7 +51,6 @@ const getNextAction = (orderStatus) => {
   return null;
 };
 
-// ... Order Details Modal Component
 const OrderDetailsModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -120,7 +121,6 @@ const AdminDashboard = () => {
   const [updateUserRole] = useUpdateUserRoleMutation();
   const [selectedOrder, setSelectedOrder] = useState(null);
   
-  // Default to the new Analytics Tab!
   const [activeTab, setActiveTab] = useState('analytics');
 
   // Coupon state
@@ -133,7 +133,15 @@ const AdminDashboard = () => {
     code: '', discountType: 'percentage', discountValue: '', minOrderAmount: '', maxDiscount: '', usageLimit: '', expiresAt: '',
   });
 
-  // Review State (Fetches top 100 products to extract reviews)
+  // Secure Admin Promotion State
+  const [requestAdminPromotion, { isLoading: isRequestingOtp }] = useRequestAdminPromotionMutation();
+  const [confirmAdminPromotion, { isLoading: isConfirmingAdmin }] = useConfirmAdminPromotionMutation();
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminStep, setAdminStep] = useState(1);
+  const [adminTarget, setAdminTarget] = useState('');
+  const [adminOtp, setAdminOtp] = useState('');
+
+  // Review State
   const { data: productsData } = useGetProductsQuery({ limit: 100 });
   const [deleteReview] = useDeleteReviewMutation();
   
@@ -181,13 +189,40 @@ const AdminDashboard = () => {
     }
   };
 
-  // ====================================================
-  // 📊 ANALYTICS DATA PROCESSING LOGIC
-  // ====================================================
+  // Secure Admin Promotion Handlers
+  const handleRequestAdminOtp = async (e) => {
+    e.preventDefault();
+    if (!adminTarget) return toast.error('Please enter the target email or mobile.');
+    try {
+      await requestAdminPromotion().unwrap();
+      toast.success('Security OTP sent to YOUR device/email.');
+      setAdminStep(2);
+    } catch (err) {
+      toast.error(err?.data?.message || 'Failed to request security OTP.');
+    }
+  };
+
+  const handleConfirmAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = adminTarget.includes('@') 
+        ? { targetEmail: adminTarget, otp: adminOtp } 
+        : { targetMobile: adminTarget, otp: adminOtp };
+        
+      await confirmAdminPromotion(payload).unwrap();
+      toast.success('Success! User promoted to Admin.');
+      setShowAdminForm(false);
+      setAdminStep(1);
+      setAdminTarget('');
+      setAdminOtp('');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Invalid OTP or failed to promote.');
+    }
+  };
+
   const analyticsData = useMemo(() => {
     if (!orders) return null;
 
-    // 1. Last 7 Days Revenue
     const last7Days = [...Array(7)].map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -197,13 +232,11 @@ const AdminDashboard = () => {
     const revenueData = last7Days.map(dateLabel => {
       const dailyRevenue = orders.filter(order => {
         const orderDate = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        // Include paid orders and Cash on Delivery
         return orderDate === dateLabel && (order.paymentStatus === 'paid' || order.paymentMethod === 'cod');
       }).reduce((acc, order) => acc + order.totalPrice, 0);
       return { date: dateLabel, Revenue: dailyRevenue };
     });
 
-    // 2. Top Selling Toys
     const topToysMap = {};
     orders.forEach(order => {
       if (order.paymentStatus === 'paid' || order.paymentMethod === 'cod') {
@@ -215,15 +248,14 @@ const AdminDashboard = () => {
     const topToysData = Object.keys(topToysMap)
       .map(key => ({ name: key, Sales: topToysMap[key] }))
       .sort((a,b) => b.Sales - a.Sales)
-      .slice(0, 5); // Top 5 for chart
+      .slice(0, 5);
 
-    // 3. Fulfillment Pipeline (Pie Chart)
     const fulfillmentData = [
-      { name: 'Pending', value: orders.filter(o => o.orderStatus === 'created' || o.orderStatus === 'pending_payment').length, color: '#f43f5e' }, // Rose
-      { name: 'Confirmed', value: orders.filter(o => o.orderStatus === 'confirmed').length, color: '#8b5cf6' }, // Violet
-      { name: 'Packed', value: orders.filter(o => o.orderStatus === 'packed').length, color: '#3b82f6' }, // Blue
-      { name: 'Dispatched', value: orders.filter(o => o.orderStatus === 'dispatched').length, color: '#f97316' }, // Orange
-    ].filter(item => item.value > 0); // Only show active stages
+      { name: 'Pending', value: orders.filter(o => o.orderStatus === 'created' || o.orderStatus === 'pending_payment').length, color: '#f43f5e' },
+      { name: 'Confirmed', value: orders.filter(o => o.orderStatus === 'confirmed').length, color: '#8b5cf6' },
+      { name: 'Packed', value: orders.filter(o => o.orderStatus === 'packed').length, color: '#3b82f6' },
+      { name: 'Dispatched', value: orders.filter(o => o.orderStatus === 'dispatched').length, color: '#f97316' },
+    ].filter(item => item.value > 0);
 
     return { revenueData, topToysData, fulfillmentData };
   }, [orders]);
@@ -307,11 +339,9 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {/* ============= 📊 NEW ANALYTICS TAB ============= */}
+        {/* ============= ANALYTICS TAB ============= */}
         {activeTab === 'analytics' && analyticsData && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 fade-in">
-            
-            {/* Revenue Line Chart */}
             <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft lg:col-span-2">
               <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-green-500">trending_up</span> 7-Day Revenue Trend
@@ -322,17 +352,13 @@ const AdminDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 12, fontWeight: 700}} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#a1a1aa', fontSize: 12, fontWeight: 700}} dx={-10} tickFormatter={(value) => `₹${value}`} />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }}
-                      itemStyle={{ color: '#F97316', fontWeight: 900 }}
-                    />
+                    <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }} itemStyle={{ color: '#F97316', fontWeight: 900 }} />
                     <Line type="monotone" dataKey="Revenue" stroke="#F97316" strokeWidth={4} dot={{r: 6, fill: '#F97316', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 8}} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Top Toys Bar Chart */}
             <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft">
               <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-yellow-500">star</span> Best Selling Toys
@@ -354,7 +380,6 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Fulfillment Pie Chart */}
             <div className="card-surface p-8 rounded-[2.5rem] border border-white shadow-soft">
               <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-purple-500">pie_chart</span> Active Bottlenecks
@@ -364,21 +389,12 @@ const AdminDashboard = () => {
                   <>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={analyticsData.fulfillmentData}
-                          cx="50%" cy="50%"
-                          innerRadius={60} outerRadius={90}
-                          paddingAngle={5} dataKey="value"
-                          stroke="none"
-                        >
-                          {analyticsData.fulfillmentData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
+                        <Pie data={analyticsData.fulfillmentData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value" stroke="none">
+                          {analyticsData.fulfillmentData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                         </Pie>
                         <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontWeight: 'bold' }} />
                       </PieChart>
                     </ResponsiveContainer>
-                    {/* Custom Legend */}
                     <div className="absolute top-1/2 -translate-y-1/2 right-0 flex flex-col gap-3">
                       {analyticsData.fulfillmentData.map((entry, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-xs font-bold text-zinc-600">
@@ -390,13 +406,11 @@ const AdminDashboard = () => {
                   </>
                 ) : (
                   <div className="flex items-center justify-center h-full text-zinc-400 font-bold text-center">
-                    <span className="material-symbols-outlined text-4xl block mb-2 opacity-50">done_all</span><br/>
-                    Queue is empty!
+                    <span className="material-symbols-outlined text-4xl block mb-2 opacity-50">done_all</span><br/>Queue is empty!
                   </div>
                 )}
               </div>
             </div>
-
           </div>
         )}
 
@@ -617,15 +631,75 @@ const AdminDashboard = () => {
         </div>
         )}
 
-        {/* ============= CUSTOMERS TAB ============= */}
+        {/* ============= CUSTOMERS TAB (WITH SECURE ADMIN PROMOTION) ============= */}
         {activeTab === 'customers' && (
         <div className="card-surface rounded-[2.5rem] border border-white shadow-soft overflow-hidden fade-in">
-          <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex items-center justify-between">
+          <div className="p-8 border-b border-zinc-100/50 bg-white/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h2 className="text-2xl font-black text-zinc-800 flex items-center gap-3">
               <span className="material-symbols-outlined text-primary-container text-[28px]">group</span>
               Customer Directory
             </h2>
+            <button
+              onClick={() => {
+                setShowAdminForm(!showAdminForm);
+                setAdminStep(1);
+                setAdminOtp('');
+              }}
+              className="bg-purple-600 text-white px-5 py-2.5 rounded-xl font-black text-sm flex items-center gap-2 hover:bg-purple-700 transition-all shadow-md hover:-translate-y-0.5 w-max"
+            >
+              <span className="material-symbols-outlined text-[18px]">{showAdminForm ? 'close' : 'security'}</span>
+              {showAdminForm ? 'Cancel' : 'Secure Add Admin'}
+            </button>
           </div>
+
+          {/* SECURE ADMIN ADDITION FORM */}
+          {showAdminForm && (
+            <div className="p-8 border-b border-purple-100 bg-purple-50/30">
+              <div className="max-w-md bg-white p-6 rounded-2xl border border-purple-100 shadow-sm">
+                <h3 className="font-black text-zinc-800 mb-2 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-purple-500">admin_panel_settings</span>
+                  Promote to Admin
+                </h3>
+                <p className="text-xs text-zinc-500 font-bold mb-5">
+                  Security Check: To promote someone, we will send an OTP to <strong>your</strong> registered admin email/phone to verify it's you making the change.
+                </p>
+
+                {adminStep === 1 ? (
+                  <form onSubmit={handleRequestAdminOtp} className="space-y-4">
+                    <div>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-wider">Target User's Email or Phone</label>
+                      <input 
+                        required 
+                        value={adminTarget} 
+                        onChange={(e) => setAdminTarget(e.target.value)} 
+                        placeholder="user@example.com" 
+                        className="w-full mt-1 bg-zinc-50 p-3 border border-zinc-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-purple-500/20 outline-none" 
+                      />
+                    </div>
+                    <button disabled={isRequestingOtp} type="submit" className="w-full bg-zinc-900 text-white py-3 rounded-xl font-black text-sm hover:bg-black transition-all shadow-md disabled:opacity-50">
+                      {isRequestingOtp ? 'Sending...' : 'Send OTP to My Device'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleConfirmAdmin} className="space-y-4 fade-in">
+                    <div>
+                      <label className="text-xs font-black text-zinc-500 uppercase tracking-wider">Enter OTP Sent to You</label>
+                      <input 
+                        required 
+                        value={adminOtp} 
+                        onChange={(e) => setAdminOtp(e.target.value)} 
+                        placeholder="123456" 
+                        className="w-full mt-1 bg-purple-50 p-3 border border-purple-200 rounded-xl font-black text-center text-lg tracking-[0.5em] focus:ring-2 focus:ring-purple-500/50 outline-none text-purple-700" 
+                      />
+                    </div>
+                    <button disabled={isConfirmingAdmin} type="submit" className="w-full bg-purple-600 text-white py-3 rounded-xl font-black text-sm hover:bg-purple-700 transition-all shadow-md disabled:opacity-50">
+                      {isConfirmingAdmin ? 'Verifying...' : 'Verify & Promote User'}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[900px]">
@@ -695,7 +769,7 @@ const AdminDashboard = () => {
                             }
                           }}
                           className={`p-2 rounded-lg flex items-center transition-colors ${user.role === 'admin' ? 'bg-zinc-100 text-zinc-500 hover:text-zinc-800' : 'bg-purple-50 text-purple-500 hover:bg-purple-500 hover:text-white'}`} 
-                          title={user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
+                          title={user.role === 'admin' ? 'Demote to User' : 'Promote to Admin (Legacy method)'}
                         >
                           <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
                         </button>
