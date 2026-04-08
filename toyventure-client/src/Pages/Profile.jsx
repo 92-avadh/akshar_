@@ -33,6 +33,7 @@ const Profile = () => {
   const [name, setName] = useState('');
   const [addresses, setAddresses] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false); 
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data: orders, isLoading: loadingOrders } = useGetMyOrdersQuery(undefined, { pollingInterval: 5000 });
   const { data: profile, isLoading: loadingProfile } = useGetUserProfileQuery();
@@ -94,6 +95,43 @@ const Profile = () => {
 
   const handleRemoveAddress = (index) => {
     setAddresses(addresses.filter((_, addressIndex) => addressIndex !== index));
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      setIsDownloading(true);
+      const token = sessionStorage.getItem('token');
+      
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      const response = await fetch(`${apiUrl}/api/orders/${orderId}/invoice`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download invoice');
+      }
+
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ToyBlix-Invoice-${orderId.substring(orderId.length - 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Invoice download error:', error);
+      alert('Could not download the invoice. Please try again later.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (loadingProfile) {
@@ -169,9 +207,22 @@ const Profile = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="text-left md:text-right">
-                            <p className="text-xs text-slate-500 font-bold mb-1">{order.orderItems.length} Item(s)</p>
-                            <p className="text-2xl font-black text-orange-500">₹{order.totalPrice.toLocaleString('en-IN')}</p>
+                          
+                          <div className="text-left md:text-right flex flex-col justify-between items-start md:items-end">
+                            <div>
+                              <p className="text-xs text-slate-500 font-bold mb-1">{order.orderItems.length} Item(s)</p>
+                              <p className="text-2xl font-black text-orange-500">₹{order.totalPrice.toLocaleString('en-IN')}</p>
+                            </div>
+                            
+                            {/* Download Invoice Button */}
+                            <button 
+                              onClick={() => handleDownloadInvoice(order._id)}
+                              disabled={isDownloading}
+                              className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-orange-500 transition-colors shadow-sm disabled:opacity-50"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">download</span>
+                              {isDownloading ? 'Downloading...' : 'Invoice'}
+                            </button>
                           </div>
                         </div>
 

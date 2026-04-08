@@ -1,5 +1,7 @@
 const Order = require('../models/Order');
 const sendEmail = require('../utils/sendEmail');
+const generateInvoice = require('../utils/generateInvoice');
+
 // @desc    Create new order
 // @route   POST /api/orders
 // @access  Private
@@ -126,4 +128,36 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, getMyOrders, getOrders, updateOrderStatus };
+// @desc    Download order invoice PDF
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+const downloadInvoice = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id).populate('user', 'name email mobileNumber');
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Security check: Ensure the user requesting the invoice is the owner of the order or an admin
+        if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+             return res.status(401).json({ message: 'Not authorized to view this invoice' });
+        }
+
+        // Generate the PDF buffer
+        const pdfBuffer = await generateInvoice(order, req.user);
+
+        // Set headers to prompt a file download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order._id}.pdf`);
+        
+        // Send the PDF buffer
+        res.send(pdfBuffer);
+
+    } catch (error) {
+        console.error("Invoice generation error:", error);
+        res.status(500).json({ message: 'Failed to generate invoice' });
+    }
+};
+
+module.exports = { createOrder, getMyOrders, getOrders, updateOrderStatus, downloadInvoice };

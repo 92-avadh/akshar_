@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const twilio = require('twilio');
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const User = require('../models/User');
 const OtpChallenge = require('../models/OtpChallenge');
 const sendEmail = require('../utils/sendEmail');
@@ -163,10 +165,17 @@ const sendOtp = async (req, res, next) => {
         return next(new Error('Failed to send OTP email. Please check your email configuration.'));
       }
     } else {
-      console.log(`\n=========================================`);
-      console.log(`📱 MOCK SMS OTP GENERATED FOR: ${identifierKey}`);
-      console.log(`🔢 YOUR OTP IS: ${otp}`);
-      console.log(`=========================================\n`);
+      try {
+        await twilioClient.messages.create({
+          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+          to: `whatsapp:${identifierKey}`,
+          body: `Your ToyVenture OTP is: ${otp}. It expires in 10 minutes.`,
+        });
+        console.log(`📱 WhatsApp OTP sent to ${identifierKey}`);
+      } catch (twilioError) {
+        console.error('Failed to send OTP via WhatsApp:', twilioError);
+        return next(new Error('Failed to send OTP via WhatsApp. Please try again later.'));
+      }
     }
 
     res.status(200).json({
