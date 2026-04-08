@@ -90,7 +90,7 @@ const Home = () => {
 
   const handleAddToCart = (product) => {
     dispatch(addToCart({ ...product, qty: 1 }));
-    toast.success(`${product.name} added to bag!`, { icon: '🎒', style: { border: '1px solid #fecaca', color: '#450a0a' } });
+    toast.success(`${product.name} added to Cart!`, { icon: '🎒', style: { border: '1px solid #fecaca', color: '#450a0a' } });
   };
 
   return (

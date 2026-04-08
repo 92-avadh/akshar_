@@ -5,47 +5,29 @@ const ShippingInfo = () => {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
-    <main className="bg-[#fafafa] text-slate-900 min-h-screen pt-40 pb-32 px-6 selection:bg-orange-200">
+    <main className="pt-40 pb-32 min-h-screen bg-white bg-hero-glow relative fade-in selection:bg-red-200 px-6">
+      {/* Unified Background Pattern */}
+      <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
+      
       <motion.div 
         initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
-        className="max-w-3xl mx-auto"
+        className="max-w-3xl mx-auto relative z-10"
       >
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight mb-8">Shipping Information</h1>
-        <p className="text-xl text-slate-600 font-medium mb-16 leading-relaxed">
+        <h1 className="text-5xl md:text-7xl font-black text-red-950 tracking-tighter leading-tight mb-8">Shipping Information</h1>
+        <p className="text-xl text-red-950/70 font-medium mb-16 leading-relaxed">
           We know they can't wait to play. We pack and ship all orders with care and speed.
         </p>
 
-        <div className="prose prose-lg prose-slate max-w-none font-medium">
-          <h2 className="text-2xl font-bold text-slate-900 mt-10 mb-4">Processing Time</h2>
-          <p className="text-slate-600 mb-8">Orders are processed within 1-2 business days. Orders placed on weekends or holidays will be processed on the next business day.</p>
+        <div className="max-w-none font-medium">
+          <h2 className="text-2xl font-bold text-red-950 mt-10 mb-4">Processing Time</h2>
+          <p className="text-red-950/70 mb-8 leading-relaxed">
+            All orders are processed and dispatched within 1-2 business days. Orders placed on weekends or public holidays will be processed on the next available business day. We work diligently to ensure your magical toys leave our warehouse as quickly as possible.
+          </p>
 
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Shipping Rates & Estimates</h2>
-          <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden mb-8">
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th className="p-6 font-bold text-slate-900">Shipping Method</th>
-                  <th className="p-6 font-bold text-slate-900">Estimated Delivery</th>
-                  <th className="p-6 font-bold text-slate-900">Cost</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-600">
-                <tr>
-                  <td className="p-6">Standard Shipping</td>
-                  <td className="p-6">3-5 Business Days</td>
-                  <td className="p-6 font-bold">Free over ₹999 (else ₹99)</td>
-                </tr>
-                <tr>
-                  <td className="p-6">Express Shipping</td>
-                  <td className="p-6">1-2 Business Days</td>
-                  <td className="p-6 font-bold">₹199</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <h2 className="text-2xl font-bold text-slate-900 mb-4">Order Tracking</h2>
-          <p className="text-slate-600">Once your order ships, you will receive a confirmation email containing your tracking number(s). The tracking link will be active within 24 hours.</p>
+          <h2 className="text-2xl font-bold text-red-950 mb-4">Order Tracking</h2>
+          <p className="text-red-950/70 leading-relaxed">
+            Once your order has been handed over to our shipping partners, you will receive a confirmation email containing your unique tracking number. You can also view live tracking updates directly from your ToyBlix account dashboard. Please note that it may take up to 24 hours for tracking information to become active on the courier's website.
+          </p>
         </div>
       </motion.div>
     </main>

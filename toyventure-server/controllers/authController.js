@@ -165,17 +165,13 @@ const sendOtp = async (req, res, next) => {
         return next(new Error('Failed to send OTP email. Please check your email configuration.'));
       }
     } else {
-      try {
-        await twilioClient.messages.create({
-          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
-          to: `whatsapp:${identifierKey}`,
-          body: `Your ToyVenture OTP is: ${otp}. It expires in 10 minutes.`,
-        });
-        console.log(`📱 WhatsApp OTP sent to ${identifierKey}`);
-      } catch (twilioError) {
-        console.error('Failed to send OTP via WhatsApp:', twilioError);
-        return next(new Error('Failed to send OTP via WhatsApp. Please try again later.'));
-      }
+      // --- TERMINAL PRINT LOGIC (BYPASSES TWILIO FOR DEVELOPMENT) ---
+      console.log('\n=============================================');
+      console.log(`🚀 DEVELOPMENT MODE: OTP GENERATED`);
+      console.log(`📱 Target Mobile : ${identifierKey}`);
+      console.log(`🔑 YOUR OTP IS   : [ ${otp} ]`);
+      console.log(`⏳ Expires in    : 10 minutes`);
+      console.log('=============================================\n');
     }
 
     res.status(200).json({

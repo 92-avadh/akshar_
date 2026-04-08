@@ -10,8 +10,8 @@ export default {
       colors: {
         "inverse-surface": "#322f37",
         "on-error": "#ffffff",
-        "primary-container": "#ff5c00",
-        "on-surface-variant": "#5b4137",
+        "primary-container": "#dc2626", // Red-600
+        "on-surface-variant": "#450a0a", // Deep Red
         "on-tertiary-fixed": "#1f1539",
         "secondary-fixed": "#ffdad6",
         "on-tertiary": "#ffffff",
@@ -19,40 +19,40 @@ export default {
         "on-tertiary-container": "#30254a",
         "secondary-fixed-dim": "#ffb4ab",
         "tertiary-container": "#998cb7",
-        "on-background": "#1d1a22",
-        "primary-fixed": "#ffdbce",
-        "surface-container": "#f3ebf7",
+        "on-background": "#450a0a", // Darker Red
+        "primary-fixed": "#fee2e2", // Red-100
+        "surface-container": "#fff1f2", // Very light red/white
         "on-tertiary-fixed-variant": "#4b4167",
         "tertiary-fixed-dim": "#cebfee",
-        "on-surface": "#1d1a22",
+        "on-surface": "#450a0a",
         "error": "#ba1a1a",
         "error-container": "#ffdad6",
-        "surface-container-highest": "#e7e0eb",
-        "surface-bright": "#fef7ff",
-        "on-primary-fixed-variant": "#802a00",
+        "surface-container-highest": "#fecaca", // Red-200
+        "surface-bright": "#ffffff",
+        "on-primary-fixed-variant": "#991b1b",
         "tertiary": "#635880",
-        "outline-variant": "#e4beb1",
+        "outline-variant": "#fca5a5",
         "on-secondary": "#ffffff",
-        "primary": "#a73a00",
-        "surface": "#fef7ff",
+        "primary": "#b91c1c", // Red-700
+        "surface": "#ffffff",
         "on-error-container": "#93000a",
-        "inverse-on-surface": "#f6eefa",
+        "inverse-on-surface": "#fef2f2",
         "tertiary-fixed": "#e9ddff",
-        "outline": "#8f7065",
+        "outline": "#ef4444",
         "on-secondary-fixed-variant": "#93000d",
-        "surface-container-low": "#f9f1fd",
-        "inverse-primary": "#ffb59a",
-        "on-primary-fixed": "#370e00",
-        "secondary": "#bb0013",
-        "surface-container-high": "#ede6f1",
-        "surface-dim": "#dfd7e3",
-        "primary-fixed-dim": "#ffb59a",
-        "surface-tint": "#a73a00",
-        "surface-variant": "#e7e0eb",
-        "on-secondary-container": "#fffbff",
-        "secondary-container": "#e71621",
-        "on-primary-container": "#521800",
-        "background": "#fef7ff",
+        "surface-container-low": "#fff5f5",
+        "inverse-primary": "#f87171",
+        "on-primary-fixed": "#450a0a",
+        "secondary": "#dc2626",
+        "surface-container-high": "#fee2e2",
+        "surface-dim": "#fecaca",
+        "primary-fixed-dim": "#f87171",
+        "surface-tint": "#dc2626",
+        "surface-variant": "#fee2e2",
+        "on-secondary-container": "#ffffff",
+        "secondary-container": "#b91c1c",
+        "on-primary-container": "#450a0a",
+        "background": "#ffffff",
         "surface-container-lowest": "#ffffff",
         "on-secondary-fixed": "#410002"
       },
@@ -71,11 +71,12 @@ export default {
         "full": "9999px"
       },
       boxShadow: {
-        "card": "0 24px 60px rgba(15, 23, 42, 0.08)",
-        "soft": "0 18px 38px rgba(17, 135, 230, 0.16)",
+        "card": "0 24px 60px rgba(69, 10, 10, 0.08)", // Red-tinted shadow
+        "soft": "0 18px 38px rgba(220, 38, 38, 0.12)", // Red-tinted shadow
       },
       backgroundImage: {
-        "hero-glow": "radial-gradient(circle at 10% 10%, rgba(255, 92, 0, 0.12), transparent 36%), radial-gradient(circle at 85% 18%, rgba(99, 88, 128, 0.15), transparent 28%), radial-gradient(circle at 70% 80%, rgba(231, 22, 33, 0.1), transparent 30%)",
+        // Red-based hero glow
+        "hero-glow": "radial-gradient(circle at 10% 10%, rgba(220, 38, 38, 0.08), transparent 36%), radial-gradient(circle at 85% 18%, rgba(220, 38, 38, 0.05), transparent 28%), radial-gradient(circle at 70% 80%, rgba(220, 38, 38, 0.05), transparent 30%)",
       },
     },
   },

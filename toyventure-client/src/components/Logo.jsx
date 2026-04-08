@@ -5,11 +5,13 @@ const Logo = ({ className = 'w-10 h-10' }) => {
     <div className={`relative flex items-center justify-center transform transition-transform duration-300 hover:-translate-y-1 hover:scale-110 ${className}`}>
       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md">
         <defs>
+          {/* Changed from Orange to Red colors for the fur */}
           <linearGradient id="teddy-fur" x1="0" y1="0" x2="100" y2="100">
-            <stop offset="0%" stopColor="#F97316" /> {/* Orange-500 */}
-            <stop offset="100%" stopColor="#EA580C" /> {/* Orange-600 */}
+            <stop offset="0%" stopColor="#EF4444" /> {/* Red-500 */}
+            <stop offset="100%" stopColor="#DC2626" /> {/* Red-600 */}
           </linearGradient>
           
+          {/* Kept snout amber/creamy to ensure the face is visible against the red */}
           <linearGradient id="teddy-snout" x1="0" y1="0" x2="100" y2="100">
             <stop offset="0%" stopColor="#FFFBEB" /> {/* Amber-50 */}
             <stop offset="100%" stopColor="#FDE68A" /> {/* Amber-200 */}
