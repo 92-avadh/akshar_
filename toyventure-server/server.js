@@ -170,3 +170,5 @@ process.on('unhandledRejection', (reason) => {
     })
   );
 });
+
+module.exports = app;
