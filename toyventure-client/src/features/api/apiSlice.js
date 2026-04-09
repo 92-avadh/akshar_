@@ -72,7 +72,8 @@ export const apiSlice = createApi({
     // ADMIN PRODUCTS (CRUD)
     // ==========================================
     createProduct: builder.mutation({
-      query: () => ({ url: '/products', method: 'POST' }),
+      // FIX 2: accept and forward data as the request body
+      query: (data) => ({ url: '/products', method: 'POST', body: data }),
       invalidatesTags: ['Product'], 
     }),
     

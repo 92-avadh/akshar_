@@ -43,8 +43,8 @@ const upload = multer({
     }
 });
 
-// 4. Create the POST route (Max 7 files)
-router.post('/', protect, admin, upload.array('images', 7), (req, res) => {
+// 4. Create the POST route (Max 4 files: 1 main, 3 optional angles)
+router.post('/', protect, admin, upload.array('images', 4), (req, res) => {
     // Map through uploaded files and format paths for the frontend
     const imagePaths = req.files.map(file => `/uploads/${path.basename(file.path)}`);
     res.send(imagePaths); // Send array of URLs back to React
