@@ -12,14 +12,11 @@ const getProducts = async (req, res) => {
         const queryFilter = {};
         const andConditions = [];
 
-        // 1. Keyword Search
         if (req.query.keyword) {
             andConditions.push({ title: { $regex: req.query.keyword, $options: 'i' } });
         }
 
-        // 2. Multi-Tag / Age Filter (Matches Tag, Category, or AgeGroup)
         if (req.query.tags) {
-            // Safely escape strings and create regex array for case-insensitive matching
             const tagsArray = req.query.tags.split(',').map(t => new RegExp(t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
             andConditions.push({
                 $or: [
@@ -30,7 +27,6 @@ const getProducts = async (req, res) => {
             });
         }
 
-        // 3. Price Range Filter 
         if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
             const priceFilter = {};
             if (req.query.minPrice !== undefined && req.query.minPrice !== '') priceFilter.$gte = Number(req.query.minPrice);
@@ -41,31 +37,31 @@ const getProducts = async (req, res) => {
             }
         }
 
-        // 4. Rating Filter
         if (req.query.minRating) {
             andConditions.push({ rating: { $gte: Number(req.query.minRating) } });
         }
 
-        // 5. Stock Availability Filter
+        // --- UPDATED STOCK VISIBILITY LOGIC ---
         if (req.query.inStock === 'true' && req.query.outOfStock !== 'true') {
              andConditions.push({ countInStock: { $gt: 0 } });
         } else if (req.query.outOfStock === 'true' && req.query.inStock !== 'true') {
              andConditions.push({ countInStock: { $eq: 0 } });
+        } else if (req.query.isAdmin !== 'true') {
+             // PUBLIC DEFAULT: Hide out of stock items and blank templates from Shop Page
+             andConditions.push({ countInStock: { $gt: 0 } });
+             andConditions.push({ title: { $ne: 'New Magical Toy' } });
         }
 
-        // Apply all AND conditions if any exist
         if (andConditions.length > 0) {
             queryFilter.$and = andConditions;
         }
 
-        // 6. Determine Sort Order
-        let sortOption = { createdAt: -1 }; // Default to Newest
+        let sortOption = { createdAt: -1 }; 
         if (req.query.sort === 'price_asc') sortOption = { price: 1 };
         if (req.query.sort === 'price_desc') sortOption = { price: -1 };
         if (req.query.sort === 'rating_desc') sortOption = { rating: -1 };
         if (req.query.sort === 'newest') sortOption = { createdAt: -1 };
 
-        // Execute Query
         const count = await Product.countDocuments(queryFilter);
         const products = await Product.find(queryFilter)
             .sort(sortOption)
@@ -85,7 +81,7 @@ const getProducts = async (req, res) => {
     }
 };
 
-// @desc    Fetch single product
+// @desc    Fetch single product (Still allows viewing out of stock if user has the link)
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = async (req, res) => {
@@ -101,9 +97,6 @@ const getProductById = async (req, res) => {
     }
 };
 
-// @desc    Create a Review (Verified Buyers)
-// @route   POST /api/products/:id/reviews
-// @access  Private
 const createProductReview = async (req, res) => {
     try {
         const { rating, comment } = req.body;
@@ -139,9 +132,6 @@ const createProductReview = async (req, res) => {
     }
 };
 
-// @desc    Delete a Review (Admin Moderation)
-// @route   DELETE /api/products/:id/reviews/:reviewId
-// @access  Private/Admin
 const deleteProductReview = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -169,9 +159,6 @@ const deleteProductReview = async (req, res) => {
     }
 };
 
-// ==========================================
-// "Notify Me" Waitlist Feature
-// ==========================================
 const notifyMeWhenAvailable = async (req, res) => {
     try {
         const { email } = req.body;
@@ -191,10 +178,6 @@ const notifyMeWhenAvailable = async (req, res) => {
     }
 };
 
-// ==========================================
-// ADMIN ONLY ROUTES
-// ==========================================
-
 const createProduct = async (req, res) => {
     try {
         const product = new Product({
@@ -203,12 +186,13 @@ const createProduct = async (req, res) => {
             user: req.user._id,
             img: 'https://via.placeholder.com/400x400?text=Upload+Image',
             images: [],
-            tag: '',         // INITIALIZE AS EMPTY
-            category: '',    // INITIALIZE AS EMPTY
+            tag: '',         
+            category: '',    
             countInStock: 0,
             numReviews: 0,
             description: 'Enter a magical description here...',
-            notifyList: [] 
+            notifyList: [],
+            variants: [] 
         });
 
         const createdProduct = await product.save();
@@ -220,12 +204,10 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        // EXACT CATEGORY EXTRACTED HERE
-        const { title, price, description, img, tag, category, oldPrice, countInStock, images } = req.body; 
+        const { title, price, description, img, tag, category, oldPrice, countInStock, images, variants } = req.body; 
         const product = await Product.findById(req.params.id);
 
         if (product) {
-            // DETECT RESTOCK EVENT
             const wasOutOfStock = product.countInStock === 0;
             const isRestocked = countInStock > 0;
 
@@ -233,13 +215,16 @@ const updateProduct = async (req, res) => {
             product.price = price ?? product.price;
             product.description = description ?? product.description;
             
-            // SAVE STRICT CATEGORIES
             product.tag = tag ?? product.tag;
             product.category = category ?? product.category; 
             
             product.oldPrice = oldPrice ?? product.oldPrice;
             product.countInStock = countInStock ?? product.countInStock;
             
+            if (variants) {
+                product.variants = variants;
+            }
+
             if (images && images.length > 0) {
                 product.images = images;
                 product.img = images[0]; 
@@ -247,7 +232,6 @@ const updateProduct = async (req, res) => {
                 product.img = img ?? product.img;
             }
 
-            // TRIGGER RESTOCK EMAILS
             if (wasOutOfStock && isRestocked && product.notifyList && product.notifyList.length > 0) {
                 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
                 const emailPromises = product.notifyList.map(async (userEmail) => {

@@ -6,7 +6,9 @@ const router = express.Router();
 const { protect, admin } = require('../middleware/authMiddleware');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // 1. Define where and how the files should be saved
 const storage = multer.diskStorage({
@@ -28,7 +30,7 @@ function checkFileType(file, cb) {
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb('Images only!');
+        cb(new Error('Images only!'));
     }
 }
 
@@ -45,9 +47,15 @@ const upload = multer({
 
 // 4. Create the POST route (Max 4 files: 1 main, 3 optional angles)
 router.post('/', protect, admin, upload.array('images', 4), (req, res) => {
-    // Map through uploaded files and format paths for the frontend
-    const imagePaths = req.files.map(file => `/uploads/${path.basename(file.path)}`);
-    res.send(imagePaths); // Send array of URLs back to React
+    if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ message: 'No images uploaded' });
+    }
+
+    // Return the FULL absolute URL so the frontend correctly renders it regardless of domain
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const imagePaths = req.files.map(file => `${baseUrl}/uploads/${file.filename}`);
+
+    res.json(imagePaths); // Send array of absolute URLs back to React
 });
 
 module.exports = router;

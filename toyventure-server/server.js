@@ -14,7 +14,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const contactRoutes = require('./routes/contactRoutes'); // <-- NEW: Imported contact routes
+const contactRoutes = require('./routes/contactRoutes'); 
 const couponRoutes = require('./routes/couponRoutes');
 const { assignRequestId, requestLogger } = require('./middleware/requestContext');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
@@ -43,26 +43,30 @@ const allowedOrigins = (process.env.CORS_ORIGIN || process.env.CLIENT_URL || '')
 app.disable('x-powered-by');
 app.use(assignRequestId);
 
-// <-- FIX: Commented out the request logger to stop the massive JSON spam in terminal
-// app.use(requestLogger); 
-
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-);
+// CORS Middleware
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-
       return callback(new Error('Origin not allowed by CORS'));
     },
     credentials: true,
   })
 );
+
+// Serve static files immediately after CORS so they are accessible 
+// cross-origin without strict Helmet blocking policies
+app.use('/uploads', express.static(uploadsDir));
+
+// Security Headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
+
 app.use(
   express.json({
     limit: requestSizeLimit,
@@ -72,6 +76,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true, limit: requestSizeLimit }));
+
 app.use(
   '/api',
   rateLimit({
@@ -82,7 +87,6 @@ app.use(
     message: { message: 'Too many requests. Please try again later.' },
   })
 );
-app.use('/uploads', express.static(uploadsDir));
 
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -107,7 +111,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/contact', contactRoutes); // <-- NEW: Added contact route endpoint
+app.use('/api/contact', contactRoutes); 
 app.use('/api/coupons', couponRoutes);
 
 app.use(notFound);

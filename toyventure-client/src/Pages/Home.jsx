@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import Lenis from 'lenis';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../features/cart/cartSlice';
 import toast from 'react-hot-toast';
@@ -44,18 +43,10 @@ const MagneticButton = ({ children, className, variant = 'dark', onClick }) => {
 // MAIN PAGE
 // ==========================================
 const Home = () => {
-  const containerRef = useRef(null);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
-    let rafId;
-    function raf(time) { lenis.raf(time); rafId = requestAnimationFrame(raf); }
-    rafId = requestAnimationFrame(raf);
-    return () => { cancelAnimationFrame(rafId); lenis.destroy(); };
-  }, []);
-
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
+  // OPTIMIZATION: Default window scroll is heavily optimized by Framer Motion
+  const { scrollYProgress } = useScroll(); 
   const heroY = useTransform(scrollYProgress, [0, 0.2], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
@@ -72,7 +63,6 @@ const Home = () => {
     { name: "Creative Arts", desc: "Unleash inner artists", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop" },
   ];
 
-  // Restored the playful blob border-radius styling while updating the colors to match the theme
   const shopByAgeData = [
     { age: "0-2 YRS", label: "Infants", color: "text-red-500", radius: "40% 60% 70% 30% / 40% 50% 60% 50%" },
     { age: "3-4 YRS", label: "Toddlers", color: "text-red-700", radius: "50% 50% 30% 70% / 60% 30% 70% 40%" },
@@ -94,10 +84,8 @@ const Home = () => {
   };
 
   return (
-    <main ref={containerRef} className="bg-white text-red-950 min-h-screen font-sans overflow-x-hidden selection:bg-red-100 relative fade-in">
+    <main className="bg-white text-red-950 min-h-screen font-sans overflow-x-hidden selection:bg-red-100 relative fade-in">
       
-      {/* Background grid removed for a cleaner minimal look */}
-
       {/* ================= HERO SECTION ================= */}
       <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
@@ -118,10 +106,9 @@ const Home = () => {
           </motion.div>
 
           <div className="lg:col-span-6 relative h-[500px] lg:h-[650px] w-full flex items-center justify-center">
-            {/* Minimal Display Card */}
             <motion.div initial={{ opacity: 0, y: 50, rotate: -3 }} animate={{ opacity: 1, y: 0, rotate: -2 }} transition={{ duration: 0.8, delay: 0.2 }} className="absolute z-10 w-[280px] sm:w-[320px] bg-white p-5 rounded-[2rem] border border-red-50 shadow-2xl shadow-red-900/10 group hover:rotate-0 hover:scale-[1.02] transition-all duration-500">
               <div className="bg-red-50/50 rounded-2xl h-[280px] p-6 mb-5 flex items-center justify-center relative overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
-                <img loading="eager" src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" alt="Wooden Toy" className="w-full h-full object-contain mix-blend-multiply" />
+                <img loading="eager" decoding="async" src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" alt="Wooden Toy" className="w-full h-full object-contain mix-blend-multiply" />
                 <div className="absolute top-4 left-4 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">Eco-Friendly</div>
               </div>
               <div className="px-2 pb-2 text-center">
@@ -165,7 +152,7 @@ const Home = () => {
               
               <div className="p-3">
                 <div className="relative h-60 p-6 flex items-center justify-center bg-red-50/50 rounded-3xl overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
-                  <img loading="lazy" src={product.img} alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out" />
+                  <img loading="lazy" decoding="async" src={product.img} alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out" />
                   <div className="absolute top-4 left-4 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
                     {product.tag}
                   </div>
@@ -180,7 +167,6 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* Hover Add To Bag Drawer */}
               <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-20">
                 <button onClick={() => handleAddToCart(product)} className="w-full bg-red-600 text-white rounded-2xl py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30">
                   <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Bag
@@ -199,8 +185,7 @@ const Home = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {categories.map((cat, idx) => (
             <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[2rem] overflow-hidden bg-red-50 cursor-pointer ${cat.size}`}>
-              <img loading="lazy" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
-              {/* Red-tinted dark overlay for legibility */}
+              <img loading="lazy" decoding="async" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
               <div className="absolute inset-0 bg-gradient-to-t from-red-950/80 to-transparent opacity-80"></div>
               
               <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
@@ -224,7 +209,6 @@ const Home = () => {
           <div className="absolute inset-0 bg-red-950/10"></div>
           
           <div className="absolute inset-0 p-8 md:p-16 flex flex-col justify-end items-start">
-            {/* Pure White Glass Card for contrast */}
             <div className="bg-white/95 backdrop-blur-xl border border-white p-10 md:p-14 rounded-[2rem] max-w-xl shadow-2xl shadow-red-950/20">
               <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-6 leading-tight text-red-950">
                 The Art of <br /><span className="text-red-600">Unplugged</span> Joy.
@@ -257,7 +241,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= STAY CONNECTED NEWSLETTER (The Dark Red Blended Section) ================= */}
+      {/* ================= STAY CONNECTED ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20 flex justify-center items-center">
         <motion.div 
           initial={{ opacity: 0, y: 30 }} 
@@ -266,7 +250,6 @@ const Home = () => {
           transition={{ duration: 0.6 }}
           className="w-full max-w-[900px] bg-gradient-to-br from-red-600 via-red-800 to-red-950 rounded-[3rem] p-12 md:p-20 flex flex-col items-center justify-center gap-10 text-center mx-auto relative overflow-hidden shadow-2xl shadow-red-900/20"
         >
-          {/* Intense vibrant glow behind the dark gradient */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-red-500 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
           <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_center,_white_1px,transparent_1px)] bg-[length:24px_24px] pointer-events-none"></div>
           

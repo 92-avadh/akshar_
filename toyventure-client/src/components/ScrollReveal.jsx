@@ -1,39 +1,46 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 
 const ScrollReveal = ({ as: Component = "div", className = "", delay = 0, children, ...props }) => {
   const elementRef = useRef(null);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const element = elementRef.current;
-
-    if (!element || visible) {
-      return undefined;
-    }
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
         if (entry?.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
+          // Use requestAnimationFrame for buttery smooth rendering
+          requestAnimationFrame(() => {
+            element.classList.add("is-visible");
+          });
+          observer.disconnect(); // Stop observing once revealed
         }
       },
       {
-        threshold: 0.1, // Lowered slightly
-        rootMargin: "50px 0px 0px 0px", // Triggers 50px BEFORE it enters the screen
+        threshold: 0, // Trigger immediately (0% visible)
+        // Trigger 200px BEFORE the element even enters the viewport
+        rootMargin: "200px 0px 200px 0px",
       }
     );
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [visible]);
+  }, []);
+
+  // Hard cap the delay to 100ms max so grid items never take too long to appear
+  const snappyDelay = Math.min(delay, 100);
 
   return (
     <Component
       ref={elementRef}
-      className={`reveal-section ${visible ? "is-visible" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
+      className={`reveal-section ${className}`}
+      style={{
+        transitionDelay: `${snappyDelay}ms`,
+        transitionDuration: '400ms', // Force a fast, snappy animation speed
+        willChange: 'opacity, transform' // Hardware acceleration
+      }}
       {...props}
     >
       {children}

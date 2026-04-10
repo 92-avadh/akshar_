@@ -23,7 +23,6 @@ const defaultFilters = {
 
 const EMPTY_ARRAY = []; 
 
-// Reusable Multi-Select Checkbox Component
 const Checkbox = ({ label, checked, onChange }) => (
   <label className="flex items-center gap-3 cursor-pointer group">
     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${checked ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-zinc-300 text-transparent group-hover:border-orange-400'}`}>
@@ -47,7 +46,6 @@ const Shop = () => {
   const [activeFilters, setActiveFilters] = useState(defaultFilters);
   const [tempFilters, setTempFilters] = useState(defaultFilters);
 
-  // Debounce search
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (localSearch !== searchQuery) {
@@ -62,7 +60,6 @@ const Shop = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [localSearch, setSearchParams, searchQuery]);
 
-  // Construct query arguments using Active Filters for the Backend
   const queryArgs = useMemo(() => ({
     keyword: searchQuery,
     tags: activeFilters.selectedAges.join(','),
@@ -128,7 +125,6 @@ const Shop = () => {
 
   return (
     <>
-      {/* SIDEBAR OVERLAY & PANEL */}
       <div className={`fixed inset-0 bg-black/50 z-[100] transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={closeSidebar} />
       <div className={`fixed top-0 left-0 h-full w-[340px] bg-white z-[110] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-zinc-50/50">
@@ -156,7 +152,6 @@ const Shop = () => {
             </div>
           </div>
 
-          {/* FIXED PRICE FILTER (Restored robust radio buttons) */}
           <div>
             <h3 className="font-black text-zinc-900 mb-4 uppercase tracking-widest text-xs">Price Range</h3>
             <div className="space-y-3">
@@ -296,14 +291,16 @@ const Shop = () => {
                     </button>
 
                     <button onClick={() => { 
-                        if(product.countInStock > 0) { 
-                          dispatch(addToCart({ ...product, qty: 1 })); 
+                        dispatch(addToCart({ ...product, qty: 1 })); 
+                        if(product.countInStock === 0) {
+                          toast.error(`Added to cart waitlist (currently out of stock)`);
+                        } else {
                           toast.success(`${product.title} added to cart!`); 
                         }
                       }} 
                       className={`absolute top-6 right-6 z-20 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-zinc-100 ${product.countInStock > 0 ? 'bg-white/90 text-primary-container hover:bg-primary-container hover:text-white' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'}`}
                     >
-                      <span className="material-symbols-outlined text-[20px]">{product.countInStock === 0 ? 'notifications' : 'shopping_cart'}</span>
+                      <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
                     </button>
 
                     <Link to={`/product/${product._id}`} className="w-full aspect-square bg-slate-50 rounded-[2rem] overflow-hidden relative mb-5 shadow-inner border border-slate-100/50 block z-10 isolate transform-gpu flex items-center justify-center p-4">
@@ -312,12 +309,17 @@ const Shop = () => {
                           {product.tag}
                         </div>
                       )}
+                      
+                      {/* --- UPDATED: Small Out of Stock Badge --- */}
                       {product.countInStock === 0 && (
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                          <span className="bg-red-500 text-white font-black px-4 py-2 rounded-full text-xs uppercase tracking-widest shadow-lg transform -rotate-12">Out of Stock</span>
-                        </div>
+                         <div className="absolute top-3 left-3 z-20 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-red-100 shadow-sm">
+                            <span className="text-red-500 font-black text-[9px] uppercase tracking-widest flex items-center gap-1">
+                               Out of Stock
+                            </span>
+                         </div>
                       )}
-                      <img alt={product.title} className="w-full h-full object-contain group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-700 ease-out mix-blend-multiply" src={product.img} />
+
+                      <img alt={product.title} className={`w-full h-full object-contain group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-700 ease-out mix-blend-multiply ${product.countInStock === 0 ? 'opacity-60 grayscale-[50%]' : ''}`} src={product.img} />
                     </Link>
 
                     <div className="px-2 flex flex-col flex-1 justify-between">

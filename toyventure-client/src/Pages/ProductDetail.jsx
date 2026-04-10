@@ -19,7 +19,6 @@ const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  // User Check
   const userInfoData = sessionStorage.getItem('userInfo');
   const userInfo = userInfoData && userInfoData !== 'undefined' ? JSON.parse(userInfoData) : null;
 
@@ -30,41 +29,86 @@ const ProductDetail = () => {
   const { data: myOrders } = useGetMyOrdersQuery(undefined, { skip: !userInfo });
   
   const [createReview, { isLoading: isReviewLoading }] = useCreateReviewMutation();
-  const [notifyMeWhenAvailable, { isLoading: isNotifying }] = useNotifyMeWhenAvailableMutation(); // NEW
+  const [notifyMeWhenAvailable, { isLoading: isNotifying }] = useNotifyMeWhenAvailableMutation(); 
   
   const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || []);
 
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [currentModalIndex, setCurrentModalIndex] = useState(0); 
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
   const [mainImage, setMainImage] = useState('');
   
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
-
-  // Notify Me State
   const [notifyEmail, setNotifyEmail] = useState('');
+
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
 
   const relatedProducts = allProductsData?.products?.filter(p => p._id !== id).slice(0, 4) || [];
 
-  // Determine if User can leave a review
   const hasBoughtAndDelivered = myOrders?.some(order => 
     ['delivered', 'fulfilled'].includes(order.orderStatus) && 
     order.orderItems.some(item => (item.product === id || item._id === id || item.title === product?.title))
   );
 
   useEffect(() => { 
-    if (product?.img) {
-      setMainImage(product.img);
+    if (product) {
+      if (product.variants && product.variants.length > 0) {
+         const firstColor = product.variants.find(v => v.color)?.color || null;
+         setSelectedColor(firstColor);
+
+         const availableSizes = product.variants
+            .filter(v => (firstColor ? v.color === firstColor : true) && v.size)
+            .map(v => v.size);
+            
+         setSelectedSize(availableSizes.length > 0 ? availableSizes[0] : null);
+
+         const firstVariant = product.variants[0];
+         setMainImage(firstVariant.images?.[0] || product.img);
+      } else if (product.img) {
+         setMainImage(product.img);
+      }
     }
   }, [id, product]);
 
-  // Pre-fill email if logged in
+  const handleColorClick = (color) => {
+      setSelectedColor(color);
+      const sizesForColor = product.variants.filter(v => v.color === color && v.size).map(v => v.size);
+      
+      if (sizesForColor.length > 0) {
+         setSelectedSize(sizesForColor[0]);
+      } else {
+         setSelectedSize(null);
+      }
+
+      const colorVariant = product.variants.find(v => v.color === color && v.images?.length > 0);
+      if (colorVariant) setMainImage(colorVariant.images[0]);
+  };
+
+  const currentVariant = product?.variants?.find(v => 
+      (v.color === selectedColor || (!v.color && !selectedColor)) && 
+      (v.size === selectedSize || (!v.size && !selectedSize))
+  ) || null;
+
   useEffect(() => {
     if (userInfo && userInfo.email && !notifyEmail) {
       setNotifyEmail(userInfo.email);
     }
   }, [userInfo]);
+
+  const displayPriceValue = currentVariant ? currentVariant.price : product?.price;
+  const displayOldPriceValue = currentVariant?.oldPrice > 0 ? currentVariant.oldPrice : product?.oldPrice;
+  const displayStock = currentVariant ? currentVariant.countInStock : product?.countInStock;
+  const displayDescription = currentVariant?.description ? currentVariant.description : product?.description;
+  
+  const galleryImages = currentVariant?.images?.length > 0 
+      ? currentVariant.images 
+      : (product?.images?.length > 0 ? product.images : [product?.img]); 
+
+  const availableColors = product?.variants ? [...new Set(product.variants.map(v => v.color).filter(Boolean))] : [];
+  const availableSizes = product?.variants ? [...new Set(product.variants.filter(v => (selectedColor ? v.color === selectedColor : true) && v.size).map(v => v.size).filter(Boolean))] : [];
 
   const displayPrice = (price) => {
     if (price === undefined || price === null) return '₹0';
@@ -88,14 +132,25 @@ const ProductDetail = () => {
     );
   }
 
-  const galleryImages = product.images?.length > 0 ? product.images : [product.img, product.img, product.img]; 
-
   const handleAddToCart = () => {
-    dispatch(addToCart({ ...product, qty: 1 }));
-    toast.success(`${product.title} magically added to your cart!`); 
+    const variantString = [selectedColor, selectedSize].filter(Boolean).join(' - ');
+    
+    dispatch(addToCart({ 
+      ...product, 
+      price: displayPriceValue,      
+      countInStock: displayStock,    
+      image: mainImage,              
+      variant: variantString || null, 
+      qty: 1 
+    }));
+    
+    if (displayStock === 0) {
+        toast.error(`Added to cart, but currently out of stock. Checkout is disabled until restocked.`);
+    } else {
+        toast.success(`${product.title} added to your cart!`); 
+    }
   };
 
-  // Submit Notify Email Handler
   const handleNotifySubmit = async (e) => {
     e.preventDefault();
     if (!notifyEmail) return toast.error("Please enter an email address.");
@@ -106,13 +161,6 @@ const ProductDetail = () => {
     } catch (err) {
       toast.error("Failed to sign up for notifications.");
     }
-  };
-
-  const handleMouseMove = (e) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - left) / width) * 100;
-    const y = ((e.clientY - top) / height) * 100;
-    setZoomPosition({ x, y });
   };
 
   const submitReviewHandler = async (e) => {
@@ -134,19 +182,84 @@ const ProductDetail = () => {
     ));
   };
 
+  const openModal = (imgUrl) => {
+      const index = galleryImages.indexOf(imgUrl);
+      setCurrentModalIndex(index !== -1 ? index : 0);
+      setIsImageModalOpen(true);
+  };
+
+  const handleMouseMoveModal = (e) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomPosition({ x, y });
+  };
+
+  const slideNext = () => {
+    setCurrentModalIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const slidePrev = () => {
+    setCurrentModalIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  };
+
   const isMainProductFavorited = wishlistItems.some(w => w._id === product._id);
-  const discountPercent = getDiscountPercent(product.price, product.oldPrice);
+  const discountPercent = getDiscountPercent(displayPriceValue, displayOldPriceValue);
 
   return (
     <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="pt-28 pb-24 min-h-screen bg-surface bg-hero-glow relative">
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
       {isImageModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/95 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
-          <button onClick={() => setIsImageModalOpen(false)} className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-900/95 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+          <button onClick={() => setIsImageModalOpen(false)} className="absolute top-6 right-6 z-50 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
-          <img src={mainImage || product.img} alt={product.title} className="max-w-[90%] max-h-[90vh] object-contain rounded-3xl shadow-2xl transform-gpu" />
+          {galleryImages.length > 1 && (
+            <button onClick={slidePrev} className="absolute left-4 md:left-10 z-50 w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm">
+              <span className="material-symbols-outlined text-[32px]">chevron_left</span>
+            </button>
+          )}
+          {galleryImages.length > 1 && (
+            <button onClick={slideNext} className="absolute right-4 md:right-10 z-50 w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm">
+              <span className="material-symbols-outlined text-[32px]">chevron_right</span>
+            </button>
+          )}
+          <div 
+            className="relative w-full max-w-[90vw] md:max-w-4xl h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden rounded-3xl cursor-crosshair"
+            onMouseEnter={() => setIsZooming(true)}
+            onMouseLeave={() => setIsZooming(false)}
+            onMouseMove={handleMouseMoveModal}
+          >
+            <img 
+              src={galleryImages[currentModalIndex]} 
+              alt={`${product.title} zoomed`} 
+              className={`max-w-full max-h-full object-contain transition-transform duration-100 ease-linear transform-gpu ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
+              style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center', willChange: 'transform' }}
+            />
+            {!isZooming && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 hover:opacity-100 transition-opacity">
+                   <div className="bg-black/50 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm flex items-center gap-2">
+                       <span className="material-symbols-outlined text-[18px]">zoom_in</span> Hover to inspect details
+                   </div>
+                </div>
+            )}
+          </div>
+          {galleryImages.length > 1 && (
+            <div className="absolute bottom-6 w-full flex justify-center px-4">
+               <div className="flex gap-3 bg-black/40 p-3 rounded-2xl backdrop-blur-xl overflow-x-auto max-w-full">
+                  {galleryImages.map((img, idx) => (
+                      <button
+                          key={idx}
+                          onClick={() => setCurrentModalIndex(idx)}
+                          className={`w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${currentModalIndex === idx ? 'border-primary-container scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                      >
+                          <img src={img} className="w-full h-full object-cover bg-white" />
+                      </button>
+                  ))}
+               </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -161,36 +274,33 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-20">
           <div className="relative group">
+            
             <div
-              className="w-full aspect-square card-surface rounded-[3rem] p-8 flex items-center justify-center shadow-soft relative overflow-hidden cursor-crosshair transform-gpu"
-              onMouseEnter={() => setIsZooming(true)}
-              onMouseLeave={() => setIsZooming(false)}
-              onMouseMove={handleMouseMove}
-              onClick={() => setIsImageModalOpen(true)}
+              className="w-full aspect-square card-surface rounded-[3rem] p-8 flex items-center justify-center shadow-soft relative overflow-hidden cursor-zoom-in transform-gpu"
+              onClick={() => openModal(mainImage)}
             >
               <img
-                src={mainImage || product.img}
+                src={mainImage}
                 alt={product.title}
                 decoding="async"
-                className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-100 ease-linear transform-gpu ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
-                style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center', willChange: 'transform' }}
+                className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-300 hover:scale-[1.03] ${displayStock === 0 ? 'opacity-80' : ''}`}
               />
+              <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm p-3 rounded-full text-zinc-600 shadow-md opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all">
+                  <span className="material-symbols-outlined">fullscreen</span>
+              </div>
             </div>
             
-            <div className="flex items-center justify-center gap-4 mt-6">
+            <div className="flex items-center justify-center gap-4 mt-6 overflow-x-auto pb-2">
               {galleryImages.map((imgUrl, idx) => (
                 <button
                   key={idx}
                   onClick={() => setMainImage(imgUrl)}
-                  className={`w-20 h-20 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm transform-gpu ${mainImage === imgUrl ? 'border-primary-container shadow-lg scale-110' : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'}`}
+                  className={`w-20 h-20 shrink-0 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm transform-gpu ${mainImage === imgUrl ? 'border-primary-container shadow-lg scale-110' : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'}`}
                 >
                   <img src={imgUrl} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply p-1" />
                 </button>
               ))}
             </div>
-            <p className="text-center text-xs text-zinc-400 font-medium mt-4 flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">zoom_in</span> Hover to zoom · Click to expand
-            </p>
           </div>
 
           <div className="flex flex-col justify-center">
@@ -203,77 +313,82 @@ const ProductDetail = () => {
 
             <h1 className="text-4xl md:text-5xl font-black text-zinc-800 tracking-tight leading-tight mb-4">{product.title}</h1>
 
-            <div className="mb-6">
-              {product.countInStock > 10 ? (
-                <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
-                  <span className="material-symbols-outlined text-[16px]">inventory_2</span> In Stock
-                </span>
-              ) : product.countInStock > 0 ? (
-                <span className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-200 text-orange-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
-                  <span className="material-symbols-outlined text-[16px]">warning</span> Hurry, only {product.countInStock} left!
+            <div className="mb-6 flex gap-3">
+              {displayStock > 0 ? (
+                <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-bold text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[14px]">inventory_2</span> In Stock
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 font-black text-sm px-3 py-1.5 rounded-full shadow-sm">
-                  <span className="material-symbols-outlined text-[16px]">error</span> Out of Stock
+                <span className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 font-bold text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="material-symbols-outlined text-[14px]">error</span> Temporarily Out of Stock
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white flex-wrap">
-              <span className="text-4xl font-black text-primary-container">{displayPrice(product.price)}</span>
-              {product.oldPrice > 0 && <span className="text-xl font-bold text-zinc-400 line-through">{displayPrice(product.oldPrice)}</span>}
+              <span className="text-4xl font-black text-primary-container">{displayPrice(displayPriceValue)}</span>
+              {displayOldPriceValue > 0 && <span className="text-xl font-bold text-zinc-400 line-through">{displayPrice(displayOldPriceValue)}</span>}
               {discountPercent > 0 && (
                 <div className="flex flex-col gap-1">
                   <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 font-black text-sm px-3 py-1.5 rounded-full">
                     <span className="material-symbols-outlined text-[16px]">local_offer</span> {discountPercent}% OFF
                   </span>
-                  <span className="text-xs text-green-600 font-bold ml-1">You save {displayPrice(Number(product.oldPrice) - Number(product.price))}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-8 space-y-5">
+              {availableColors.length > 0 && (
+                <div>
+                   <p className="text-sm font-black text-zinc-800 uppercase tracking-widest mb-3">Color: <span className="font-bold text-zinc-500 capitalize">{selectedColor}</span></p>
+                   <div className="flex flex-wrap gap-3">
+                      {availableColors.map((color) => (
+                         <button 
+                            key={color}
+                            onClick={() => handleColorClick(color)}
+                            className={`px-5 py-2.5 rounded-2xl border-[3px] font-black text-sm transition-all transform active:scale-95 ${selectedColor === color ? 'border-primary-container bg-orange-50 text-primary-container shadow-md' : 'border-white bg-white/60 text-zinc-500 hover:border-zinc-200 hover:text-zinc-800'}`}
+                         >
+                            {color}
+                         </button>
+                      ))}
+                   </div>
+                </div>
+              )}
+
+              {availableSizes.length > 0 && (
+                <div>
+                   <p className="text-sm font-black text-zinc-800 uppercase tracking-widest mb-3">Size / Option: <span className="font-bold text-zinc-500 capitalize">{selectedSize}</span></p>
+                   <div className="flex flex-wrap gap-3">
+                      {availableSizes.map((size) => (
+                         <button 
+                            key={size}
+                            onClick={() => {
+                               setSelectedSize(size);
+                               const comboVariant = product.variants.find(v => v.color === selectedColor && v.size === size);
+                               if (comboVariant?.images?.length > 0) setMainImage(comboVariant.images[0]);
+                            }}
+                            className={`px-5 py-2.5 rounded-2xl border-[3px] font-black text-sm transition-all transform active:scale-95 ${selectedSize === size ? 'border-zinc-800 bg-zinc-800 text-white shadow-md' : 'border-white bg-white/60 text-zinc-500 hover:border-zinc-200 hover:text-zinc-800'}`}
+                         >
+                            {size}
+                         </button>
+                      ))}
+                   </div>
                 </div>
               )}
             </div>
 
             <p className="text-zinc-600 font-medium leading-relaxed mb-8 text-lg">
-              {product.description || "Bring home the magic with this incredible toy! Spark creativity, imagination, and endless hours of joy."}
+              {displayDescription || "Bring home the magic with this incredible toy! Spark creativity, imagination, and endless hours of joy."}
             </p>
 
             <div className="flex gap-4">
-              {/* ========================================== */}
-              {/* NEW DYNAMIC BUTTON: ADD TO CART vs NOTIFY ME */}
-              {/* ========================================== */}
-              {product.countInStock === 0 ? (
-                <div className="flex-1 bg-red-50 p-4 md:p-5 rounded-[2rem] border border-red-100 flex flex-col justify-center shadow-inner">
-                  <p className="text-red-600 font-black text-sm mb-3 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[18px]">notifications_active</span>
-                    Out of stock! Be the first to know when it's back:
-                  </p>
-                  <form onSubmit={handleNotifySubmit} className="flex flex-col sm:flex-row gap-2 w-full">
-                    <input 
-                      type="email" 
-                      value={notifyEmail} 
-                      onChange={(e) => setNotifyEmail(e.target.value)} 
-                      required 
-                      placeholder="Your email address" 
-                      className="flex-1 px-4 py-3.5 rounded-xl border border-red-200 outline-none focus:ring-2 focus:ring-red-400 font-bold text-sm bg-white shadow-sm"
-                    />
-                    <button 
-                      type="submit" 
-                      disabled={isNotifying}
-                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-3.5 rounded-xl font-black text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-1 shrink-0"
-                    >
-                      {isNotifying ? 'Wait...' : 'Notify Me'}
-                      {!isNotifying && <span className="material-symbols-outlined text-[18px]">send</span>}
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <button 
-                  onClick={handleAddToCart} 
-                  className="flex-1 py-5 font-black text-xl rounded-[2rem] bg-zinc-900 text-white hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl hover:-translate-y-1 active:scale-95 group"
-                >
-                  Add to Cart
-                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>
-                </button>
-              )}
+               <button 
+                 onClick={handleAddToCart} 
+                 className={`flex-1 py-5 font-black text-xl rounded-[2rem] transition-all flex items-center justify-center gap-3 shadow-xl active:scale-95 group ${displayStock === 0 ? 'bg-zinc-200 text-zinc-500 hover:bg-zinc-300' : 'bg-zinc-900 text-white hover:bg-black hover:-translate-y-1'}`}
+               >
+                 {displayStock === 0 ? 'Add to Cart (Waitlist)' : 'Add to Cart'}
+                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">shopping_cart_checkout</span>
+               </button>
               
               <button 
                 onClick={() => {
@@ -286,6 +401,37 @@ const ProductDetail = () => {
                 <span className={`material-symbols-outlined text-[32px] ${isMainProductFavorited ? 'filled' : ''}`}>favorite</span>
               </button>
             </div>
+            
+            {/* --- RESTORED: Notify me text & Form if out of stock --- */}
+            {displayStock === 0 && (
+               <div className="mt-6 bg-red-50 p-5 rounded-[2rem] border border-red-100 flex flex-col justify-center shadow-inner">
+                  <p className="text-red-600 font-black text-sm mb-3 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+                    Out of stock! Get notified when it's back:
+                  </p>
+                  <form onSubmit={handleNotifySubmit} className="flex flex-col sm:flex-row gap-2 w-full">
+                    <input 
+                      type="email" 
+                      value={notifyEmail} 
+                      onChange={(e) => setNotifyEmail(e.target.value)} 
+                      required 
+                      placeholder="Your email address" 
+                      className="flex-1 px-4 py-3 rounded-xl border border-red-200 outline-none focus:ring-2 focus:ring-red-400 font-bold text-sm bg-white shadow-sm"
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={isNotifying}
+                      className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-black text-sm transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-1 shrink-0"
+                    >
+                      {isNotifying ? 'Wait...' : 'Notify Me'}
+                      {!isNotifying && <span className="material-symbols-outlined text-[18px]">send</span>}
+                    </button>
+                  </form>
+                  <p className="mt-3 text-xs text-red-500 font-bold">
+                    * You can still add this item to your cart, but checkout will be disabled until it is restocked.
+                  </p>
+               </div>
+            )}
 
             <div className="flex items-center gap-4 mt-6 flex-wrap">
               <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 bg-white/60 px-3 py-2 rounded-full border border-white"><span className="material-symbols-outlined text-green-500 text-[16px]">verified_user</span> 100% Safe</div>

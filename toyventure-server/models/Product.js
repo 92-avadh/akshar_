@@ -7,7 +7,18 @@ const reviewSchema = mongoose.Schema({
     comment: { type: String, required: true },
 }, { timestamps: true });
 
-// 2. Update your main Product Schema
+// 2. UPDATED: Schema for Product Variants with separate Color and Size
+const variantSchema = mongoose.Schema({
+    color: { type: String }, // e.g., "Red", "Blue", "Gold"
+    size: { type: String },  // e.g., "Small", "XL", "15cm"
+    description: { type: String }, // Specific description for this variant
+    price: { type: Number, required: true, default: 0 },
+    oldPrice: { type: Number, default: 0 },
+    countInStock: { type: Number, required: true, default: 0, min: 0 },
+    images: [{ type: String }], // Images specific to this variant
+});
+
+// 3. Update your main Product Schema
 const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -25,8 +36,11 @@ const productSchema = new mongoose.Schema({
     category: { type: String },
     countInStock: { type: Number, required: true, default: 0, min: 0 },
     
-    // NEW: "Notify Me" Waiting List
+    // "Notify Me" Waiting List
     notifyList: [{ type: String }],
+    
+    // Variants Array
+    variants: [variantSchema],
     
     // REVIEW FIELDS:
     reviews: [reviewSchema],
