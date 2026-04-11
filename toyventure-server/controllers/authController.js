@@ -1,6 +1,4 @@
 const jwt = require('jsonwebtoken');
-const twilio = require('twilio');
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const User = require('../models/User');
 const OtpChallenge = require('../models/OtpChallenge');
 const sendEmail = require('../utils/sendEmail');
@@ -117,12 +115,12 @@ const sendOtp = async (req, res, next) => {
     const otp = generateOtp();
 
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10); 
-    
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
     const resendAvailableAt = new Date();
     resendAvailableAt.setMinutes(resendAvailableAt.getMinutes() + 1);
 
-    const maskedRecipient = email 
+    const maskedRecipient = email
       ? email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length))
       : mobileNumber.replace(/.(?=.{4})/g, '*');
 
@@ -130,15 +128,15 @@ const sendOtp = async (req, res, next) => {
 
     await OtpChallenge.findOneAndUpdate(
       { identifierKey },
-      { 
-        identifierKey, 
-        channel, 
-        otpHash, 
+      {
+        identifierKey,
+        channel,
+        otpHash,
         expiresAt,
         resendAvailableAt,
         maskedRecipient,
         isUsed: false,
-        attempts: 0
+        attempts: 0,
       },
       { upsert: true, new: true }
     );
@@ -157,7 +155,7 @@ const sendOtp = async (req, res, next) => {
               </div>
               <p style="color: #52525b; font-size: 14px;">This code will expire in 10 minutes.</p>
             </div>
-          `
+          `,
         });
         console.log(`📧 OTP Email successfully sent to: ${identifierKey}`);
       } catch (emailError) {
@@ -165,18 +163,23 @@ const sendOtp = async (req, res, next) => {
         return next(new Error('Failed to send OTP email. Please check your email configuration.'));
       }
     } else {
-      // --- TERMINAL PRINT LOGIC (BYPASSES TWILIO FOR DEVELOPMENT) ---
-      console.log('\n=============================================');
-      console.log(`🚀 DEVELOPMENT MODE: OTP GENERATED`);
-      console.log(`📱 Target Mobile : ${identifierKey}`);
-      console.log(`🔑 YOUR OTP IS   : [ ${otp} ]`);
-      console.log(`⏳ Expires in    : 10 minutes`);
-      console.log('=============================================\n');
+      try {
+        const response = await fetch(`https://2factor.in/API/V1/98428294-356c-11f1-bfb4-0200cd936042/SMS/${identifierKey}/${otp}/OTP1`);
+        const data = await response.json();
+        if (data.Status !== 'Success') {
+          console.error('2Factor API error:', data);
+          return next(new Error('Failed to send OTP. Please try again.'));
+        }
+        console.log(`📱 OTP sent via 2Factor to: ${identifierKey}`);
+      } catch (smsError) {
+        console.error('Failed to send OTP via 2Factor:', smsError);
+        return next(new Error('Failed to send OTP. Please try again.'));
+      }
     }
 
     res.status(200).json({
       message: channel === 'email' ? 'OTP sent to your email' : 'OTP sent successfully',
-      expiresIn: 600, 
+      expiresIn: 600,
       channel,
       env: process.env.NODE_ENV,
     });
@@ -205,7 +208,7 @@ const verifyOtp = async (req, res, next) => {
     }
 
     const identifierKey = String(identifierKeyRaw).trim();
-    const incomingOtp = String(otp).trim(); 
+    const incomingOtp = String(otp).trim();
 
     const challenge = await OtpChallenge.findOne({ identifierKey });
 
@@ -240,7 +243,7 @@ const verifyOtp = async (req, res, next) => {
       user = await User.create({
         email: email || undefined,
         mobileNumber: mobileNumber || undefined,
-        role: 'user', 
+        role: 'user',
       });
     }
 
@@ -251,7 +254,7 @@ const verifyOtp = async (req, res, next) => {
       mobileNumber: user.mobileNumber,
       role: user.role,
       token: generateToken(user._id),
-      isNewUser: !user.name, 
+      isNewUser: !user.name,
     });
   } catch (error) {
     next(error);
