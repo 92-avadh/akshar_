@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../features/cart/cartSlice';
+import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 import toast from 'react-hot-toast';
 
 // ==========================================
@@ -44,6 +44,7 @@ const MagneticButton = ({ children, className, variant = 'dark', onClick }) => {
 // ==========================================
 const Home = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // OPTIMIZATION: Default window scroll is heavily optimized by Framer Motion
   const { scrollYProgress } = useScroll(); 
@@ -64,10 +65,118 @@ const Home = () => {
   ];
 
   const shopByAgeData = [
-    { age: "0-2 YRS", label: "Infants", color: "text-red-500", radius: "40% 60% 70% 30% / 40% 50% 60% 50%" },
-    { age: "3-4 YRS", label: "Toddlers", color: "text-red-700", radius: "50% 50% 30% 70% / 60% 30% 70% 40%" },
-    { age: "5-7 YRS", label: "Preschool", color: "text-red-600", radius: "70% 30% 50% 50% / 30% 40% 60% 70%" },
-    { age: "8+ YRS", label: "Grade School", color: "text-red-800", radius: "30% 70% 60% 40% / 50% 60% 40% 50%" },
+    {
+      age: "0-12 MO",
+      label: "Infants",
+      sublabel: "Newborn to First Steps",
+      section: "Infants",
+      color: "text-red-400",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-100",
+      radius: "40% 60% 70% 30% / 40% 50% 60% 50%",
+      icon: "🍼",
+      subcategories: ["Onesies", "Sleepwear", "Swaddles", "Rompers", "Booties", "Bibs"],
+      sizes: ["NB", "0-3M", "3-6M", "6-9M", "9-12M"],
+      genderFilters: ["Boy", "Girl", "Neutral"],
+      highlights: ["Ultra-soft fabrics", "Snap closures", "Hypoallergenic"],
+      productCount: 120,
+    },
+    {
+      age: "12-36 MO",
+      label: "Toddlers",
+      sublabel: "Walking & Exploring",
+      section: "Infants",
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+      radius: "50% 50% 30% 70% / 60% 30% 70% 40%",
+      icon: "🧸",
+      subcategories: ["T-Shirts", "Leggings", "Shorts", "Dresses", "PJs", "First Shoes"],
+      sizes: ["12-18M", "18-24M", "2T"],
+      genderFilters: ["Boy", "Girl", "Neutral"],
+      highlights: ["Elastic waistbands", "Easy pull-on", "Durable knees"],
+      productCount: 110,
+    },
+    {
+      age: "2-5 YRS",
+      label: "Preschool",
+      sublabel: "Creative & Curious",
+      section: "Little Kids",
+      color: "text-red-600",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+      radius: "70% 30% 50% 50% / 30% 40% 60% 70%",
+      icon: "🎨",
+      subcategories: ["Tops", "Bottoms", "Dresses", "Activewear", "Outerwear", "Swimwear"],
+      sizes: ["2T", "3T", "4T", "5T"],
+      genderFilters: ["Boy", "Girl", "Neutral"],
+      highlights: ["Art-friendly", "Washable prints", "Play-proof"],
+      productCount: 130,
+    },
+    {
+      age: "5-7 YRS",
+      label: "Kindergarten",
+      sublabel: "School Ready",
+      section: "Little Kids",
+      color: "text-red-700",
+      bgColor: "bg-red-100",
+      borderColor: "border-red-300",
+      radius: "30% 70% 60% 40% / 50% 60% 40% 50%",
+      icon: "🎒",
+      subcategories: ["Uniforms", "Tops", "Bottoms", "Activewear", "Rainwear", "Sneakers"],
+      sizes: ["XS (4-5)", "S (6-7)"],
+      genderFilters: ["Boy", "Girl", "Neutral"],
+      highlights: ["School-ready", "Active-friendly", "Stain resistant"],
+      productCount: 115,
+    },
+    {
+      age: "7-10 YRS",
+      label: "Grade School",
+      sublabel: "Full of Energy",
+      section: "Big Kids",
+      color: "text-red-700",
+      bgColor: "bg-red-100",
+      borderColor: "border-red-300",
+      radius: "60% 40% 40% 60% / 40% 60% 50% 50%",
+      icon: "⚽",
+      subcategories: ["Graphic Tees", "Jeans", "Hoodies", "Activewear", "Shorts", "Sneakers"],
+      sizes: ["S (7-8)", "M (9-10)"],
+      genderFilters: ["Boy", "Girl", "Neutral"],
+      highlights: ["Sporty styles", "Reinforced knees", "Weekend looks"],
+      productCount: 135,
+    },
+    {
+      age: "10-14 YRS",
+      label: "Tweens",
+      sublabel: "Finding Their Style",
+      section: "Big Kids",
+      color: "text-red-800",
+      bgColor: "bg-red-100",
+      borderColor: "border-red-300",
+      radius: "45% 55% 55% 45% / 55% 45% 55% 45%",
+      icon: "🎧",
+      subcategories: ["Streetwear", "Denim", "Hoodies", "Joggers", "Layer Pieces", "Accessories"],
+      sizes: ["L (11-12)", "XL (12-13)", "XXL (13-14)"],
+      genderFilters: ["Boy", "Girl", "Unisex"],
+      highlights: ["Trend-forward", "Self-expression", "Casual & cool"],
+      productCount: 150,
+    },
+    {
+      age: "14+ YRS",
+      label: "Teens",
+      sublabel: "Young Adults",
+      section: "Teens",
+      color: "text-rose-800",
+      bgColor: "bg-rose-100",
+      borderColor: "border-rose-400",
+      radius: "50% 50% 40% 60% / 40% 50% 60% 50%",
+      icon: "🛍️",
+      subcategories: ["Premium Basics", "Outerwear", "Formal", "Athleisure", "Denim", "Accessories"],
+      sizes: ["XS", "S", "M", "L", "XL"],
+      genderFilters: ["Male", "Female", "Unisex"],
+      highlights: ["Adult sizing", "Fashion-forward", "Occasion wear"],
+      productCount: 160,
+    },
   ];
 
   const reviews = [
@@ -78,9 +187,24 @@ const Home = () => {
   ];
   const infiniteReviews = [...reviews, ...reviews];
 
+  const runningCategories = [ 
+    "Soft Toys", "Wooden Wonders", "Remote controles Cars", "Arts & Crafts", 
+    "Mind Puzzles", "Metal Machines", "Outdoor Adventures", "Educational Games", "Building & STEM" 
+  ];
+  const infiniteCategories = [...runningCategories, ...runningCategories];
+
+  // ================= NEW ADD TO CART LOGIC =================
   const handleAddToCart = (product) => {
-    dispatch(addToCart({ ...product, qty: 1 }));
-    toast.success(`${product.name} added to Cart!`, { icon: '🎒', style: { border: '1px solid #fecaca', color: '#450a0a' } });
+    const userInfoData = sessionStorage.getItem('userInfo');
+    const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') ? JSON.parse(userInfoData) : null;
+
+    if (!userInfo) {
+      dispatch(setPendingItem({ ...product, qty: 1 }));
+      navigate('/cart');
+    } else {
+      dispatch(addToCart({ ...product, qty: 1 }));
+      toast.success(`${product.name || product.title} added to Cart!`, { icon: '🎒', style: { border: '1px solid #fecaca', color: '#450a0a' } });
+    }
   };
 
   return (
@@ -120,17 +244,41 @@ const Home = () => {
         </div>
       </motion.section>
 
+      {/* ================= INFINITE CATEGORY STRIP ================= */}
+      <section className="py-5 bg-red-600 border-y border-red-700 overflow-hidden relative z-20 flex">
+        <div className="flex gap-8 w-max px-4 will-change-transform transform-gpu" style={{ animation: "marquee-fast 20s linear infinite" }}>
+          <style>{`@keyframes marquee-fast { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
+          {infiniteCategories.map((cat, idx) => (
+            <div key={idx} className="flex items-center gap-8 shrink-0">
+              <span className="text-white font-black uppercase tracking-widest text-sm md:text-base whitespace-nowrap">{cat}</span>
+              <span className="material-symbols-outlined text-red-300 text-sm">star</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ================= SHOP BY AGE ================= */}
       <section className="bg-red-50/30 py-24 relative z-20 border-y border-red-50">
         <div className="max-w-[1440px] mx-auto px-6 text-center mb-16">
           <h2 className="text-red-600 font-bold uppercase tracking-widest text-xs mb-3">Find The Perfect Toy</h2>
           <h3 className="text-4xl md:text-5xl font-black text-red-950 tracking-tighter">Shop by Age</h3>
         </div>
-        <div className="flex flex-wrap justify-center gap-6 px-6 max-w-[1440px] mx-auto">
+        
+        {/* Scrollable Container */}
+        <div className="flex overflow-x-auto gap-8 px-6 pb-12 pt-4 max-w-[1440px] mx-auto snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
+          
           {shopByAgeData.map((item, idx) => (
-            <motion.div key={idx} whileHover={{ scale: 1.05 }} className={`w-40 h-40 md:w-48 md:h-48 bg-white border border-red-100 shadow-sm hover:shadow-xl hover:shadow-red-900/10 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-300 ${item.color}`} style={{ borderRadius: item.radius }}>
-               <h4 className="font-black text-2xl md:text-3xl tracking-tight">{item.age}</h4>
-               <p className="font-bold text-red-950/50 text-xs mt-2 uppercase tracking-wider">{item.label}</p>
+            <motion.div 
+              key={idx} 
+              whileHover={{ scale: 1.05 }} 
+              className={`shrink-0 snap-center w-56 h-56 md:w-64 md:h-64 ${item.bgColor} border ${item.borderColor} shadow-sm hover:shadow-xl hover:shadow-red-900/10 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-300 ${item.color}`} 
+              style={{ borderRadius: item.radius }}
+            >
+               <span className="text-4xl md:text-5xl mb-3">{item.icon}</span>
+               <h4 className="font-black text-2xl md:text-3xl tracking-tight leading-none text-center">{item.age}</h4>
+               <p className="font-bold text-red-950/60 text-sm mt-2 uppercase tracking-wider">{item.label}</p>
+               <p className="font-medium text-red-950/40 text-xs mt-1 text-center">{item.sublabel}</p>
             </motion.div>
           ))}
         </div>
@@ -236,6 +384,35 @@ const Home = () => {
                 <p className="text-red-950/70 font-medium mb-8 leading-relaxed line-clamp-4">"{review.text}"</p>
                 <p className="font-bold text-red-950 text-sm tracking-wide">{review.author}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= STORE FEATURES ================= */}
+      <section className="py-20 bg-white relative z-20 border-t border-red-50">
+        <div className="max-w-[1440px] mx-auto px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { icon: 'local_shipping', title: 'Free Delivery', subtitle: 'On orders over ₹999' },
+              { icon: 'shield_lock', title: '100% Secure Payment', subtitle: 'Encrypted transactions' },
+              { icon: 'sell', title: 'Daily Offer', subtitle: 'Explore fresh deals' },
+              { icon: 'workspace_premium', title: 'Quality Guarantee', subtitle: 'Premium toy materials' }
+            ].map((feature, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, y: 20 }} 
+                whileInView={{ opacity: 1, y: 0 }} 
+                viewport={{ once: true }} 
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-red-50/50 transition-colors duration-300 group"
+              >
+                <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-6 group-hover:scale-110 group-hover:bg-red-100 group-hover:shadow-lg group-hover:shadow-red-600/10 transition-all duration-300">
+                  <span className="material-symbols-outlined text-4xl">{feature.icon}</span>
+                </div>
+                <h4 className="font-black text-red-950 text-xl tracking-tight mb-2">{feature.title}</h4>
+                <p className="text-red-950/60 font-medium">{feature.subtitle}</p>
+              </motion.div>
             ))}
           </div>
         </div>

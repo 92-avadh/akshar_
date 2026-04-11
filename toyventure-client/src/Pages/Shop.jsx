@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion'; 
 import toast from 'react-hot-toast'; 
@@ -7,7 +7,7 @@ import ScrollReveal from '../components/ScrollReveal.jsx';
 import SkeletonCard from '../components/SkeletonCard.jsx';
 import { apiSlice, useGetProductsQuery } from '../features/api/apiSlice.js';
 import { toggleFavorite } from '../features/wishlist/wishlistSlice.js';
-import { addToCart } from '../features/cart/cartSlice';
+import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 
 const ageCategories = ['0-2 Years', '3-5 Years', '6-8 Years', '9+ Years'];
 const tagCategories = ['Unique', 'Educational', 'Soft Toys'];
@@ -34,6 +34,7 @@ const Checkbox = ({ label, checked, onChange }) => (
 
 const Shop = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const wishlistItems = useSelector((state) => state.wishlist?.wishlistItems || EMPTY_ARRAY);
   const prefetchProduct = apiSlice.usePrefetch('getProductById');
 
@@ -119,6 +120,24 @@ const Shop = () => {
     setActiveFilters(prev => ({ ...prev, sort: val }));
     setTempFilters(prev => ({ ...prev, sort: val }));
     setPage(1);
+  };
+
+  // ================= NEW ADD TO CART LOGIC =================
+  const handleAddToCartClick = (product) => {
+    const userInfoData = sessionStorage.getItem('userInfo');
+    const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') ? JSON.parse(userInfoData) : null;
+    
+    if (!userInfo) {
+       dispatch(setPendingItem({ ...product, qty: 1 }));
+       navigate('/cart');
+    } else {
+       dispatch(addToCart({ ...product, qty: 1 })); 
+       if(product.countInStock === 0) {
+         toast.error(`Added to cart waitlist (currently out of stock)`);
+       } else {
+         toast.success(`${product.title} added to cart!`); 
+       }
+    }
   };
 
   if (error) return <div className="min-h-screen flex items-center justify-center bg-surface"><h2 className="text-2xl font-bold text-red-500">Failed to load products.</h2></div>;
@@ -290,14 +309,8 @@ const Shop = () => {
                       <span className={`material-symbols-outlined text-[20px] transition-colors ${isFavorited ? 'text-red-500 filled' : 'text-zinc-400 hover:text-red-400'}`}>favorite</span>
                     </button>
 
-                    <button onClick={() => { 
-                        dispatch(addToCart({ ...product, qty: 1 })); 
-                        if(product.countInStock === 0) {
-                          toast.error(`Added to cart waitlist (currently out of stock)`);
-                        } else {
-                          toast.success(`${product.title} added to cart!`); 
-                        }
-                      }} 
+                    <button 
+                      onClick={() => handleAddToCartClick(product)} 
                       className={`absolute top-6 right-6 z-20 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-zinc-100 ${product.countInStock > 0 ? 'bg-white/90 text-primary-container hover:bg-primary-container hover:text-white' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'}`}
                     >
                       <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
@@ -310,7 +323,6 @@ const Shop = () => {
                         </div>
                       )}
                       
-                      {/* --- UPDATED: Small Out of Stock Badge --- */}
                       {product.countInStock === 0 && (
                          <div className="absolute top-3 left-3 z-20 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full border border-red-100 shadow-sm">
                             <span className="text-red-500 font-black text-[9px] uppercase tracking-widest flex items-center gap-1">

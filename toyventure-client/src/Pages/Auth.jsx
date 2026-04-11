@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart, clearPendingItem } from '../features/cart/cartSlice';
 import { 
     useSendOtpMutation, 
     useVerifyOtpMutation, 
@@ -16,6 +18,10 @@ const Auth = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  
+  // Access the pending item from Redux
+  const pendingItem = useSelector((state) => state.cart.pendingItem);
 
   const [sendOtp, { isLoading: isSending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
@@ -24,7 +30,6 @@ const Auth = () => {
   const redirect = new URLSearchParams(location.search).get('redirect') || '/';
 
   useEffect(() => {
-    // 1. Clear phone number and otp when the page loads
     setIdentifier('');
     setOtp('');
 
@@ -69,7 +74,6 @@ const Auth = () => {
       
       const res = await verifyOtp(payload).unwrap();
       
-      // Save credentials & token IMMEDIATELY so the next Step 3 API call is authenticated
       sessionStorage.setItem('userInfo', JSON.stringify(res));
       sessionStorage.setItem('token', res.token); 
       
@@ -77,6 +81,12 @@ const Auth = () => {
           setStep(3);
           toast.success("OTP Verified! Let's set up your profile.");
       } else {
+          // --- NEW: Handle Pending Item for Existing Users ---
+          if (pendingItem) {
+              dispatch(addToCart(pendingItem));
+              dispatch(clearPendingItem());
+          }
+
           const firstName = res.name ? res.name.split(' ')[0] : 'User';
           toast.success(`Welcome back, ${firstName}!`);
           setTimeout(() => {
@@ -88,7 +98,6 @@ const Auth = () => {
     } catch (err) {
       toast.error(err?.data?.message || 'Invalid OTP. Please check the code and try again.');
       
-      // 2. Clear phone number and otp when OTP is wrong/invalid, and reset to step 1
       setOtp('');
       setIdentifier('');
       setStep(1);
@@ -109,6 +118,12 @@ const Auth = () => {
         userInfo.name = name;
         sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
 
+        // --- NEW: Handle Pending Item for New Users ---
+        if (pendingItem) {
+            dispatch(addToCart(pendingItem));
+            dispatch(clearPendingItem());
+        }
+
         toast.success(`Welcome to ToyBlix, ${name.split(' ')[0]}!`);
         
         setTimeout(() => {
@@ -125,12 +140,10 @@ const Auth = () => {
     <main className="pt-32 pb-24 min-h-screen bg-white flex flex-col items-center justify-center px-6 relative overflow-hidden">
       <div className="absolute inset-0 doodle-bg opacity-30 pointer-events-none z-0"></div>
 
-      {/* Background Glow matching home page */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-50 rounded-full blur-[120px] opacity-50 pointer-events-none"></div>
 
       <div className="bg-white/90 backdrop-blur-md p-8 md:p-12 rounded-[3rem] shadow-2xl shadow-red-950/5 w-full max-w-md relative z-10 border border-red-50 animate-[fadeIn_0.3s_ease-out]">
         
-        {/* HEADER SECTION */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-red-100 shadow-sm">
              <span className="material-symbols-outlined text-[32px]">
@@ -151,7 +164,6 @@ const Auth = () => {
           </p>
         </div>
 
-        {/* STEP 1: SEND OTP FORM */}
         {step === 1 && (
           <form onSubmit={handleSendOtp} className="space-y-5 animate-[fadeIn_0.3s_ease-out]">
             <div className="space-y-2">
@@ -173,7 +185,6 @@ const Auth = () => {
           </form>
         )}
 
-        {/* STEP 2: VERIFY OTP FORM */}
         {step === 2 && (
           <form onSubmit={handleVerifyOtp} className="space-y-5 animate-[fadeIn_0.3s_ease-out]">
             <div className="space-y-2">
@@ -202,7 +213,6 @@ const Auth = () => {
           </form>
         )}
 
-        {/* STEP 3: CAPTURE NAME */}
         {step === 3 && (
           <form onSubmit={handleCompleteProfile} className="space-y-5 animate-[fadeIn_0.3s_ease-out]">
             <div className="space-y-2">

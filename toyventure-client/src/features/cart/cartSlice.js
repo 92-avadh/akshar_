@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  // THIS LINE IS CRITICAL: It loads the saved cart from the browser memory
   cartItems: sessionStorage.getItem('cartItems') ? JSON.parse(sessionStorage.getItem('cartItems')) : [],
+  // Remember the product if they aren't logged in
+  pendingItem: sessionStorage.getItem('pendingItem') ? JSON.parse(sessionStorage.getItem('pendingItem')) : null, 
 };
 
 export const cartSlice = createSlice({
@@ -19,7 +20,6 @@ export const cartSlice = createSlice({
         state.cartItems.push(item);
       }
       
-      // CRITICAL: Save to local storage after adding
       sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
     },
     updateQuantity: (state, action) => {
@@ -38,13 +38,21 @@ export const cartSlice = createSlice({
       state.cartItems = [];
       sessionStorage.removeItem('cartItems');
     },
-    // NEW: Cloud Hydration Reducer
     setCart: (state, action) => {
       state.cartItems = action.payload;
       sessionStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+    },
+    // NEW REDUCERS FOR PENDING ITEMS
+    setPendingItem: (state, action) => {
+      state.pendingItem = action.payload;
+      sessionStorage.setItem('pendingItem', JSON.stringify(action.payload));
+    },
+    clearPendingItem: (state) => {
+      state.pendingItem = null;
+      sessionStorage.removeItem('pendingItem');
     }
   },
 });
 
-export const { addToCart, updateQuantity, removeFromCart, clearCart, setCart } = cartSlice.actions;
+export const { addToCart, updateQuantity, removeFromCart, clearCart, setCart, setPendingItem, clearPendingItem } = cartSlice.actions;
 export default cartSlice.reducer;

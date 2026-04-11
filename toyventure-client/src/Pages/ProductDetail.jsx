@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion'; 
 import toast from 'react-hot-toast'; 
@@ -10,7 +10,7 @@ import {
   useGetMyOrdersQuery,
   useNotifyMeWhenAvailableMutation 
 } from '../features/api/apiSlice';
-import { addToCart } from '../features/cart/cartSlice';
+import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 import { toggleFavorite } from '../features/wishlist/wishlistSlice'; 
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
 import ScrollReveal from '../components/ScrollReveal.jsx'; 
@@ -18,6 +18,7 @@ import ScrollReveal from '../components/ScrollReveal.jsx';
 const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const userInfoData = sessionStorage.getItem('userInfo');
   const userInfo = userInfoData && userInfoData !== 'undefined' ? JSON.parse(userInfoData) : null;
@@ -132,22 +133,28 @@ const ProductDetail = () => {
     );
   }
 
+  // ================= NEW ADD TO CART LOGIC =================
   const handleAddToCart = () => {
     const variantString = [selectedColor, selectedSize].filter(Boolean).join(' - ');
-    
-    dispatch(addToCart({ 
+    const cartPayload = { 
       ...product, 
       price: displayPriceValue,      
       countInStock: displayStock,    
       image: mainImage,              
       variant: variantString || null, 
       qty: 1 
-    }));
-    
-    if (displayStock === 0) {
-        toast.error(`Added to cart, but currently out of stock. Checkout is disabled until restocked.`);
+    };
+
+    if (!userInfo) {
+      dispatch(setPendingItem(cartPayload));
+      navigate('/cart');
     } else {
-        toast.success(`${product.title} added to your cart!`); 
+      dispatch(addToCart(cartPayload));
+      if (displayStock === 0) {
+          toast.error(`Added to cart, but currently out of stock. Checkout is disabled until restocked.`);
+      } else {
+          toast.success(`${product.title} added to your cart!`); 
+      }
     }
   };
 
@@ -402,7 +409,6 @@ const ProductDetail = () => {
               </button>
             </div>
             
-            {/* --- RESTORED: Notify me text & Form if out of stock --- */}
             {displayStock === 0 && (
                <div className="mt-6 bg-red-50 p-5 rounded-[2rem] border border-red-100 flex flex-col justify-center shadow-inner">
                   <p className="text-red-600 font-black text-sm mb-3 flex items-center gap-1">
