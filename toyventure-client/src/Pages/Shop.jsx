@@ -29,8 +29,17 @@ const defaultFilters = {
 
 const EMPTY_ARRAY = []; 
 
+// ==========================================
+// FIXED: Added the hidden <input> element so the label triggers the onChange event
+// ==========================================
 const Checkbox = ({ label, checked, onChange }) => (
   <label className="flex items-center gap-3 cursor-pointer group">
+    <input 
+      type="checkbox" 
+      className="hidden" 
+      checked={checked} 
+      onChange={onChange} 
+    />
     <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${checked ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-zinc-300 text-transparent group-hover:border-orange-400'}`}>
       <span className="material-symbols-outlined text-[14px] font-black">check</span>
     </div>
@@ -50,7 +59,7 @@ const Shop = () => {
   const initialTag = searchParams.get('tag');
   
   const [localSearch, setLocalSearch] = useState(searchQuery);
-  const [isTyping, setIsTyping] = useState(false); // <-- NEW: Tracks active typing state
+  const [isTyping, setIsTyping] = useState(false); 
   const [page, setPage] = useState(1);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -67,17 +76,13 @@ const Shop = () => {
     selectedTags: initialTag ? [initialTag] : []
   });
 
-  // =========================================================
-  // PRODUCTION DEBOUNCE: Pause-based Trigger & Param Merging
-  // =========================================================
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      setIsTyping(false); // User has paused typing
+      setIsTyping(false); 
       
       if (localSearch !== searchQuery) {
         setPage(1); 
         
-        // Preserve existing filters while updating search
         const currentParams = new URLSearchParams(searchParams);
         
         if (localSearch.trim()) {
@@ -88,12 +93,11 @@ const Shop = () => {
         
         setSearchParams(currentParams);
       }
-    }, 700); // 700ms provides a perfect "pause" UX without spamming the backend
+    }, 700); 
 
     return () => clearTimeout(delayDebounceFn);
   }, [localSearch, searchQuery, searchParams, setSearchParams]);
 
-  // Sync state if URL changes directly (like clicking from Home)
   useEffect(() => {
     const currentAgeParam = searchParams.get('age');
     const currentTagParam = searchParams.get('tag');
@@ -422,7 +426,6 @@ const Shop = () => {
 
               <form onSubmit={handleLocalSearchSubmit} className="flex items-center gap-2 bg-white/80 rounded-full px-5 py-2.5 shadow-inner w-full sm:w-80 border-none focus-within:shadow-md transition-shadow relative">
                 
-                {/* --- LOADING UX ENHANCEMENT --- */}
                 <div className="flex items-center justify-center w-6 h-6">
                   <AnimatePresence mode="wait">
                     {(isTyping || isFetching) ? (
@@ -454,7 +457,7 @@ const Shop = () => {
                   value={localSearch} 
                   onChange={(e) => { 
                     setLocalSearch(e.target.value); 
-                    setIsTyping(true); // Triggers loading UI and pause-timer
+                    setIsTyping(true); 
                   }} 
                   placeholder="Search toys..." 
                   className="flex-1 bg-transparent border-none outline-none focus:ring-0 font-medium text-sm text-zinc-800 placeholder:text-zinc-400 w-full" 

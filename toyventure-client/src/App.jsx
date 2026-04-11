@@ -1,32 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast'; 
+
+// CRITICAL/CORE COMPONENTS (Load Immediately)
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Home from './Pages/Home';
-import Shop from './Pages/Shop';
-import ProductDetail from './Pages/ProductDetail';
-import Cart from './Pages/Cart';
-import Checkout from './Pages/Checkout';
-import Profile from './Pages/Profile';
-import Auth from './Pages/Auth';
-import Favorites from './Pages/Favorites';
-import About from './Pages/About';       
-import Contact from './Pages/Contact';   
-import AdminDashboard from './Pages/AdminDashboard';
-import AdminCatalog from './Pages/AdminCatalog';
 import ScrollToTop from './components/ScrollToTop';
 import Loader from './components/Loader'; 
 import CloudSyncManager from './components/CloudSyncManager'; 
-import ErrorBoundary from './components/ErrorBoundary'; // <-- NEW IMPORT
-import NotFound from './Pages/NotFound'; // <-- NEW IMPORT
+import ErrorBoundary from './components/ErrorBoundary'; 
 
-// Footer Pages
-import SafetyStandards from './Pages/SafetyStandards';
-import ShippingInfo from './Pages/ShippingInfo';
-import Returns from './Pages/Returns';
-import PrivacyPolicy from './Pages/PrivacyPolicy';
-import Terms from './Pages/Terms';
+// ==========================================
+// PRODUCTION ROUTE CODE SPLITTING
+// Only loads the Javascript for these pages when the user navigates to them.
+// ==========================================
+const Home = lazy(() => import('./Pages/Home'));
+const Shop = lazy(() => import('./Pages/Shop'));
+const ProductDetail = lazy(() => import('./Pages/ProductDetail'));
+const Cart = lazy(() => import('./Pages/Cart'));
+const Checkout = lazy(() => import('./Pages/Checkout'));
+const Profile = lazy(() => import('./Pages/Profile'));
+const Auth = lazy(() => import('./Pages/Auth'));
+const Favorites = lazy(() => import('./Pages/Favorites'));
+const About = lazy(() => import('./Pages/About'));       
+const Contact = lazy(() => import('./Pages/Contact'));   
+const AdminDashboard = lazy(() => import('./Pages/AdminDashboard'));
+const AdminCatalog = lazy(() => import('./Pages/AdminCatalog'));
+const NotFound = lazy(() => import('./Pages/NotFound'));
+
+// Footer Pages (Lazy loaded)
+const SafetyStandards = lazy(() => import('./Pages/SafetyStandards'));
+const ShippingInfo = lazy(() => import('./Pages/ShippingInfo'));
+const Returns = lazy(() => import('./Pages/Returns'));
+const PrivacyPolicy = lazy(() => import('./Pages/PrivacyPolicy'));
+const Terms = lazy(() => import('./Pages/Terms'));
 
 // ==========================================
 // SECURE ADMIN ROUTE GATEKEEPER
@@ -90,35 +97,37 @@ const App = () => {
 
       <Navbar />
       <div className="flex-grow">
-        {/* Wrap all internal routes in the ErrorBoundary */}
         <ErrorBoundary>
-          <Routes>
-            {/* PUBLIC ROUTES */}
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/about" element={<About />} />       
-            <Route path="/contact" element={<Contact />} />   
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/favorites" element={<Favorites />} /> 
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/auth" element={<Auth />} />
+          {/* Suspense catches the lazy-loaded components while they are downloading */}
+          <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader /></div>}>
+            <Routes>
+              {/* PUBLIC ROUTES */}
+              <Route path="/" element={<Home />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/about" element={<About />} />       
+              <Route path="/contact" element={<Contact />} />   
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/favorites" element={<Favorites />} /> 
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/auth" element={<Auth />} />
 
-            {/* FOOTER PAGE ROUTES */}
-            <Route path="/safety-standards" element={<SafetyStandards />} />
-            <Route path="/shipping" element={<ShippingInfo />} />
-            <Route path="/returns" element={<Returns />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<Terms />} />
+              {/* FOOTER PAGE ROUTES */}
+              <Route path="/safety-standards" element={<SafetyStandards />} />
+              <Route path="/shipping" element={<ShippingInfo />} />
+              <Route path="/returns" element={<Returns />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<Terms />} />
 
-            {/* SECURE ADMIN ROUTES */}
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/catalog" element={<AdminRoute><AdminCatalog /></AdminRoute>} />
+              {/* SECURE ADMIN ROUTES */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/catalog" element={<AdminRoute><AdminCatalog /></AdminRoute>} />
 
-            {/* 404 CATCH-ALL ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* 404 CATCH-ALL ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </ErrorBoundary>
       </div>
       <Footer />
