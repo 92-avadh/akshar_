@@ -12,21 +12,24 @@ const getProducts = async (req, res) => {
         const queryFilter = {};
         const andConditions = [];
 
-        if (req.query.keyword) {
+        // 1. Keyword Search
+        if (req.query.keyword && req.query.keyword.trim() !== '') {
             andConditions.push({ title: { $regex: req.query.keyword, $options: 'i' } });
         }
 
-        if (req.query.tags) {
-            const tagsArray = req.query.tags.split(',').map(t => new RegExp(t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
-            andConditions.push({
-                $or: [
-                    { tag: { $in: tagsArray } },
-                    { category: { $in: tagsArray } },
-                    { ageGroup: { $in: tagsArray } }
-                ]
-            });
+        // 2. Categories (Maps to "tag" in DB)
+        if (req.query.tags && req.query.tags.trim() !== '') {
+            const tagsArray = req.query.tags.split(',').map(t => new RegExp(t.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
+            andConditions.push({ tag: { $in: tagsArray } });
         }
 
+        // 3. Age Groups (Maps to "category" in DB)
+        if (req.query.category && req.query.category.trim() !== '') {
+            const ageArray = req.query.category.split(',').map(c => new RegExp(c.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
+            andConditions.push({ category: { $in: ageArray } });
+        }
+
+        // 4. Price Range
         if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
             const priceFilter = {};
             if (req.query.minPrice !== undefined && req.query.minPrice !== '') priceFilter.$gte = Number(req.query.minPrice);
@@ -37,25 +40,35 @@ const getProducts = async (req, res) => {
             }
         }
 
-        if (req.query.minRating) {
+        // 5. Rating
+        if (req.query.minRating && req.query.minRating.trim() !== '') {
             andConditions.push({ rating: { $gte: Number(req.query.minRating) } });
         }
 
-        // --- UPDATED STOCK VISIBILITY LOGIC ---
-        if (req.query.inStock === 'true' && req.query.outOfStock !== 'true') {
-             andConditions.push({ countInStock: { $gt: 0 } });
-        } else if (req.query.outOfStock === 'true' && req.query.inStock !== 'true') {
-             andConditions.push({ countInStock: { $eq: 0 } });
-        } else if (req.query.isAdmin !== 'true') {
-             // PUBLIC DEFAULT: Hide out of stock items and blank templates from Shop Page
-             andConditions.push({ countInStock: { $gt: 0 } });
-             andConditions.push({ title: { $ne: 'New Magical Toy' } });
+        // 6. Stock Visibility Logic
+        if (req.query.isAdmin !== 'true') {
+            andConditions.push({ title: { $ne: 'New Magical Toy' } }); // Always hide blank templates
+
+            const wantInStock = req.query.inStock === 'true';
+            const wantOutOfStock = req.query.outOfStock === 'true';
+
+            if (wantInStock && !wantOutOfStock) {
+                andConditions.push({ countInStock: { $gt: 0 } });
+            } else if (!wantInStock && wantOutOfStock) {
+                andConditions.push({ countInStock: { $lte: 0 } });
+            } else if (wantInStock && wantOutOfStock) {
+                // Show all (both checked), no filter required
+            } else {
+                // Default Public View: Only show in-stock items
+                andConditions.push({ countInStock: { $gt: 0 } });
+            }
         }
 
         if (andConditions.length > 0) {
             queryFilter.$and = andConditions;
         }
 
+        // 7. Sorting
         let sortOption = { createdAt: -1 }; 
         if (req.query.sort === 'price_asc') sortOption = { price: 1 };
         if (req.query.sort === 'price_desc') sortOption = { price: -1 };

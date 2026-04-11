@@ -17,7 +17,9 @@ import AdminDashboard from './Pages/AdminDashboard';
 import AdminCatalog from './Pages/AdminCatalog';
 import ScrollToTop from './components/ScrollToTop';
 import Loader from './components/Loader'; 
-import CloudSyncManager from './components/CloudSyncManager'; // <-- NEW IMPORT
+import CloudSyncManager from './components/CloudSyncManager'; 
+import ErrorBoundary from './components/ErrorBoundary'; // <-- NEW IMPORT
+import NotFound from './Pages/NotFound'; // <-- NEW IMPORT
 
 // Footer Pages
 import SafetyStandards from './Pages/SafetyStandards';
@@ -65,7 +67,7 @@ const App = () => {
 
   return (
     <Router>
-      <CloudSyncManager /> {/* <-- ADDED: Invisible Cloud Sync Engine */}
+      <CloudSyncManager /> 
       <ScrollToTop />
       
       {/* Global Toast Notification Container */}
@@ -88,30 +90,36 @@ const App = () => {
 
       <Navbar />
       <div className="flex-grow">
-        <Routes>
-          {/* PUBLIC ROUTES */}
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/about" element={<About />} />       
-          <Route path="/contact" element={<Contact />} />   
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/favorites" element={<Favorites />} /> 
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/auth" element={<Auth />} />
+        {/* Wrap all internal routes in the ErrorBoundary */}
+        <ErrorBoundary>
+          <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/about" element={<About />} />       
+            <Route path="/contact" element={<Contact />} />   
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/favorites" element={<Favorites />} /> 
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/auth" element={<Auth />} />
 
-          {/* FOOTER PAGE ROUTES */}
-          <Route path="/safety-standards" element={<SafetyStandards />} />
-          <Route path="/shipping" element={<ShippingInfo />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
+            {/* FOOTER PAGE ROUTES */}
+            <Route path="/safety-standards" element={<SafetyStandards />} />
+            <Route path="/shipping" element={<ShippingInfo />} />
+            <Route path="/returns" element={<Returns />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
 
-          {/* SECURE ADMIN ROUTES */}
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/catalog" element={<AdminRoute><AdminCatalog /></AdminRoute>} />
-        </Routes>
+            {/* SECURE ADMIN ROUTES */}
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/catalog" element={<AdminRoute><AdminCatalog /></AdminRoute>} />
+
+            {/* 404 CATCH-ALL ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </div>
       <Footer />
     </Router>

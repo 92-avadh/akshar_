@@ -296,9 +296,15 @@ const AdminCatalog = () => {
                       <label className="text-sm font-black text-red-950/40 uppercase tracking-widest ml-1">Toy Category</label>
                       <select name="tag" value={editingProduct.tag || ''} onChange={handleEditChange} className="w-full bg-white p-4 rounded-2xl focus:ring-2 focus:ring-red-600 outline-none border border-red-50 font-bold text-red-950 transition-all cursor-pointer">
                         <option value="">Select Category...</option>
-                        <option value="Unique">Unique</option>
-                        <option value="Educational">Educational</option>
                         <option value="Soft Toys">Soft Toys</option>
+                        <option value="Wooden Wonders">Wooden Wonders</option>
+                        <option value="Remote Control Cars">Remote Control Cars</option>
+                        <option value="Arts & Crafts">Arts & Crafts</option>
+                        <option value="Mind Puzzles">Mind Puzzles</option>
+                        <option value="Metal Machines">Metal Machines</option>
+                        <option value="Outdoor Adventures">Outdoor Adventures</option>
+                        <option value="Educational Games">Educational Games</option>
+                        <option value="Building & STEM">Building & STEM</option>
                       </select>
                     </div>
 
@@ -306,10 +312,13 @@ const AdminCatalog = () => {
                       <label className="text-sm font-black text-red-950/40 uppercase tracking-widest ml-1">Age Group</label>
                       <select name="category" value={editingProduct.category || ''} onChange={handleEditChange} className="w-full bg-white p-4 rounded-2xl focus:ring-2 focus:ring-red-600 outline-none border border-red-50 font-bold text-red-950 transition-all cursor-pointer">
                         <option value="">Select Age Group...</option>
-                        <option value="0-2 Years">0-2 Years</option>
-                        <option value="3-5 Years">3-5 Years</option>
-                        <option value="6-8 Years">6-8 Years</option>
-                        <option value="9+ Years">9+ Years</option>
+                        <option value="0-12 MO">0-12 MO</option>
+                        <option value="12-36 MO">12-36 MO</option>
+                        <option value="2-5 YRS">2-5 YRS</option>
+                        <option value="5-7 YRS">5-7 YRS</option>
+                        <option value="7-10 YRS">7-10 YRS</option>
+                        <option value="10-14 YRS">10-14 YRS</option>
+                        <option value="14+ YRS">14+ YRS</option>
                       </select>
                     </div>
 

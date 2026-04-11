@@ -163,18 +163,12 @@ const sendOtp = async (req, res, next) => {
         return next(new Error('Failed to send OTP email. Please check your email configuration.'));
       }
     } else {
-      try {
-        const response = await fetch(`https://2factor.in/API/V1/98428294-356c-11f1-bfb4-0200cd936042/SMS/${identifierKey}/${otp}/OTP1`);
-        const data = await response.json();
-        if (data.Status !== 'Success') {
-          console.error('2Factor API error:', data);
-          return next(new Error('Failed to send OTP. Please try again.'));
-        }
-        console.log(`📱 OTP sent via 2Factor to: ${identifierKey}`);
-      } catch (smsError) {
-        console.error('Failed to send OTP via 2Factor:', smsError);
-        return next(new Error('Failed to send OTP. Please try again.'));
-      }
+      // Disabled 2Factor implementation, outputting to terminal instead
+      console.log(`\n========================================`);
+      console.log(`📱 DEVELOPMENT SMS OTP SIMULATION`);
+      console.log(`To: ${identifierKey}`);
+      console.log(`OTP: ${otp}`);
+      console.log(`========================================\n`);
     }
 
     res.status(200).json({

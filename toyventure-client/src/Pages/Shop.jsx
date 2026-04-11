@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion'; 
+import { motion, AnimatePresence } from 'framer-motion'; 
 import toast from 'react-hot-toast'; 
 import ScrollReveal from '../components/ScrollReveal.jsx';
 import SkeletonCard from '../components/SkeletonCard.jsx';
@@ -9,14 +9,20 @@ import { apiSlice, useGetProductsQuery } from '../features/api/apiSlice.js';
 import { toggleFavorite } from '../features/wishlist/wishlistSlice.js';
 import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 
-const ageCategories = ['0-2 Years', '3-5 Years', '6-8 Years', '9+ Years'];
-const tagCategories = ['Unique', 'Educational', 'Soft Toys'];
+const ageCategories = ["0-12 MO", "12-36 MO", "2-5 YRS", "5-7 YRS", "7-10 YRS", "10-14 YRS", "14+ YRS"];
+const tagCategories = [
+  "Soft Toys", "Wooden Wonders", "Remote Control Cars", "Arts & Crafts", 
+  "Mind Puzzles", "Metal Machines", "Outdoor Adventures", "Educational Games", "Building & STEM"
+];
+
+const MAX_SLIDER_PRICE = 5000;
 
 const defaultFilters = {
   availability: { inStock: false, outOfStock: false },
-  minPrice: '',
-  maxPrice: '', 
+  minPrice: 0,
+  maxPrice: MAX_SLIDER_PRICE, 
   selectedAges: [], 
+  selectedTags: [],
   minRating: '',
   sort: 'newest'
 };
@@ -40,32 +46,82 @@ const Shop = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
+  const initialAge = searchParams.get('age');
+  const initialTag = searchParams.get('tag');
+  
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [isTyping, setIsTyping] = useState(false); // <-- NEW: Tracks active typing state
   const [page, setPage] = useState(1);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState(defaultFilters);
-  const [tempFilters, setTempFilters] = useState(defaultFilters);
+  
+  const [activeFilters, setActiveFilters] = useState({
+    ...defaultFilters,
+    selectedAges: initialAge ? [initialAge] : [],
+    selectedTags: initialTag ? [initialTag] : []
+  });
+  
+  const [tempFilters, setTempFilters] = useState({
+    ...defaultFilters,
+    selectedAges: initialAge ? [initialAge] : [],
+    selectedTags: initialTag ? [initialTag] : []
+  });
 
+  // =========================================================
+  // PRODUCTION DEBOUNCE: Pause-based Trigger & Param Merging
+  // =========================================================
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      setIsTyping(false); // User has paused typing
+      
       if (localSearch !== searchQuery) {
         setPage(1); 
+        
+        // Preserve existing filters while updating search
+        const currentParams = new URLSearchParams(searchParams);
+        
         if (localSearch.trim()) {
-          setSearchParams({ search: localSearch.trim() });
+          currentParams.set('search', localSearch.trim());
         } else {
-          setSearchParams({});
+          currentParams.delete('search');
         }
+        
+        setSearchParams(currentParams);
       }
-    }, 500); 
+    }, 700); // 700ms provides a perfect "pause" UX without spamming the backend
+
     return () => clearTimeout(delayDebounceFn);
-  }, [localSearch, setSearchParams, searchQuery]);
+  }, [localSearch, searchQuery, searchParams, setSearchParams]);
+
+  // Sync state if URL changes directly (like clicking from Home)
+  useEffect(() => {
+    const currentAgeParam = searchParams.get('age');
+    const currentTagParam = searchParams.get('tag');
+    let newAges = [...activeFilters.selectedAges];
+    let newTags = [...activeFilters.selectedTags];
+    let changed = false;
+
+    if (currentAgeParam && !newAges.includes(currentAgeParam)) {
+       newAges.push(currentAgeParam);
+       changed = true;
+    }
+    if (currentTagParam && !newTags.includes(currentTagParam)) {
+       newTags.push(currentTagParam);
+       changed = true;
+    }
+
+    if (changed) {
+       setActiveFilters(prev => ({ ...prev, selectedAges: newAges, selectedTags: newTags }));
+       setTempFilters(prev => ({ ...prev, selectedAges: newAges, selectedTags: newTags }));
+    }
+  }, [searchParams]);
 
   const queryArgs = useMemo(() => ({
     keyword: searchQuery,
-    tags: activeFilters.selectedAges.join(','),
-    minPrice: activeFilters.minPrice,
-    maxPrice: activeFilters.maxPrice,
+    tags: activeFilters.selectedTags.join(','),
+    category: activeFilters.selectedAges.join(','),
+    minPrice: activeFilters.minPrice > 0 ? activeFilters.minPrice : '',
+    maxPrice: activeFilters.maxPrice < MAX_SLIDER_PRICE ? activeFilters.maxPrice : '',
     minRating: activeFilters.minRating,
     sort: activeFilters.sort,
     inStock: activeFilters.availability.inStock ? 'true' : '',
@@ -93,25 +149,50 @@ const Shop = () => {
   };
 
   const handleLocalSearchSubmit = (e) => e.preventDefault(); 
-  const clearSearch = () => { setLocalSearch(''); setSearchParams({}); setPage(1); };
+  
+  const clearSearch = () => { 
+    setLocalSearch(''); 
+    setIsTyping(false);
+    const currentParams = new URLSearchParams(searchParams);
+    currentParams.delete('search');
+    setSearchParams(currentParams);
+    setPage(1); 
+  };
 
   const openSidebar = () => { setTempFilters(activeFilters); setIsSidebarOpen(true); document.body.style.overflow = 'hidden'; };
   const closeSidebar = () => { setIsSidebarOpen(false); document.body.style.overflow = 'unset'; };
-  const applyFilters = () => { setActiveFilters(tempFilters); setPage(1); closeSidebar(); };
+  
+  const applyFilters = () => { 
+      setActiveFilters(tempFilters); 
+      setPage(1); 
+      closeSidebar(); 
+      if (searchParams.get('age') || searchParams.get('tag')) {
+         const newParams = new URLSearchParams(searchParams);
+         newParams.delete('age');
+         newParams.delete('tag');
+         setSearchParams(newParams);
+      }
+  };
   
   const clearFilters = () => {
     setTempFilters(defaultFilters); 
     setActiveFilters(defaultFilters); 
     setPage(1); 
     closeSidebar();
+    if (searchParams.get('age') || searchParams.get('tag')) {
+       const newParams = new URLSearchParams(searchParams);
+       newParams.delete('age');
+       newParams.delete('tag');
+       setSearchParams(newParams);
+    }
   };
 
-  const handleTagToggle = (tag) => {
+  const handleFilterToggle = (type, value) => {
     setTempFilters(prev => ({
       ...prev,
-      selectedAges: prev.selectedAges.includes(tag) 
-        ? prev.selectedAges.filter(a => a !== tag) 
-        : [...prev.selectedAges, tag]
+      [type]: prev[type].includes(value) 
+        ? prev[type].filter(item => item !== value) 
+        : [...prev[type], value]
     }));
   };
 
@@ -122,7 +203,6 @@ const Shop = () => {
     setPage(1);
   };
 
-  // ================= NEW ADD TO CART LOGIC =================
   const handleAddToCartClick = (product) => {
     const userInfoData = sessionStorage.getItem('userInfo');
     const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') ? JSON.parse(userInfoData) : null;
@@ -144,6 +224,49 @@ const Shop = () => {
 
   return (
     <>
+      <style>{`
+        .custom-range-slider::-webkit-slider-thumb {
+          pointer-events: auto;
+          appearance: none;
+          width: 22px;
+          height: 22px;
+          background-color: white;
+          border: 2px solid #f97316;
+          border-radius: 50%;
+          cursor: grab;
+          box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3);
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        }
+        .custom-range-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+          box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4);
+        }
+        .custom-range-slider::-webkit-slider-thumb:active {
+          cursor: grabbing;
+          transform: scale(1.05);
+        }
+        .custom-range-slider::-moz-range-thumb {
+          pointer-events: auto;
+          appearance: none;
+          width: 22px;
+          height: 22px;
+          background-color: white;
+          border: 2px solid #f97316;
+          border-radius: 50%;
+          cursor: grab;
+          box-shadow: 0 2px 6px rgba(249, 115, 22, 0.3);
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        }
+        .custom-range-slider::-moz-range-thumb:hover {
+          transform: scale(1.15);
+          box-shadow: 0 4px 10px rgba(249, 115, 22, 0.4);
+        }
+        .custom-range-slider::-moz-range-thumb:active {
+          cursor: grabbing;
+          transform: scale(1.05);
+        }
+      `}</style>
+
       <div className={`fixed inset-0 bg-black/50 z-[100] transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={closeSidebar} />
       <div className={`fixed top-0 left-0 h-full w-[340px] bg-white z-[110] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-zinc-50/50">
@@ -157,7 +280,7 @@ const Shop = () => {
             <h3 className="font-bold text-zinc-800 mb-4 uppercase tracking-wider text-xs">Categories</h3>
             <div className="space-y-3">
               {tagCategories.map((tag) => (
-                <Checkbox key={tag} label={tag} checked={tempFilters.selectedAges.includes(tag)} onChange={() => handleTagToggle(tag)} />
+                <Checkbox key={tag} label={tag} checked={tempFilters.selectedTags.includes(tag)} onChange={() => handleFilterToggle('selectedTags', tag)} />
               ))}
             </div>
           </div>
@@ -166,36 +289,61 @@ const Shop = () => {
             <h3 className="font-bold text-zinc-800 mb-4 uppercase tracking-wider text-xs">Shop by Age</h3>
             <div className="space-y-3">
               {ageCategories.map((age) => (
-                <Checkbox key={age} label={age} checked={tempFilters.selectedAges.includes(age)} onChange={() => handleTagToggle(age)} />
+                <Checkbox key={age} label={age} checked={tempFilters.selectedAges.includes(age)} onChange={() => handleFilterToggle('selectedAges', age)} />
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="font-black text-zinc-900 mb-4 uppercase tracking-widest text-xs">Price Range</h3>
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="radio" name="price" className="hidden" checked={tempFilters.minPrice === '' && tempFilters.maxPrice === ''} onChange={() => setTempFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }))} />
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${tempFilters.minPrice === '' && tempFilters.maxPrice === '' ? 'border-orange-500' : 'border-zinc-300 group-hover:border-orange-400'}`}>
-                  {tempFilters.minPrice === '' && tempFilters.maxPrice === '' && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full"></div>}
-                </div>
-                <span className={`text-sm font-bold ${tempFilters.minPrice === '' && tempFilters.maxPrice === '' ? 'text-zinc-900' : 'text-zinc-500'}`}>Any Price</span>
-              </label>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-zinc-900 uppercase tracking-widest text-xs">Price Range</h3>
+              <span className="text-[10px] font-black text-orange-600 bg-orange-50 border border-orange-100 px-2 py-1 rounded-md tracking-wider">
+                ₹{tempFilters.minPrice} - {tempFilters.maxPrice >= MAX_SLIDER_PRICE ? `₹${MAX_SLIDER_PRICE}+` : `₹${tempFilters.maxPrice}`}
+              </span>
+            </div>
+            
+            <div className="relative w-full h-8 flex items-center group/slider mt-2">
+              <div className="absolute w-full h-2 bg-zinc-100 rounded-full z-0 overflow-hidden shadow-inner"></div>
               
-              {[
-                { label: 'Under ₹500', min: '0', max: '500' },
-                { label: '₹500 - ₹1000', min: '500', max: '1000' },
-                { label: '₹1000 - ₹2000', min: '1000', max: '2000' },
-                { label: 'Over ₹2000', min: '2000', max: '999999' }
-              ].map((range) => (
-                <label key={range.label} className="flex items-center gap-3 cursor-pointer group">
-                  <input type="radio" name="price" className="hidden" checked={tempFilters.minPrice === range.min && tempFilters.maxPrice === range.max} onChange={() => setTempFilters(prev => ({ ...prev, minPrice: range.min, maxPrice: range.max }))} />
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${tempFilters.minPrice === range.min && tempFilters.maxPrice === range.max ? 'border-orange-500' : 'border-zinc-300 group-hover:border-orange-400'}`}>
-                    {tempFilters.minPrice === range.min && tempFilters.maxPrice === range.max && <div className="w-2.5 h-2.5 bg-orange-500 rounded-full"></div>}
-                  </div>
-                  <span className={`text-sm font-bold ${tempFilters.minPrice === range.min && tempFilters.maxPrice === range.max ? 'text-zinc-900' : 'text-zinc-500'}`}>{range.label}</span>
-                </label>
-              ))}
+              <div 
+                className="absolute h-2 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full z-10 transition-all duration-100 ease-out shadow-sm"
+                style={{ 
+                  left: `${(tempFilters.minPrice / MAX_SLIDER_PRICE) * 100}%`, 
+                  right: `${100 - (tempFilters.maxPrice / MAX_SLIDER_PRICE) * 100}%` 
+                }}
+              ></div>
+
+              <input 
+                type="range" 
+                min="0" 
+                max={MAX_SLIDER_PRICE} 
+                step="100"
+                value={tempFilters.minPrice} 
+                onChange={(e) => {
+                  const val = Math.min(Number(e.target.value), tempFilters.maxPrice - 100);
+                  setTempFilters(prev => ({ ...prev, minPrice: val }));
+                }}
+                className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-20 focus:outline-none custom-range-slider"
+              />
+
+              <input 
+                type="range" 
+                min="0" 
+                max={MAX_SLIDER_PRICE} 
+                step="100"
+                value={tempFilters.maxPrice} 
+                onChange={(e) => {
+                  const val = Math.max(Number(e.target.value), tempFilters.minPrice + 100);
+                  setTempFilters(prev => ({ ...prev, maxPrice: val }));
+                }}
+                className="absolute w-full h-2 appearance-none bg-transparent pointer-events-none z-30 focus:outline-none custom-range-slider"
+              />
+            </div>
+            
+            <div className="flex justify-between text-[10px] font-bold text-zinc-400 mt-3">
+              <span>₹0</span>
+              <span>₹{MAX_SLIDER_PRICE / 2}</span>
+              <span>₹{MAX_SLIDER_PRICE}+</span>
             </div>
           </div>
 
@@ -258,7 +406,7 @@ const Shop = () => {
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto relative z-10">
               <button onClick={openSidebar} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-inner border-none backdrop-blur-md bg-white/80 text-zinc-700 hover:bg-white focus:outline-none">
                 <span className="material-symbols-outlined text-[18px]">tune</span> Filters
-                {(activeFilters.selectedAges.length > 0 || activeFilters.minPrice !== '' || activeFilters.minRating !== '' || activeFilters.availability.inStock || activeFilters.availability.outOfStock) && (<span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">!</span>)}
+                {(activeFilters.selectedAges.length > 0 || activeFilters.selectedTags.length > 0 || activeFilters.minPrice > 0 || activeFilters.maxPrice < MAX_SLIDER_PRICE || activeFilters.minRating !== '' || activeFilters.availability.inStock || activeFilters.availability.outOfStock) && (<span className="bg-primary-container text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full ml-1">!</span>)}
               </button>
 
               <select 
@@ -272,19 +420,60 @@ const Shop = () => {
                 <option value="rating_desc">Best Rated</option>
               </select>
 
-              <form onSubmit={handleLocalSearchSubmit} className="flex items-center gap-2 bg-white/80 rounded-full px-5 py-2.5 shadow-inner w-full sm:w-80 border-none focus-within:shadow-md transition-shadow">
-                <span className="material-symbols-outlined text-primary-container text-[20px]">search</span>
-                <input type="text" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} placeholder="Search toys..." className="flex-1 bg-transparent border-none outline-none focus:ring-0 font-medium text-sm text-zinc-800 placeholder:text-zinc-400 w-full" />
-                {localSearch && <button type="button" onClick={clearSearch} className="text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none"><span className="material-symbols-outlined text-[18px]">close</span></button>}
+              <form onSubmit={handleLocalSearchSubmit} className="flex items-center gap-2 bg-white/80 rounded-full px-5 py-2.5 shadow-inner w-full sm:w-80 border-none focus-within:shadow-md transition-shadow relative">
+                
+                {/* --- LOADING UX ENHANCEMENT --- */}
+                <div className="flex items-center justify-center w-6 h-6">
+                  <AnimatePresence mode="wait">
+                    {(isTyping || isFetching) ? (
+                      <motion.span 
+                        key="loading"
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="material-symbols-outlined text-orange-500 text-[20px] animate-spin absolute"
+                      >
+                        progress_activity
+                      </motion.span>
+                    ) : (
+                      <motion.span 
+                        key="search"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        className="material-symbols-outlined text-primary-container text-[20px] absolute"
+                      >
+                        search
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <input 
+                  type="text" 
+                  value={localSearch} 
+                  onChange={(e) => { 
+                    setLocalSearch(e.target.value); 
+                    setIsTyping(true); // Triggers loading UI and pause-timer
+                  }} 
+                  placeholder="Search toys..." 
+                  className="flex-1 bg-transparent border-none outline-none focus:ring-0 font-medium text-sm text-zinc-800 placeholder:text-zinc-400 w-full" 
+                />
+                
+                {localSearch && (
+                  <button type="button" onClick={clearSearch} className="text-zinc-400 hover:text-zinc-600 transition-colors focus:outline-none flex items-center">
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                )}
               </form>
             </div>
           </ScrollReveal>
 
-          {(isLoading || isFetching) ? (
+          {(!isTyping && isLoading && filteredProducts.length === 0) ? (
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8 mt-4">
               {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : (!isTyping && filteredProducts.length === 0) ? (
             <div className="card-surface rounded-[3rem] p-20 flex flex-col items-center justify-center text-center shadow-soft mt-8 border border-white">
               <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">search_off</span>
               <h2 className="text-2xl font-black text-zinc-800 mb-3">No toys found.</h2>
@@ -292,7 +481,7 @@ const Shop = () => {
               <button onClick={() => { clearSearch(); clearFilters(); }} className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">Clear All Filters</button>
             </div>
           ) : (
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8 mt-4">
+            <div className={`w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8 mt-4 transition-opacity duration-300 ${isFetching ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
               {filteredProducts.map((product, index) => {
                 const isFavorited = wishlistItems.some((wItem) => wItem._id === product._id);
                 const discountPercent = getDiscountPercent(product.price, product.oldPrice);

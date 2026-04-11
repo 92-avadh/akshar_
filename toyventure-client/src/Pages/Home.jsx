@@ -188,7 +188,7 @@ const Home = () => {
   const infiniteReviews = [...reviews, ...reviews];
 
   const runningCategories = [ 
-    "Soft Toys", "Wooden Wonders", "Remote controles Cars", "Arts & Crafts", 
+    "Soft Toys", "Wooden Wonders", "Remote Control Cars", "Arts & Crafts", 
     "Mind Puzzles", "Metal Machines", "Outdoor Adventures", "Educational Games", "Building & STEM" 
   ];
   const infiniteCategories = [...runningCategories, ...runningCategories];
@@ -249,7 +249,11 @@ const Home = () => {
         <div className="flex gap-8 w-max px-4 will-change-transform transform-gpu" style={{ animation: "marquee-fast 20s linear infinite" }}>
           <style>{`@keyframes marquee-fast { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
           {infiniteCategories.map((cat, idx) => (
-            <div key={idx} className="flex items-center gap-8 shrink-0">
+            <div 
+              key={idx} 
+              onClick={() => navigate(`/shop?tag=${encodeURIComponent(cat)}`)}
+              className="flex items-center gap-8 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <span className="text-white font-black uppercase tracking-widest text-sm md:text-base whitespace-nowrap">{cat}</span>
               <span className="material-symbols-outlined text-red-300 text-sm">star</span>
             </div>
@@ -271,6 +275,7 @@ const Home = () => {
           {shopByAgeData.map((item, idx) => (
             <motion.div 
               key={idx} 
+              onClick={() => navigate(`/shop?age=${encodeURIComponent(item.age)}`)}
               whileHover={{ scale: 1.05 }} 
               className={`shrink-0 snap-center w-56 h-56 md:w-64 md:h-64 ${item.bgColor} border ${item.borderColor} shadow-sm hover:shadow-xl hover:shadow-red-900/10 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-300 ${item.color}`} 
               style={{ borderRadius: item.radius }}
