@@ -48,7 +48,7 @@ Thumbs.db
 # Coverage (testing)
 # ===============================
 coverage/
-
+.env.local
 # ===============================
 # Optional: uploads (if storing files locally)
 # ===============================
