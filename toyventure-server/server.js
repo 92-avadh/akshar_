@@ -8,14 +8,16 @@ const rateLimit = require('express-rate-limit');
 
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-const { requestContextMiddleware } = require('./middleware/requestContext'); 
+
+// FIX: Import the correctly named middleware functions from requestContext.js
+const { assignRequestId, requestLogger } = require('./middleware/requestContext'); 
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const cartRoutes = require('./routes/cartRoutes'); // <-- UNCOMMENTED
+const cartRoutes = require('./routes/cartRoutes'); 
 const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const contactRoutes = require('./routes/contactRoutes');
@@ -61,15 +63,16 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request Context (Logging)
-app.use(requestContextMiddleware);
+// FIX: Apply the correct Request Context (Logging) middlewares
+app.use(assignRequestId);
+app.use(requestLogger);
 
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/cart', cartRoutes); // <-- UNCOMMENTED
+app.use('/api/cart', cartRoutes); 
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/contact', contactRoutes);
