@@ -64,16 +64,17 @@ const Shop = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
+  // FIXED: Split comma-separated values into arrays for initial state
   const [activeFilters, setActiveFilters] = useState({
     ...defaultFilters,
-    selectedAges: initialAge ? [initialAge] : [],
-    selectedTags: initialTag ? [initialTag] : []
+    selectedAges: initialAge ? initialAge.split(',') : [],
+    selectedTags: initialTag ? initialTag.split(',') : []
   });
   
   const [tempFilters, setTempFilters] = useState({
     ...defaultFilters,
-    selectedAges: initialAge ? [initialAge] : [],
-    selectedTags: initialTag ? [initialTag] : []
+    selectedAges: initialAge ? initialAge.split(',') : [],
+    selectedTags: initialTag ? initialTag.split(',') : []
   });
 
   useEffect(() => {
@@ -98,25 +99,20 @@ const Shop = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [localSearch, searchQuery, searchParams, setSearchParams]);
 
+  // FIXED: Properly handle arrays and compare URL params to state
   useEffect(() => {
     const currentAgeParam = searchParams.get('age');
     const currentTagParam = searchParams.get('tag');
-    let newAges = [...activeFilters.selectedAges];
-    let newTags = [...activeFilters.selectedTags];
-    let changed = false;
 
-    if (currentAgeParam && !newAges.includes(currentAgeParam)) {
-       newAges.push(currentAgeParam);
-       changed = true;
-    }
-    if (currentTagParam && !newTags.includes(currentTagParam)) {
-       newTags.push(currentTagParam);
-       changed = true;
-    }
+    const urlAges = currentAgeParam ? currentAgeParam.split(',') : [];
+    const urlTags = currentTagParam ? currentTagParam.split(',') : [];
 
-    if (changed) {
-       setActiveFilters(prev => ({ ...prev, selectedAges: newAges, selectedTags: newTags }));
-       setTempFilters(prev => ({ ...prev, selectedAges: newAges, selectedTags: newTags }));
+    const agesMatch = urlAges.length === activeFilters.selectedAges.length && urlAges.every(a => activeFilters.selectedAges.includes(a));
+    const tagsMatch = urlTags.length === activeFilters.selectedTags.length && urlTags.every(t => activeFilters.selectedTags.includes(t));
+
+    if (!agesMatch || !tagsMatch) {
+       setActiveFilters(prev => ({ ...prev, selectedAges: urlAges, selectedTags: urlTags }));
+       setTempFilters(prev => ({ ...prev, selectedAges: urlAges, selectedTags: urlTags }));
     }
   }, [searchParams]);
 
@@ -166,29 +162,42 @@ const Shop = () => {
   const openSidebar = () => { setTempFilters(activeFilters); setIsSidebarOpen(true); document.body.style.overflow = 'hidden'; };
   const closeSidebar = () => { setIsSidebarOpen(false); document.body.style.overflow = 'unset'; };
   
+  // FIXED: Push updated filter arrays to the URL
   const applyFilters = () => { 
       setActiveFilters(tempFilters); 
       setPage(1); 
       closeSidebar(); 
-      if (searchParams.get('age') || searchParams.get('tag')) {
-         const newParams = new URLSearchParams(searchParams);
+      
+      const newParams = new URLSearchParams(searchParams);
+      
+      // Update or delete Age param
+      if (tempFilters.selectedAges.length > 0) {
+         newParams.set('age', tempFilters.selectedAges.join(','));
+      } else {
          newParams.delete('age');
-         newParams.delete('tag');
-         setSearchParams(newParams);
       }
+      
+      // Update or delete Tag param
+      if (tempFilters.selectedTags.length > 0) {
+         newParams.set('tag', tempFilters.selectedTags.join(','));
+      } else {
+         newParams.delete('tag');
+      }
+      
+      setSearchParams(newParams);
   };
   
+  // FIXED: Ensure age and tag params are properly cleared from URL
   const clearFilters = () => {
     setTempFilters(defaultFilters); 
     setActiveFilters(defaultFilters); 
     setPage(1); 
     closeSidebar();
-    if (searchParams.get('age') || searchParams.get('tag')) {
-       const newParams = new URLSearchParams(searchParams);
-       newParams.delete('age');
-       newParams.delete('tag');
-       setSearchParams(newParams);
-    }
+    
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('age');
+    newParams.delete('tag');
+    setSearchParams(newParams);
   };
 
   const handleFilterToggle = (type, value) => {
