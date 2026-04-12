@@ -3,8 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const compression = require('compression'); // NEW
-const rateLimit = require('express-rate-limit'); // NEW
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
@@ -15,7 +15,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const cartRoutes = require('./routes/cartRoutes');
+const cartRoutes = require('./routes/cartRoutes'); // <-- UNCOMMENTED
 const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const contactRoutes = require('./routes/contactRoutes');
@@ -26,6 +26,9 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// Trust the AWS load balancer/proxy (Step A - Fixes the AWS Image mixed-content URL issue)
+app.set('trust proxy', 1);
 
 // ==========================================
 // PRODUCTION OPTIMIZATIONS & SECURITY
@@ -66,7 +69,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/cart', cartRoutes);
+app.use('/api/cart', cartRoutes); // <-- UNCOMMENTED
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/contact', contactRoutes);
