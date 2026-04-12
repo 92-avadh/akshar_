@@ -20,14 +20,15 @@ const storage = multer.diskStorage({
 });
 
 function checkFileType(file, cb) {
-    const filetypes = /jpg|jpeg|png|webp/;
+    // UPDATED: Added 'svg' and 'gif' to allowed formats to prevent upload errors
+    const filetypes = /jpg|jpeg|png|webp|svg|gif/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = /image\//.test(file.mimetype);
 
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb(new Error('Images only!'));
+        cb(new Error('Images only! Allowed formats: JPG, PNG, WEBP, SVG, GIF'));
     }
 }
 
@@ -46,8 +47,9 @@ router.post('/', protect, admin, upload.array('images', 7), (req, res) => {
         return res.status(400).json({ message: 'No images uploaded' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const imagePaths = req.files.map(file => `${baseUrl}/uploads/${file.filename}`);
+    // FIX: Only return the relative path. 
+    // The frontend's resolveImage() function will automatically attach the correct API_BASE_URL.
+    const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
     res.json(imagePaths);
 });
