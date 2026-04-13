@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import {
-  useCreateRazorpayOrderMutation,
-  useGetUserProfileQuery,
-  useCreateDemoOrderMutation,
-  useCreateCodOrderMutation,
-  useUpdateUserProfileMutation,
-  useValidateCouponMutation,
-  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
-} from '../features/api/apiSlice';
+import { useCreateRazorpayOrderMutation, 
+  useGetUserProfileQuery, 
+  useCreateDemoOrderMutation, 
+  useCreateCodOrderMutation, 
+  useUpdateUserProfileMutation, 
+  useValidateCouponMutation } 
+from "../features/api/apiSlice";
 import { clearCart } from '../features/cart/cartSlice';
 
 const RAZORPAY_SCRIPT_URL = 'https://checkout.razorpay.com/v1/checkout.js';
