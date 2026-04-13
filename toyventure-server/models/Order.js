@@ -39,7 +39,7 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['razorpay', 'manual', 'demo'],
+        enum: ['razorpay', 'manual', 'demo', 'cod'], // UPDATED TO INCLUDE 'cod'
         default: 'razorpay'
     },
     orderStatus: {
@@ -90,7 +90,6 @@ const orderSchema = new mongoose.Schema({
         lastWebhookEvent: { type: String },
         lastWebhookAt: { type: Date }
     },
-    // NEW FIELDS FOR ADMIN PANEL
     isDelivered: {
         type: Boolean,
         required: true,

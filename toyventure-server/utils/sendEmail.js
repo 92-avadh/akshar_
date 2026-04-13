@@ -12,7 +12,7 @@ const sendEmail = async (options) => {
 
     // 2. Define the email options
     const mailOptions = {
-        from: '"ToyBlix Updates" <no-reply@toyblix.com>', // Sender name and address
+        from: '"ToyBlix" <no-reply@toyblix.com>', // Sender name and address
         to: options.email, // Receiver address
         subject: options.subject, // Subject line
         html: options.html, // HTML body

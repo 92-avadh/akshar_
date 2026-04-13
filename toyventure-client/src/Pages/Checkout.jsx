@@ -4,9 +4,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   useCreateRazorpayOrderMutation,
-  useVerifyRazorpayPaymentMutation,
+  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
   useGetUserProfileQuery,
   useCreateDemoOrderMutation,
+  useCreateCodOrderMutation, // <-- ADDED THIS
   useUpdateUserProfileMutation,
   useValidateCouponMutation,
 } from '../features/api/apiSlice';
@@ -50,8 +51,9 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
-  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVerifyRazorpayPaymentMutation();
+  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
+  const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); // <-- ADDED HOOK
   const { data: profile } = useGetUserProfileQuery();
   const [updateProfile] = useUpdateUserProfileMutation();
 
@@ -115,7 +117,8 @@ const Checkout = () => {
     toast('Coupon removed.', { icon: '🗑️' });
   };
 
-  const isBusy = isCreatingOrder || isVerifyingPayment || isCreatingDemoOrder;
+  // ADDED isCreatingCodOrder to loading state check
+  const isBusy = isCreatingOrder || isVerifyingPayment || isCreatingDemoOrder || isCreatingCodOrder; 
 
   const handleInputChange = (e) => {
     setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
@@ -232,6 +235,24 @@ const Checkout = () => {
     }
 
     try {
+      // NEW: Cash on Delivery Logic
+      if (paymentMethod === 'cod') {
+        await createCodOrder({
+          orderItems: cartItems,
+          shippingDetails,
+          totalPrice,
+          paymentMethod: 'cod',
+          idempotencyKey: checkoutRequestKey,
+          couponCode: appliedCoupon?.code || null,
+        }).unwrap();
+        
+        dispatch(clearCart());
+        await handleAutoSaveAddress();
+        toast.success('Order Placed Successfully! Get ready for magic ✨');
+        navigate('/profile');
+        return;
+      }
+
       if (paymentMethod === 'demo') {
         const demoOrder = await createDemoOrder({
           orderItems: cartItems,
@@ -266,7 +287,7 @@ const Checkout = () => {
 
       await launchRazorpayCheckout(checkoutSession);
     } catch (error) {
-      toast.error(error?.data?.message || error.message || 'Unable to start Razorpay checkout.');
+      toast.error(error?.data?.message || error.message || 'Unable to process checkout.');
     }
   };
 
@@ -372,17 +393,27 @@ const Checkout = () => {
           <div className="card-surface p-8 rounded-[2.5rem] shadow-soft">
             <div className="flex items-center gap-3 mb-6 border-b border-white pb-4">
               <span className="material-symbols-outlined text-primary-container text-[28px]">payments</span>
-              <h1 className="text-2xl font-black text-zinc-800">Secure Payment</h1>
+              <h1 className="text-2xl font-black text-zinc-800">Payment Options</h1>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* COD OPTION ADDED HERE */}
+              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'cod' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="material-symbols-outlined text-primary-container text-[28px]">local_mall</span>
+                  <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
+                </div>
+                <span className="font-black text-zinc-800 text-lg">Cash on Delivery</span>
+                <span className="text-xs text-zinc-500 font-medium">Pay with cash when your magical package arrives at your doorstep.</span>
+              </label>
+              
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'card' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                 <div className="flex items-center justify-between">
                   <span className="material-symbols-outlined text-primary-container text-[28px]">credit_card</span>
                   <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
                 </div>
                 <span className="font-black text-zinc-800 text-lg">Card</span>
-                <span className="text-xs text-zinc-500 font-medium">Open Razorpay Checkout with cards enabled.</span>
+                <span className="text-xs text-zinc-500 font-medium">Open secure Checkout with credit/debit cards enabled.</span>
               </label>
 
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'upi' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
@@ -391,32 +422,32 @@ const Checkout = () => {
                   <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
                 </div>
                 <span className="font-black text-zinc-800 text-lg">UPI</span>
-                <span className="text-xs text-zinc-500 font-medium">Use GPay, PhonePe, Paytm, or any UPI app inside Razorpay.</span>
+                <span className="text-xs text-zinc-500 font-medium">Use GPay, PhonePe, Paytm, or any UPI app.</span>
               </label>
-            </div>
-
-            <div className="mb-6">
+              
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'demo' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                 <div className="flex items-center justify-between">
                   <span className="material-symbols-outlined text-primary-container text-[28px]">bug_report</span>
                   <input type="radio" name="payment" value="demo" checked={paymentMethod === 'demo'} onChange={() => setPaymentMethod('demo')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
                 </div>
-                <span className="font-black text-zinc-800 text-lg">Demo Payment (Testing)</span>
-                <span className="text-xs text-zinc-500 font-medium">Bypass Razorpay and automatically process a fulfilled testing transaction.</span>
+                <span className="font-black text-zinc-800 text-lg">Demo Payment</span>
+                <span className="text-xs text-zinc-500 font-medium">Bypass gateway and process a test transaction.</span>
               </label>
             </div>
 
-            <div className="bg-white/50 border border-white rounded-[2rem] p-6 shadow-inner">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-primary-container text-[26px]">shield_lock</span>
-                <div>
-                  <p className="font-black text-zinc-800">ToyBlix does not collect card numbers or CVV.</p>
-                  <p className="text-sm text-zinc-500 font-medium mt-2">
-                    When you click pay, Razorpay opens its secure hosted checkout so payment details stay inside the payment gateway.
-                  </p>
+            {paymentMethod !== 'cod' && paymentMethod !== 'demo' && (
+              <div className="bg-white/50 border border-white rounded-[2rem] p-6 shadow-inner mt-6">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary-container text-[26px]">shield_lock</span>
+                  <div>
+                    <p className="font-black text-zinc-800">ToyBlix does not collect card numbers or CVV.</p>
+                    <p className="text-sm text-zinc-500 font-medium mt-2">
+                      When you click pay, a secure hosted checkout opens so payment details stay strictly inside the payment gateway.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -556,14 +587,18 @@ const Checkout = () => {
               type="submit"
               form="checkout-form"
               disabled={isBusy}
-              className="w-full py-4 mt-8 bg-zinc-900 text-white font-black text-lg rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 group"
+              className={`w-full py-4 mt-8 text-white font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 group ${paymentMethod === 'cod' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-zinc-900 hover:bg-black'}`}
             >
-              {isBusy ? 'Opening Secure Checkout...' : `Pay Rs ${totalPrice.toLocaleString('en-IN')}`}
-              {!isBusy && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">lock</span>}
+              {isBusy ? 'Processing...' : (paymentMethod === 'cod' ? `Place Order • Rs ${totalPrice.toLocaleString('en-IN')}` : `Pay Rs ${totalPrice.toLocaleString('en-IN')}`)}
+              {!isBusy && paymentMethod !== 'cod' && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">lock</span>}
+              {!isBusy && paymentMethod === 'cod' && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">local_shipping</span>}
             </button>
-            <p className="text-center text-[10px] text-zinc-400 font-bold mt-4 uppercase tracking-wider flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">verified_user</span> Razorpay Hosted Checkout
-            </p>
+            
+            {paymentMethod !== 'cod' && paymentMethod !== 'demo' && (
+              <p className="text-center text-[10px] text-zinc-400 font-bold mt-4 uppercase tracking-wider flex items-center justify-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">verified_user</span> Razorpay Hosted Checkout
+              </p>
+            )}
           </div>
         </div>
       </div>

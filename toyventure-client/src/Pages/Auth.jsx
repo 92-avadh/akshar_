@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart, clearPendingItem } from '../features/cart/cartSlice';
@@ -15,6 +15,9 @@ const Auth = () => {
   const [identifier, setIdentifier] = useState(''); 
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
+  
+  // NEW: State for Terms and Conditions agreement
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,6 +52,11 @@ const Auth = () => {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+
+    if (!agreeTerms) {
+      toast.error('Please agree to the Terms of Service to continue.');
+      return;
+    }
 
     if (isPhone && identifier.length < 10) {
       toast.error('Mobile number must be exactly 10 digits.');
@@ -89,12 +97,8 @@ const Auth = () => {
 
           const firstName = res.name ? res.name.split(' ')[0] : 'User';
           toast.success(`Welcome back, ${firstName}!`);
-          
-          // Determine where to send the user based on admin status
-          const destination = res.isAdmin ? '/admin' : redirect; 
-          
           setTimeout(() => {
-              navigate(destination);
+              navigate(redirect);
               window.location.reload(); 
           }, 1000);
       }
@@ -130,19 +134,13 @@ const Auth = () => {
 
         toast.success(`Welcome to ToyBlix, ${name.split(' ')[0]}!`);
         
-        // Determine where to send the user based on admin status
-        const destination = userInfo.isAdmin ? '/admin' : redirect;
-        
         setTimeout(() => {
-            navigate(destination);
+            navigate(redirect);
             window.location.reload(); 
         }, 1000);
     } catch (err) {
         toast.error(err?.data?.message || 'Failed to save name. You can update it later in your profile.');
-        const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
-        const destination = userInfo?.isAdmin ? '/admin' : redirect;
-        
-        setTimeout(() => { navigate(destination); window.location.reload(); }, 1500);
+        setTimeout(() => { navigate(redirect); window.location.reload(); }, 1500);
     }
   };
 
@@ -188,9 +186,35 @@ const Auth = () => {
               />
             </div>
 
-            <button type="submit" disabled={isSending || !identifier} className="w-full py-4 mt-4 bg-red-600 text-white font-black text-lg rounded-2xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+            {/* NEW: Terms and Conditions Checkbox */}
+            <div className="flex items-start gap-3 mt-4 bg-red-50/30 p-3 rounded-xl border border-red-50/50">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 text-red-600 bg-white border-red-200 rounded focus:ring-red-500 focus:ring-2 cursor-pointer transition-colors"
+              />
+              <label htmlFor="terms" className="text-[11px] font-bold text-red-950/60 leading-snug cursor-pointer">
+                By continuing, I confirm that I have read and agree to ToyBlix's{' '}
+                <Link to="/terms" className="text-red-600 hover:text-red-800 hover:underline transition-colors">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy-policy" className="text-red-600 hover:text-red-800 hover:underline transition-colors">
+                  Privacy Policy
+                </Link>.
+              </label>
+            </div>
+
+            {/* Button disables if identifier is empty OR terms are not agreed to */}
+            <button 
+              type="submit" 
+              disabled={isSending || !identifier || !agreeTerms} 
+              className="w-full py-4 mt-2 bg-red-600 text-white font-black text-lg rounded-2xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 group"
+            >
               {isSending ? 'Sending OTP...' : 'Continue with OTP'}
-              {!isSending && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
+              {!isSending && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>}
             </button>
           </form>
         )}

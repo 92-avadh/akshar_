@@ -2,13 +2,62 @@ const Order = require('../models/Order');
 const sendEmail = require('../utils/sendEmail');
 const generateInvoice = require('../utils/generateInvoice');
 
-// @desc    Create new order
+// @desc    Create new order (specifically for COD)
 // @route   POST /api/orders
 // @access  Private
 const createOrder = async (req, res) => {
-    res.status(400).json({
-        message: 'Direct order creation is disabled. Start checkout through Razorpay order creation.',
-    });
+    try {
+        const { orderItems, shippingDetails, totalPrice, paymentMethod, couponCode } = req.body;
+
+        // Ensure direct order creation is ONLY used for Cash On Delivery
+        if (paymentMethod !== 'cod') {
+            return res.status(400).json({
+                message: 'Direct order creation is only for Cash on Delivery. Start checkout through Razorpay for online payments.',
+            });
+        }
+
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).json({ message: 'No order items provided' });
+        }
+
+        const order = new Order({
+            user: req.user._id,
+            orderItems,
+            shippingDetails,
+            totalPrice,
+            paymentMethod: 'cod',
+            orderStatus: 'confirmed', // COD orders are confirmed right away
+            paymentStatus: 'pending', // Pending until delivery boy collects cash
+            isPaid: false,
+            couponCode: couponCode || null,
+            inventoryCommitted: true 
+        });
+
+        const createdOrder = await order.save();
+
+        // SEND COD CONFIRMATION EMAIL
+        if (req.user && req.user.email) {
+            sendEmail({
+                email: req.user.email,
+                subject: 'Your ToyBlix COD Order is Confirmed! 🚀',
+                html: `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
+                        <h2 style="color: #18181b;">Order Confirmed! 🎉</h2>
+                        <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
+                            Thank you for choosing ToyBlix! Your Cash on Delivery order <strong>#${String(createdOrder._id).slice(-8).toUpperCase()}</strong> has been successfully placed.
+                        </p>
+                        <p style="color: #52525b; font-size: 16px;">Amount to pay on delivery: <strong style="color:#f97316;">₹${totalPrice}</strong></p>
+                        <p style="color: #52525b; font-size: 16px;">We will notify you once your magical package is dispatched.</p>
+                    </div>
+                `
+            }).catch(err => console.error("Failed to send COD email:", err));
+        }
+
+        res.status(201).json(createdOrder);
+    } catch (error) {
+        console.error("COD Create Order Error:", error);
+        res.status(500).json({ message: 'Server error: Failed to create COD order' });
+    }
 };
 
 // @desc    Get logged in user orders
@@ -29,7 +78,6 @@ const getMyOrders = async (req, res) => {
 // @access  Private/Admin
 const getOrders = async (req, res) => {
     try {
-        // Fetch all orders and attach the user's basic info
         const orders = await Order.find({}).populate('user', 'name mobileNumber').sort({ createdAt: -1 });
         res.json(orders);
     } catch (error) {
@@ -47,13 +95,11 @@ const updateOrderStatus = async (req, res) => {
         if (order) {
             const { status, courierName, trackingLink } = req.body;
             
-            // Validate sequence to prevent regressions if needed, though admin has authority
             const validStatuses = ['paid', 'confirmed', 'packed', 'dispatched', 'delivered', 'cancelled'];
             if (!validStatuses.includes(status)) {
                 return res.status(400).json({ message: 'Invalid order status provided.' });
             }
 
-            // Check if we are freshly dispatching this order to send email
             const isFreshlyDispatched = status === 'dispatched' && order.orderStatus !== 'dispatched';
 
             order.orderStatus = status;
@@ -82,6 +128,13 @@ const updateOrderStatus = async (req, res) => {
             if (status === 'delivered') {
                 order.isDelivered = true;
                 order.deliveredAt = Date.now();
+                
+                // IF COD, Automatically mark order as officially Paid once delivered
+                if (order.paymentMethod === 'cod') {
+                    order.isPaid = true;
+                    order.paidAt = Date.now();
+                    order.paymentStatus = 'paid';
+                }
             }
 
             const updatedOrder = await order.save();
@@ -139,19 +192,14 @@ const downloadInvoice = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        // Security check: Ensure the user requesting the invoice is the owner of the order or an admin
         if (order.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
              return res.status(401).json({ message: 'Not authorized to view this invoice' });
         }
 
-        // Generate the PDF buffer
         const pdfBuffer = await generateInvoice(order, req.user);
 
-        // Set headers to prompt a file download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order._id}.pdf`);
-        
-        // Send the PDF buffer
         res.send(pdfBuffer);
 
     } catch (error) {

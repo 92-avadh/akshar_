@@ -72,7 +72,6 @@ export const apiSlice = createApi({
     // ADMIN PRODUCTS (CRUD)
     // ==========================================
     createProduct: builder.mutation({
-      // FIX 2: accept and forward data as the request body
       query: (data) => ({ url: '/products', method: 'POST', body: data }),
       invalidatesTags: ['Product'], 
     }),
@@ -174,6 +173,17 @@ export const apiSlice = createApi({
         body: data,
         headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
       }),
+    }),
+
+    // NEW: Cash on Delivery endpoint
+    createCodOrder: builder.mutation({
+      query: ({ idempotencyKey, ...data }) => ({
+        url: '/orders',
+        method: 'POST',
+        body: data,
+        headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+      }),
+      invalidatesTags: ['Order'],
     }),
 
     getMyOrders: builder.query({
@@ -292,11 +302,12 @@ export const {
   useRequestAdminPromotionMutation,
   useConfirmAdminPromotionMutation, 
   useCreateOrderMutation,
+  useCreateCodOrderMutation, // <-- ADDED HERE
   useGetMyOrdersQuery, 
   useGetAllOrdersQuery,    
   useUpdateOrderStatusMutation,
   useCreateRazorpayOrderMutation,
-  useVerifyRazorpayPaymentMutation,
+  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
   useCreateDemoOrderMutation,
   useSubmitContactMessageMutation,
   useGetAllContactMessagesQuery,
