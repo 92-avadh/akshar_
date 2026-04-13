@@ -29,9 +29,9 @@ class ErrorBoundary extends React.Component {
               <span className="material-symbols-outlined text-[48px]">warning</span>
             </div>
             
-            <h2 className="text-3xl font-black text-red-950 mb-4 tracking-tighter">Oops! Something broke.</h2>
+            <h2 className="text-3xl font-black text-red-950 mb-4 tracking-tighter">Oops! Something Went Wrong.</h2>
             <p className="text-zinc-500 font-medium mb-10 max-w-md mx-auto leading-relaxed">
-              Our engineering team has been automatically notified and is working to fix this UI issue. Please try refreshing the page.
+              Our team has been notified and they will working to fix this issue. Please try again later or try refreshing the page.
             </p>
             
             <button 

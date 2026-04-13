@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================
+   GLOBAL TYPOGRAPHY (FREDOKA & NUNITO)
+   ========================================== */
+@layer base {
+  body {
+    @apply font-sans text-zinc-800 bg-surface; 
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight; 
+  }
+
+  input, textarea, button, select {
+    @apply font-sans;
+  }
+}
+
+/* ==========================================
+   YOUR CUSTOM STYLES
+   ========================================== */
 html {
   scroll-behavior: smooth;
 }
