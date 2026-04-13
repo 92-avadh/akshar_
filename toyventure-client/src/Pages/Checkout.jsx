@@ -123,18 +123,17 @@ const Checkout = () => {
     setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
   };
 
-  const handleSelectSavedAddress = (addressObj) => {
-    setShippingDetails({
-      fullName: profile?.name || '',
-      phone: profile?.mobileNumber || profile?.phone || '',
-      flatNumber: addressObj?.flatNumber || '',
-      street: addressObj?.street || '',
-      landmark: addressObj?.landmark || '',
-      city: addressObj?.city || '',
-      pincode: addressObj?.pincode || '',
-    });
-  };
-
+ const handleSelectSavedAddress = (addressObj) => {
+  setShippingDetails({
+    fullName: profile?.name || shippingDetails.fullName || '',
+    phone: profile?.mobileNumber || shippingDetails.phone || '',
+    flatNumber: addressObj.flatNumber || '',
+    street: addressObj.street || '',
+    landmark: addressObj.landmark || '',
+    city: addressObj.city || '',
+    pincode: String(addressObj.pincode || ''),
+  });
+};
   const handleAutoSaveAddress = async () => {
     if (!profile) return;
     const { flatNumber, street, landmark, city, pincode } = shippingDetails;

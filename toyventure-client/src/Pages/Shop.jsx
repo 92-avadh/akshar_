@@ -49,8 +49,7 @@ const Checkbox = ({ label, checked, onChange }) => (
       checked={checked} 
       onChange={onChange} 
     />
-    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${checked ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-zinc-300 text-transparent group-hover:border-orange-400'}`}>
-      <span className="material-symbols-outlined text-[14px] font-black">check</span>
+    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${checked ? 'bg-red-600 border-red-600 text-white shadow-md' : 'bg-white border-zinc-300 text-transparent group-hover:border-red-400'}`}>      <span className="material-symbols-outlined text-[14px] font-black">check</span>
     </div>
     <span className={`text-sm font-bold ${checked ? 'text-zinc-900' : 'text-zinc-500 group-hover:text-zinc-800'}`}>{label}</span>
   </label>
@@ -394,8 +393,8 @@ const Shop = () => {
         </div>
 
         <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-3">
-          <button onClick={applyFilters} className="w-full py-4 bg-primary-container hover:opacity-90 text-white font-black rounded-xl shadow-md transition-all hover:-translate-y-0.5">Apply Filters</button>
-          <button onClick={clearFilters} className="w-full py-2 text-zinc-500 hover:text-red-500 font-bold text-sm transition-colors">Clear All Filters</button>
+            <button onClick={applyFilters} className="w-full py-4 bg-primary-container hover:bg-red-700 text-white font-black rounded-xl shadow-md transition-all hover:-translate-y-0.5">Apply Filters</button>            
+            <button onClick={clearFilters} className="w-full py-2 text-zinc-500 hover:text-red-500 font-bold text-sm transition-colors">Clear All Filters</button>
         </div>
       </div>
 
