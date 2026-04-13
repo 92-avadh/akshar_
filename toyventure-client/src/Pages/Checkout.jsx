@@ -9,7 +9,7 @@ import {
   useCreateCodOrderMutation,
   useUpdateUserProfileMutation,
   useValidateCouponMutation,
-  useVerifyRazorpayPaymentMutation,
+  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
 } from '../features/api/apiSlice';
 import { clearCart } from '../features/cart/cartSlice';
 
@@ -51,7 +51,7 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
-  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVerifyRazorpayPaymentMutation(); // <-- FIXED
+  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
   const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); 
   const { data: profile } = useGetUserProfileQuery();
@@ -126,12 +126,12 @@ const Checkout = () => {
   const handleSelectSavedAddress = (addressObj) => {
     setShippingDetails({
       fullName: profile?.name || '',
-      phone: profile?.mobileNumber || '',
-      flatNumber: addressObj.flatNumber,
-      street: addressObj.street,
-      landmark: addressObj.landmark || '',
-      city: addressObj.city,
-      pincode: addressObj.pincode,
+      phone: profile?.mobileNumber || profile?.phone || '',
+      flatNumber: addressObj?.flatNumber || '',
+      street: addressObj?.street || '',
+      landmark: addressObj?.landmark || '',
+      city: addressObj?.city || '',
+      pincode: addressObj?.pincode || '',
     });
   };
 
@@ -318,17 +318,24 @@ const Checkout = () => {
                   <span className="material-symbols-outlined text-[16px]">bolt</span> Quick Select Saved Address:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {profile.addresses.map((addr, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSelectSavedAddress(addr)}
-                      className="text-left p-3 rounded-xl border-2 border-transparent bg-white hover:border-primary-container/30 hover:shadow-md transition-all"
-                    >
-                      <p className="font-bold text-zinc-800 text-sm line-clamp-1">{addr.flatNumber}, {addr.street}</p>
-                      <p className="text-xs text-zinc-500 mt-1">{addr.city} - {addr.pincode}</p>
-                    </button>
-                  ))}
+                  {profile.addresses.map((addr, idx) => {
+                    const isSelected = shippingDetails.flatNumber === addr.flatNumber && shippingDetails.street === addr.street;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectSavedAddress(addr)}
+                        className={`text-left p-3 rounded-xl border-2 transition-all ${
+                          isSelected 
+                            ? 'border-primary-container bg-primary-container/10 shadow-md' 
+                            : 'border-transparent bg-white hover:border-primary-container/30 hover:shadow-md'
+                        }`}
+                      >
+                        <p className="font-bold text-zinc-800 text-sm line-clamp-1">{addr.flatNumber}, {addr.street}</p>
+                        <p className="text-xs text-zinc-500 mt-1">{addr.city} - {addr.pincode}</p>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -582,7 +589,7 @@ const Checkout = () => {
               type="submit"
               form="checkout-form"
               disabled={isBusy}
-              className={`w-full py-4 mt-8 text-white font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 group ${paymentMethod === 'cod' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-zinc-900 hover:bg-black'}`}
+              className={`w-full py-4 mt-8 text-white font-black text-lg rounded-2xl transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 group ${paymentMethod === 'cod' ? 'bg-red-600 hover:bg-red-700' : 'bg-zinc-900 hover:bg-black'}`}
             >
               {isBusy ? 'Processing...' : (paymentMethod === 'cod' ? `Place Order • Rs ${totalPrice.toLocaleString('en-IN')}` : `Pay Rs ${totalPrice.toLocaleString('en-IN')}`)}
               {!isBusy && paymentMethod !== 'cod' && <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">lock</span>}

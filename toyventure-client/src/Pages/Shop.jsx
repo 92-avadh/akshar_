@@ -394,7 +394,7 @@ const Shop = () => {
         </div>
 
         <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-3">
-          <button onClick={applyFilters} className="w-full py-4 bg-primary-container hover:bg-orange-600 text-white font-black rounded-xl shadow-md transition-all hover:-translate-y-0.5">Apply Filters</button>
+          <button onClick={applyFilters} className="w-full py-4 bg-primary-container hover:opacity-90 text-white font-black rounded-xl shadow-md transition-all hover:-translate-y-0.5">Apply Filters</button>
           <button onClick={clearFilters} className="w-full py-2 text-zinc-500 hover:text-red-500 font-bold text-sm transition-colors">Clear All Filters</button>
         </div>
       </div>
