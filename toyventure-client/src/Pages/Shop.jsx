@@ -548,17 +548,17 @@ const Shop = () => {
 
                       {/* Bottom Sliding Add To Cart Button */}
                       <div className="absolute -bottom-16 left-0 right-0 flex justify-center px-3 transition-all duration-300 group-hover:bottom-4 z-30">
-                        <button
-                          onClick={(e) => {
-                             e.preventDefault(); // Prevent Link navigation
-                             e.stopPropagation();
-                             handleAddToCartClick(product);
-                          }}
-                          className={`w-full py-2.5 rounded-2xl backdrop-blur-md shadow-lg flex items-center justify-center gap-2 font-black transition-transform hover:scale-105 text-sm ${product.countInStock > 0 ? 'bg-zinc-900/90 text-white hover:bg-black' : 'bg-red-50/90 text-red-500 border border-red-100 hover:bg-red-100'}`}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
-                          {product.countInStock > 0 ? 'Add to Cart' : 'Waitlist'}
-                        </button>
+                    <button
+                        onClick={(e) => {
+                      e.preventDefault(); // Prevent Link navigation
+                      e.stopPropagation();
+                      handleAddToCartClick(product);
+                    }}
+                    className={`w-full py-2.5 rounded-2xl backdrop-blur-md shadow-lg flex items-center justify-center gap-2 font-black transition-transform hover:scale-105 text-sm ${product.countInStock > 0 ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-600/30' : 'bg-red-50/90 text-red-500 border border-red-100 hover:bg-red-100'}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                    {product.countInStock > 0 ? 'Add to Cart' : 'Waitlist'}
+                  </button>
                       </div>
                     </Link>
 

@@ -322,7 +322,7 @@ const Home = () => {
 
               <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-20">
                 <button onClick={() => handleAddToCart(product)} className="w-full bg-red-600 text-white rounded-2xl py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30">
-                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Bag
+                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Cart
                 </button>
               </div>
             </motion.div>
