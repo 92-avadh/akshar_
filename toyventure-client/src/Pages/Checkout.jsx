@@ -8,7 +8,7 @@ import { useCreateRazorpayOrderMutation,
   useCreateCodOrderMutation, 
   useUpdateUserProfileMutation, 
   useValidateCouponMutation, 
-  useVerifyRazorpayPaymentMutation} 
+  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8} 
 from "../features/api/apiSlice";
 import { clearCart } from '../features/cart/cartSlice';
 
@@ -50,7 +50,7 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
-  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVerifyRazorpayPaymentMutation();
+  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
   const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); 
   const { data: profile } = useGetUserProfileQuery();
@@ -66,11 +66,38 @@ const Checkout = () => {
     pincode: '',
   });
 
+  const handleSelectSavedAddress = (addressObj) => {
+    setShippingDetails((prev) => ({
+      ...prev,
+      fullName: prev.fullName || profile?.name || '',
+      phone: prev.phone || profile?.mobileNumber || '',
+      flatNumber: addressObj.flatNumber || '',
+      street: addressObj.street || '',
+      landmark: addressObj.landmark || '',
+      city: addressObj.city || '',
+      pincode: String(addressObj.pincode || ''),
+    }));
+  };
+
   React.useEffect(() => {
-    if (profile?.addresses?.length > 0 && shippingDetails.street === '') {
-      handleSelectSavedAddress(profile.addresses[0]);
+    if (profile?.addresses?.length > 0) {
+      setShippingDetails((prev) => {
+        // Only auto-select if the user hasn't already started typing an address
+        if (prev.street !== '') return prev; 
+        
+        const addressObj = profile.addresses[0];
+        return {
+          ...prev,
+          fullName: prev.fullName || profile?.name || '',
+          phone: prev.phone || profile?.mobileNumber || '',
+          flatNumber: addressObj.flatNumber || '',
+          street: addressObj.street || '',
+          landmark: addressObj.landmark || '',
+          city: addressObj.city || '',
+          pincode: String(addressObj.pincode || ''),
+        };
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -122,17 +149,6 @@ const Checkout = () => {
     setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
   };
 
- const handleSelectSavedAddress = (addressObj) => {
-  setShippingDetails({
-    fullName: profile?.name || shippingDetails.fullName || '',
-    phone: profile?.mobileNumber || shippingDetails.phone || '',
-    flatNumber: addressObj.flatNumber || '',
-    street: addressObj.street || '',
-    landmark: addressObj.landmark || '',
-    city: addressObj.city || '',
-    pincode: String(addressObj.pincode || ''),
-  });
-};
   const handleAutoSaveAddress = async () => {
     if (!profile) return;
     const { flatNumber, street, landmark, city, pincode } = shippingDetails;
@@ -317,7 +333,7 @@ const Checkout = () => {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {profile.addresses.map((addr, idx) => {
-                    const isSelected = shippingDetails.flatNumber === addr.flatNumber && shippingDetails.street === addr.street;
+                    const isSelected = shippingDetails.flatNumber === (addr.flatNumber || '') && shippingDetails.street === (addr.street || '');
                     return (
                       <button
                         key={idx}
