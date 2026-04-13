@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   useCreateRazorpayOrderMutation,
-  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
+  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, // <-- FIXED
   useGetUserProfileQuery,
   useCreateDemoOrderMutation,
   useCreateCodOrderMutation,
@@ -51,7 +51,7 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
-  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
+  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8(); // <-- FIXED
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
   const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); 
   const { data: profile } = useGetUserProfileQuery();
