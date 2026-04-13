@@ -102,9 +102,11 @@ const Profile = () => {
       setIsDownloading(true);
       const token = sessionStorage.getItem('token');
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      // FIX: Use VITE_API_BASE_URL to match Redux, falling back to /api
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       
-      const response = await fetch(`${apiUrl}/api/orders/${orderId}/invoice`, {
+      // FIX: Ensure path appends correctly to the base URL
+      const response = await fetch(`${baseUrl}/orders/${orderId}/invoice`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
