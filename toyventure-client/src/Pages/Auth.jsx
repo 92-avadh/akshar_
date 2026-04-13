@@ -81,7 +81,7 @@ const Auth = () => {
           setStep(3);
           toast.success("OTP Verified! Let's set up your profile.");
       } else {
-          // --- NEW: Handle Pending Item for Existing Users ---
+          // Handle Pending Item for Existing Users
           if (pendingItem) {
               dispatch(addToCart(pendingItem));
               dispatch(clearPendingItem());
@@ -89,8 +89,12 @@ const Auth = () => {
 
           const firstName = res.name ? res.name.split(' ')[0] : 'User';
           toast.success(`Welcome back, ${firstName}!`);
+          
+          // Determine where to send the user based on admin status
+          const destination = res.isAdmin ? '/admin' : redirect; 
+          
           setTimeout(() => {
-              navigate(redirect);
+              navigate(destination);
               window.location.reload(); 
           }, 1000);
       }
@@ -118,7 +122,7 @@ const Auth = () => {
         userInfo.name = name;
         sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
 
-        // --- NEW: Handle Pending Item for New Users ---
+        // Handle Pending Item for New Users
         if (pendingItem) {
             dispatch(addToCart(pendingItem));
             dispatch(clearPendingItem());
@@ -126,13 +130,19 @@ const Auth = () => {
 
         toast.success(`Welcome to ToyBlix, ${name.split(' ')[0]}!`);
         
+        // Determine where to send the user based on admin status
+        const destination = userInfo.isAdmin ? '/admin' : redirect;
+        
         setTimeout(() => {
-            navigate(redirect);
+            navigate(destination);
             window.location.reload(); 
         }, 1000);
     } catch (err) {
         toast.error(err?.data?.message || 'Failed to save name. You can update it later in your profile.');
-        setTimeout(() => { navigate(redirect); window.location.reload(); }, 1500);
+        const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+        const destination = userInfo?.isAdmin ? '/admin' : redirect;
+        
+        setTimeout(() => { navigate(destination); window.location.reload(); }, 1500);
     }
   };
 

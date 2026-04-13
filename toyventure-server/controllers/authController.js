@@ -147,14 +147,57 @@ const sendOtp = async (req, res, next) => {
           email: identifierKey,
           subject: 'Your ToyBlix Verification Code',
           html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-              <h2 style="color: #18181b;">ToyBlix Verification</h2>
-              <p style="color: #52525b; font-size: 16px;">Here is your One-Time Password (OTP) to access your account:</p>
-              <div style="background-color: #f4f4f5; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                <strong style="font-size: 32px; letter-spacing: 5px; color: #f97316;">${otp}</strong>
-              </div>
-              <p style="color: #52525b; font-size: 14px;">This code will expire in 10 minutes.</p>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>ToyBlix Verification</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333333;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f7f6; padding: 40px 20px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); overflow: hidden;">
+                      
+                      <tr>
+                        <td align="center" style="background-color: #ff6600; padding: 35px 20px;">
+                          <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 1.5px;">ToyBlix</h1>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td style="padding: 40px 30px; text-align: center;">
+                          <h2 style="margin-top: 0; color: #2d3748; font-size: 24px;">Verification Code</h2>
+                          <p style="color: #718096; font-size: 16px; line-height: 1.6; margin-bottom: 35px;">
+                            Here is your One-Time Password (OTP) to securely access your account. Please do not share this code with anyone.
+                          </p>
+                          
+                          <div style="background-color: #fff5eb; border: 2px dashed #ff6600; padding: 25px; border-radius: 8px; display: inline-block; margin-bottom: 35px;">
+                            <strong style="font-size: 42px; letter-spacing: 10px; color: #ff6600; margin-left: 10px;">${otp}</strong>
+                          </div>
+                          
+                          <p style="color: #a0aec0; font-size: 14px; margin-bottom: 0;">
+                            This code expires in <strong style="color: #ff6600;">10 minutes</strong>.
+                          </p>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td style="background-color: #f8fafc; padding: 25px; text-align: center; border-top: 1px solid #e2e8f0;">
+                          <p style="color: #a0aec0; font-size: 13px; margin: 0; line-height: 1.5;">
+                            &copy; 2026 ToyBlix. All rights reserved.<br>
+                            <a href="https://toyblix.com" style="color: #ff6600; text-decoration: none; font-weight: bold;">www.toyblix.com</a>
+                          </p>
+                        </td>
+                      </tr>
+                      
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
           `,
         });
         console.log(`📧 OTP Email successfully sent to: ${identifierKey}`);

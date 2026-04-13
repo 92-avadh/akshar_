@@ -8,6 +8,8 @@ const assignRequestId = (req, res, next) => {
 };
 
 const requestLogger = (req, res, next) => {
+  // Commented out to prevent unnecessary console printing and reduce server load
+  /*
   const start = process.hrtime.bigint();
 
   res.on('finish', () => {
@@ -30,6 +32,7 @@ const requestLogger = (req, res, next) => {
       })
     );
   });
+  */
 
   next();
 };
