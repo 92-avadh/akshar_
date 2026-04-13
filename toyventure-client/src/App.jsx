@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react'; // Removed useState, useEffect
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast'; 
 
@@ -12,7 +12,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // ==========================================
 // PRODUCTION ROUTE CODE SPLITTING
-// Only loads the Javascript for these pages when the user navigates to them.
 // ==========================================
 const Home = lazy(() => import('./Pages/Home'));
 const Shop = lazy(() => import('./Pages/Shop'));
@@ -58,19 +57,7 @@ const AdminRoute = ({ children }) => {
 };
 
 const App = () => {
-  const [isAppLoading, setIsAppLoading] = useState(true);
-
-  useEffect(() => {
-    const splashTimer = setTimeout(() => {
-      setIsAppLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(splashTimer);
-  }, []);
-
-  if (isAppLoading) {
-    return <Loader />;
-  }
+  // Removed the isAppLoading state and useEffect completely.
 
   return (
     <Router>
@@ -98,8 +85,11 @@ const App = () => {
       <Navbar />
       <div className="flex-grow">
         <ErrorBoundary>
-          {/* Suspense catches the lazy-loaded components while they are downloading */}
-          <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader /></div>}>
+          {/* FIX APPLIED: Passed fullScreen={false} to the Suspense loader. 
+            Since it is rendered inside a min-h container under the Navbar, 
+            it shouldn't be a fixed full-screen overlay. 
+          */}
+          <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader fullScreen={false} /></div>}>
             <Routes>
               {/* PUBLIC ROUTES */}
               <Route path="/" element={<Home />} />
