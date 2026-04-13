@@ -99,3 +99,12 @@ html {
 .pause-marquee:hover .animate-marquee {
   animation-play-state: paused;
 }
+@keyframes floatSlow {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-floatSlow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
