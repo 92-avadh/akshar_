@@ -10,6 +10,7 @@ import {
   useCreateCodOrderMutation,
   useUpdateUserProfileMutation,
   useValidateCouponMutation,
+  useVerifyRazorpayPaymentMutation,
 } from '../features/api/apiSlice';
 import { clearCart } from '../features/cart/cartSlice';
 
@@ -51,7 +52,7 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
-  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8(); // <-- FIXED
+  const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVerifyRazorpayPaymentMutation(); // <-- FIXED
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
   const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); 
   const { data: profile } = useGetUserProfileQuery();
