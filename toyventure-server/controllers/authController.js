@@ -1,315 +1,306 @@
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const OtpChallenge = require('../models/OtpChallenge');
 const sendEmail = require('../utils/sendEmail');
-const Product = require('../models/Product');
 
-// @desc    Fetch all products with Advanced Filter, Sort, and Pagination
-// @route   GET /api/products
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+  });
+};
+
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// @desc    Register a new user (Email/Password)
+// @route   POST /api/auth/register
 // @access  Public
-const getProducts = async (req, res) => {
-    try {
-        const pageSize = Number(req.query.limit) || 12; 
-        const page = Number(req.query.page) || 1;
+const registerUser = async (req, res, next) => {
+  try {
+    const { name, email, mobileNumber, password } = req.body;
 
-        const queryFilter = {};
-        const andConditions = [];
-
-        // 1. Keyword Search
-        if (req.query.keyword && req.query.keyword.trim() !== '') {
-            andConditions.push({ title: { $regex: req.query.keyword, $options: 'i' } });
-        }
-
-        // 2. Categories (Maps to "tag" in DB)
-        if (req.query.tags && req.query.tags.trim() !== '') {
-            const tagsArray = req.query.tags.split(',').map(t => new RegExp(t.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
-            andConditions.push({ tag: { $in: tagsArray } });
-        }
-
-        // 3. Age Groups (Maps to "category" in DB) - UPDATED FOR "ALL AGE"
-        if (req.query.category && req.query.category.trim() !== '') {
-            const ageArray = req.query.category.split(',').map(c => new RegExp(c.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i'));
-            
-            // Allow any product labeled "All Age" or "All Ages" to bypass the specific age filter restriction
-            ageArray.push(/all\s*age/i); 
-
-            andConditions.push({ category: { $in: ageArray } });
-        }
-
-        // 4. Price Range
-        if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
-            const priceFilter = {};
-            if (req.query.minPrice !== undefined && req.query.minPrice !== '') priceFilter.$gte = Number(req.query.minPrice);
-            if (req.query.maxPrice !== undefined && req.query.maxPrice !== '') priceFilter.$lte = Number(req.query.maxPrice);
-            
-            if (Object.keys(priceFilter).length > 0) {
-                andConditions.push({ price: priceFilter });
-            }
-        }
-
-        // 5. Rating
-        if (req.query.minRating && req.query.minRating.trim() !== '') {
-            andConditions.push({ rating: { $gte: Number(req.query.minRating) } });
-        }
-
-        // 6. Stock Visibility Logic
-        if (req.query.isAdmin !== 'true') {
-            andConditions.push({ title: { $ne: 'New Magical Toy' } }); // Always hide blank templates
-
-            const wantInStock = req.query.inStock === 'true';
-            const wantOutOfStock = req.query.outOfStock === 'true';
-
-            if (wantInStock && !wantOutOfStock) {
-                andConditions.push({ countInStock: { $gt: 0 } });
-            } else if (!wantInStock && wantOutOfStock) {
-                andConditions.push({ countInStock: { $lte: 0 } });
-            } else if (wantInStock && wantOutOfStock) {
-                // Show all (both checked), no filter required
-            } else {
-                // Default Public View: Only show in-stock items
-                andConditions.push({ countInStock: { $gt: 0 } });
-            }
-        }
-
-        if (andConditions.length > 0) {
-            queryFilter.$and = andConditions;
-        }
-
-        // 7. Sorting
-        let sortOption = { createdAt: -1 }; 
-        if (req.query.sort === 'price_asc') sortOption = { price: 1 };
-        if (req.query.sort === 'price_desc') sortOption = { price: -1 };
-        if (req.query.sort === 'rating_desc') sortOption = { rating: -1 };
-        if (req.query.sort === 'newest') sortOption = { createdAt: -1 };
-
-        const count = await Product.countDocuments(queryFilter);
-        const products = await Product.find(queryFilter)
-            .sort(sortOption)
-            .limit(pageSize)
-            .skip(pageSize * (page - 1));
-
-        res.json({
-            products,
-            page,
-            pages: Math.ceil(count / pageSize),
-            totalProducts: count
-        });
-
-    } catch (error) {
-        console.error("Fetch Products Error:", error);
-        res.status(500).json({ message: "Server Error: Could not fetch products" });
+    if (!email && !mobileNumber) {
+      res.status(400);
+      return next(new Error('Please provide an email or mobile number'));
     }
+
+    const query = [];
+    if (email) query.push({ email });
+    if (mobileNumber) query.push({ mobileNumber });
+
+    const userExists = await User.findOne({ $or: query });
+
+    if (userExists) {
+      res.status(400);
+      return next(new Error('User already exists'));
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      mobileNumber,
+      password,
+    });
+
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(400);
+      next(new Error('Invalid user data'));
+    }
+  } catch (error) {
+    next(error);
+  }
 };
 
-// @desc    Fetch single product
-// @route   GET /api/products/:id
+// @desc    Auth user & get token (Email/Password)
+// @route   POST /api/auth/login
 // @access  Public
-const getProductById = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        if (product) {
-            res.json(product);
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "Server Error" });
+const loginUser = async (req, res, next) => {
+  try {
+    const { identifier, password } = req.body;
+
+    if (!identifier || !password) {
+      res.status(400);
+      return next(new Error('Please provide identifier and password'));
     }
+
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { mobileNumber: identifier }],
+    }).select('+password');
+
+    if (user && user.isBanned) {
+      res.status(403);
+      return next(new Error('Your account has been banned. Please contact support.'));
+    }
+
+    if (user && (await user.matchPassword(password))) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(401);
+      next(new Error('Invalid credentials'));
+    }
+  } catch (error) {
+    next(error);
+  }
 };
 
-const createProductReview = async (req, res) => {
-    try {
-        const { rating, comment } = req.body;
-        const product = await Product.findById(req.params.id);
+// @desc    Initiate OTP login/registration
+// @route   POST /api/auth/send-otp
+// @access  Public
+const sendOtp = async (req, res, next) => {
+  try {
+    const { email, mobileNumber } = req.body;
 
-        if (product) {
-            const alreadyReviewed = product.reviews.find(
-                (r) => r.name.toString() === req.user.name.toString()
-            );
-
-            if (alreadyReviewed) {
-                return res.status(400).json({ message: 'You have already reviewed this toy.' });
-            }
-
-            const review = {
-                name: req.user.name,
-                rating: Number(rating),
-                comment,
-            };
-
-            product.reviews.push(review);
-            product.numReviews = product.reviews.length;
-            product.rating = product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length;
-
-            await product.save();
-            res.status(201).json({ message: 'Review added successfully!' });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Failed to add review' });
+    if (!email && !mobileNumber) {
+      res.status(400);
+      return next(new Error('Email or mobile number required for OTP'));
     }
-};
 
-const deleteProductReview = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        
-        if (product) {
-            const reviewIndex = product.reviews.findIndex(r => r._id.toString() === req.params.reviewId);
-            
-            if (reviewIndex !== -1) {
-                product.reviews.splice(reviewIndex, 1);
-                product.numReviews = product.reviews.length;
-                product.rating = product.reviews.length > 0 
-                    ? product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length 
-                    : 0;
+    const identifierKey = email || mobileNumber;
+    const channel = email ? 'email' : 'mobile';
+    const otp = generateOtp();
 
-                await product.save();
-                res.json({ message: 'Review successfully deleted by Admin' });
-            } else {
-                res.status(404).json({ message: 'Review not found' });
-            }
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error handling review deletion' });
-    }
-};
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
-const notifyMeWhenAvailable = async (req, res) => {
-    try {
-        const { email } = req.body;
-        const product = await Product.findById(req.params.id);
+    const resendAvailableAt = new Date();
+    resendAvailableAt.setMinutes(resendAvailableAt.getMinutes() + 1);
 
-        if (product) {
-            if (!product.notifyList.includes(email)) {
-                product.notifyList.push(email);
-                await product.save();
-            }
-            res.status(200).json({ message: "You're on the list! We'll alert you when it's back." });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to add to waitlist', error });
-    }
-};
+    const maskedRecipient = email
+      ? email.replace(/(.{2})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + '*'.repeat(gp3.length))
+      : mobileNumber.replace(/.(?=.{4})/g, '*');
 
-const createProduct = async (req, res) => {
-    try {
-        const product = new Product({
-            title: 'New Magical Toy',
-            price: 0,
-            user: req.user._id,
-            img: 'https://via.placeholder.com/400x400?text=Upload+Image',
-            images: [],
-            tag: '',         
-            category: '',    
-            countInStock: 0,
-            numReviews: 0,
-            description: 'Enter a magical description here...',
-            notifyList: [],
-            variants: [] 
+    const otpHash = otp;
+
+    await OtpChallenge.findOneAndUpdate(
+      { identifierKey },
+      {
+        identifierKey,
+        channel,
+        otpHash,
+        expiresAt,
+        resendAvailableAt,
+        maskedRecipient,
+        isUsed: false,
+        attempts: 0,
+      },
+      { upsert: true, new: true }
+    );
+
+    if (channel === 'email') {
+      try {
+        await sendEmail({
+          email: identifierKey,
+          subject: 'Your ToyBlix Verification Code',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>ToyBlix Verification</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7f6; color: #333333;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f7f6; padding: 40px 20px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); overflow: hidden;">
+                      
+                      <tr>
+                        <td align="center" style="background-color: #ff6600; padding: 35px 20px;">
+                          <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 1.5px;">ToyBlix</h1>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td style="padding: 40px 30px; text-align: center;">
+                          <h2 style="margin-top: 0; color: #2d3748; font-size: 24px;">Verification Code</h2>
+                          <p style="color: #718096; font-size: 16px; line-height: 1.6; margin-bottom: 35px;">
+                            Here is your One-Time Password (OTP) to securely access your account. Please do not share this code with anyone.
+                          </p>
+                          
+                          <div style="background-color: #fff5eb; border: 2px dashed #ff6600; padding: 25px; border-radius: 8px; display: inline-block; margin-bottom: 35px;">
+                            <strong style="font-size: 42px; letter-spacing: 10px; color: #ff6600; margin-left: 10px;">${otp}</strong>
+                          </div>
+                          
+                          <p style="color: #a0aec0; font-size: 14px; margin-bottom: 0;">
+                            This code expires in <strong style="color: #ff6600;">10 minutes</strong>.
+                          </p>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td style="background-color: #f8fafc; padding: 25px; text-align: center; border-top: 1px solid #e2e8f0;">
+                          <p style="color: #a0aec0; font-size: 13px; margin: 0; line-height: 1.5;">
+                            &copy; 2026 ToyBlix. All rights reserved.<br>
+                            <a href="https://toyblix.com" style="color: #ff6600; text-decoration: none; font-weight: bold;">www.toyblix.com</a>
+                          </p>
+                        </td>
+                      </tr>
+                      
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `,
         });
-
-        const createdProduct = await product.save();
-        res.status(201).json(createdProduct);
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to create product template', error });
+        console.log(`📧 OTP Email successfully sent to: ${identifierKey}`);
+      } catch (emailError) {
+        console.error('Failed to send OTP email:', emailError);
+        return next(new Error('Failed to send OTP email. Please check your email configuration.'));
+      }
+    } else {
+      // Disabled 2Factor implementation, outputting to terminal instead
+      console.log(`\n========================================`);
+      console.log(`📱 DEVELOPMENT SMS OTP SIMULATION`);
+      console.log(`To: ${identifierKey}`);
+      console.log(`OTP: ${otp}`);
+      console.log(`========================================\n`);
     }
+
+    res.status(200).json({
+      message: channel === 'email' ? 'OTP sent to your email' : 'OTP sent successfully',
+      expiresIn: 600,
+      channel,
+      env: process.env.NODE_ENV,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const updateProduct = async (req, res) => {
-    try {
-        const { title, price, description, img, tag, category, oldPrice, countInStock, images, variants } = req.body; 
-        const product = await Product.findById(req.params.id);
+// @desc    Verify OTP and issue token
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, mobileNumber, otp } = req.body;
 
-        if (product) {
-            const wasOutOfStock = product.countInStock === 0;
-            const isRestocked = countInStock > 0;
-
-            product.title = title ?? product.title;
-            product.price = price ?? product.price;
-            product.description = description ?? product.description;
-            
-            product.tag = tag ?? product.tag;
-            product.category = category ?? product.category; 
-            
-            product.oldPrice = oldPrice ?? product.oldPrice;
-            product.countInStock = countInStock ?? product.countInStock;
-            
-            if (variants) {
-                product.variants = variants;
-            }
-
-            if (images && images.length > 0) {
-                product.images = images;
-                product.img = images[0]; 
-            } else {
-                product.img = img ?? product.img;
-            }
-
-            if (wasOutOfStock && isRestocked && product.notifyList && product.notifyList.length > 0) {
-                const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-                const emailPromises = product.notifyList.map(async (userEmail) => {
-                    try {
-                        await sendEmail({
-                            email: userEmail,
-                            subject: `🎉 It's Back! ${product.title} is fully restocked!`,
-                            html: `
-                                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-                                    <h2 style="color: #18181b;">Great news! 🚀</h2>
-                                    <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
-                                        You asked us to let you know when the <strong>${product.title}</strong> was back in stock. Well, the wait is over! We just added fresh inventory to our store.
-                                    </p>
-                                    <div style="text-align: center; margin: 30px 0;"><img src="${product.img}" alt="${product.title}" style="max-width: 250px; border-radius: 10px;" /></div>
-                                    <p style="color: #52525b; font-size: 16px;">Hurry and grab yours before it sells out again!</p>
-                                    <div style="text-align: center; margin-top: 30px;">
-                                        <a href="${clientUrl}/product/${product._id}" style="background-color: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">Shop Now</a>
-                                    </div>
-                                </div>
-                            `
-                        });
-                    } catch (emailErr) {
-                        console.error(`Failed to send email to ${userEmail}:`, emailErr);
-                    }
-                });
-                await Promise.all(emailPromises);
-                product.notifyList = [];
-            }
-
-            const updatedProduct = await product.save();
-            res.json(updatedProduct);
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to update product', error });
+    if (!otp) {
+      res.status(400);
+      return next(new Error('OTP is required'));
     }
+
+    const identifierKeyRaw = email || mobileNumber;
+
+    if (!identifierKeyRaw) {
+      res.status(400);
+      return next(new Error('Email or mobile number is required'));
+    }
+
+    const identifierKey = String(identifierKeyRaw).trim();
+    const incomingOtp = String(otp).trim();
+
+    const challenge = await OtpChallenge.findOne({ identifierKey });
+
+    console.log(`\n--- OTP Verification Check ---`);
+    console.log(`Looking for user: "${identifierKey}"`);
+    if (!challenge) {
+      console.log(`❌ Challenge not found in DB`);
+    } else {
+      console.log(`DB OTP: "${challenge.otpHash}"`);
+      console.log(`Req OTP: "${incomingOtp}"`);
+      console.log(`Expired?: ${challenge.expiresAt < new Date()}`);
+    }
+    console.log(`------------------------------\n`);
+
+    if (!challenge || challenge.otpHash !== incomingOtp || challenge.expiresAt < new Date()) {
+      res.status(401);
+      return next(new Error('Invalid or expired OTP'));
+    }
+
+    await OtpChallenge.deleteOne({ _id: challenge._id });
+
+    let user = await User.findOne({
+      $or: [{ email: identifierKey }, { mobileNumber: identifierKey }],
+    });
+
+    if (user && user.isBanned) {
+      res.status(403);
+      return next(new Error('Your account has been banned. Please contact support.'));
+    }
+
+    if (!user) {
+      user = await User.create({
+        email: email || undefined,
+        mobileNumber: mobileNumber || undefined,
+        role: 'user',
+      });
+    }
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      mobileNumber: user.mobileNumber,
+      role: user.role,
+      token: generateToken(user._id),
+      isNewUser: !user.name,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const deleteProduct = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-
-        if (product) {
-            await Product.deleteOne({ _id: product._id });
-            res.json({ message: 'Product completely removed from store' });
-        } else {
-            res.status(404).json({ message: 'Product not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to delete product', error });
-    }
-};
-
-module.exports = { 
-    getProducts, 
-    getProductById, 
-    createProductReview,
-    deleteProductReview,
-    notifyMeWhenAvailable, 
-    createProduct, 
-    updateProduct, 
-    deleteProduct 
+module.exports = {
+  registerUser,
+  loginUser,
+  sendOtp,
+  verifyOtp,
 };

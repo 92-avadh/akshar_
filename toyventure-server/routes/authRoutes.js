@@ -1,12 +1,15 @@
 const express = require('express');
-const { rateLimit } = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const router = express.Router();
-const { sendOtp, verifyOtp } = require('../controllers/authController');
+
+// Safe import with check
+const authController = require('../controllers/authController');
+const sendOtp = authController.sendOtp;
+const verifyOtp = authController.verifyOtp;
 
 const buildRateLimitKey = (req) => {
   const identifier = String(req.body?.mobileNumber || req.body?.email || 'unknown').trim().toLowerCase();
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
-  return `${ip}:${identifier}`;
+  return `${ipKeyGenerator(req)}_${identifier}`;
 };
 
 const otpSendLimiter = rateLimit({
@@ -15,6 +18,7 @@ const otpSendLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: buildRateLimitKey,
+  skip: () => !sendOtp,
   message: { message: 'Too many OTP requests. Please try again later.' },
 });
 
@@ -26,6 +30,12 @@ const otpVerifyLimiter = rateLimit({
   keyGenerator: buildRateLimitKey,
   message: { message: 'Too many OTP verification attempts. Please try again later.' },
 });
+
+// Safety check
+if (typeof sendOtp !== 'function' || typeof verifyOtp !== 'function') {
+  console.error('❌ authController missing sendOtp or verifyOtp!');
+  console.error('Available exports:', Object.keys(authController));
+}
 
 router.post('/send-otp', otpSendLimiter, sendOtp);
 router.post('/verify-otp', otpVerifyLimiter, verifyOtp);
