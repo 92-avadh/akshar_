@@ -78,7 +78,7 @@ const Cart = () => {
       <main className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6 fade-in">
         <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">shopping_bag</span>
         <h2 className="text-3xl font-black text-zinc-800 mb-4">Your cart is empty!</h2>
-        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Looks like you haven't added any magical toys yet.</p>
+        <p className="text-zinc-500 font-bold mb-8 text-center max-w-md">Looks like you haven't added any toys yet.</p>
         <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
           Discover Toys
         </Link>

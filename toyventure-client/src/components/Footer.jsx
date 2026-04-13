@@ -20,7 +20,7 @@ const Footer = () => {
           </div>
           
           <p className="text-sm font-medium text-red-200/70 mb-8 leading-relaxed max-w-sm">
-            Making every childhood moment a magical adventure through wonderfully crafted, minimalist physical play. Designed to last.
+            Making every childhood moment a adventure through wonderfully crafted, minimalist physical play. Designed to last.
           </p>
           <div className="flex gap-3">
             <a className="w-10 h-10 border border-red-800/50 rounded-full flex items-center justify-center text-red-200 hover:bg-red-900 hover:text-white hover:border-red-700 transition-all" href="#" aria-label="Share">

@@ -244,7 +244,7 @@ const Checkout = () => {
         
         dispatch(clearCart());
         await handleAutoSaveAddress();
-        toast.success('Order Placed Successfully! Get ready for magic ✨');
+        toast.success('Order Placed Successfully! Get ready for fun ✨');
         navigate('/profile');
         return;
       }
@@ -292,7 +292,7 @@ const Checkout = () => {
       <div className="pt-32 pb-24 min-h-screen bg-surface flex flex-col items-center justify-center px-6">
         <span className="material-symbols-outlined text-[80px] text-zinc-300 mb-6">shopping_bag</span>
         <h2 className="text-3xl font-black text-zinc-800 mb-4">Your cart is empty</h2>
-        <p className="text-zinc-500 mb-8 text-center max-w-md">Looks like you haven't added any magical toys to your cart yet.</p>
+        <p className="text-zinc-500 mb-8 text-center max-w-md">Looks like you haven't added any toys to your cart yet.</p>
         <Link to="/shop" className="px-8 py-4 bg-primary-container text-white font-black rounded-full hover:-translate-y-1 hover:shadow-lg transition-all">
           Start Shopping
         </Link>
@@ -406,7 +406,7 @@ const Checkout = () => {
                   <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
                 </div>
                 <span className="font-black text-zinc-800 text-lg">Cash on Delivery</span>
-                <span className="text-xs text-zinc-500 font-medium">Pay with cash when your magical package arrives at your doorstep.</span>
+                <span className="text-xs text-zinc-500 font-medium">Pay with cash when your package arrives at your doorstep.</span>
               </label>
               
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'card' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>

@@ -415,7 +415,7 @@ const Shop = () => {
 
           <ScrollReveal delay={50} className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
             <div>
-              <h1 className="text-4xl md:text-5xl font-black text-on-surface tracking-tighter">{searchQuery ? `Results for "${searchQuery}"` : 'Magical Collection'}</h1>
+              <h1 className="text-4xl md:text-5xl font-black text-on-surface tracking-tighter">{searchQuery ? `Results for "${searchQuery}"` : 'Magic Collection'}</h1>
               {!isLoading && <p className="text-zinc-500 font-medium mt-1">Showing {filteredProducts.length} items of {responseData?.totalProducts || 0} total</p>}
             </div>
 

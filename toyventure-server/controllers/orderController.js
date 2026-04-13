@@ -47,7 +47,7 @@ const createOrder = async (req, res) => {
                             Thank you for choosing ToyBlix! Your Cash on Delivery order <strong>#${String(createdOrder._id).slice(-8).toUpperCase()}</strong> has been successfully placed.
                         </p>
                         <p style="color: #52525b; font-size: 16px;">Amount to pay on delivery: <strong style="color:#f97316;">₹${totalPrice}</strong></p>
-                        <p style="color: #52525b; font-size: 16px;">We will notify you once your magical package is dispatched.</p>
+                        <p style="color: #52525b; font-size: 16px;">We will notify you once your package is dispatched.</p>
                     </div>
                 `
             }).catch(err => console.error("Failed to send COD email:", err));
@@ -160,7 +160,7 @@ const updateOrderStatus = async (req, res) => {
                             <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
                                 Hi ${order.user.name}, your order <strong>#${String(order._id).slice(-8).toUpperCase()}</strong> has been dispatched ${courierText}.
                             </p>
-                            <p style="color: #52525b; font-size: 16px;">It will be magically arriving at your doorstep very soon!</p>
+                            <p style="color: #52525b; font-size: 16px;">It will be arriving at your doorstep very soon!</p>
                             ${trackingBtn}
                             <div style="text-align: center; margin-top: 20px;">
                                 <a href="${clientUrl}/profile" style="color: #f97316; text-decoration: none; font-weight: bold; font-size: 14px;">

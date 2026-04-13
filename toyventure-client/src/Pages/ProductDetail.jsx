@@ -557,7 +557,7 @@ const ProductDetail = () => {
                 <span className="material-symbols-outlined text-[48px] text-orange-400 mb-4 block">local_shipping</span>
                 <h3 className="text-xl font-black text-zinc-800 mb-2">Verified Buyers Only</h3>
                 <p className="text-zinc-500 font-medium text-sm">
-                  You unlock the ability to leave a glowing 1-5 Star review once your order for this magical toy has been delivered!
+                  You unlock the ability to leave a glowing 1-5 Star review once your order for this toy has been delivered!
                 </p>
               </div>
             ) : (
