@@ -1,11 +1,12 @@
 const express = require('express');
-const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const { rateLimit } = require('express-rate-limit');
 const router = express.Router();
 const { sendOtp, verifyOtp } = require('../controllers/authController');
 
 const buildRateLimitKey = (req) => {
   const identifier = String(req.body?.mobileNumber || req.body?.email || 'unknown').trim().toLowerCase();
-  return `${ipKeyGenerator(req.ip)}:${identifier}`;
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  return `${ip}:${identifier}`;
 };
 
 const otpSendLimiter = rateLimit({
