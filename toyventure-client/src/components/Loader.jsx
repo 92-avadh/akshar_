@@ -1,44 +1,35 @@
 import React from 'react';
+import Logo from './Logo'; // <-- Imports your actual Navbar logo
 
 const Loader = ({ fullScreen = true, text = "Loading" }) => {
-  // Smooth, modern animations for the ToyBlix brand
+  // Smooth, modern animations
   const customStyles = `
     @keyframes float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-12px); }
     }
     @keyframes pulse-glow {
-      0%, 100% { opacity: 0.8; filter: drop-shadow(0 4px 6px rgba(249, 115, 22, 0.3)); }
-      50% { opacity: 1; filter: drop-shadow(0 8px 15px rgba(249, 115, 22, 0.6)); }
-    }
-    @keyframes spin-slow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      0%, 100% { opacity: 0.8; filter: drop-shadow(0 4px 6px rgba(249, 115, 22, 0.2)); }
+      50% { opacity: 1; filter: drop-shadow(0 8px 15px rgba(249, 115, 22, 0.5)); }
     }
     
     .animate-float { animation: float 3s ease-in-out infinite; }
     .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
-    .animate-spin-slow { animation: spin-slow 3s linear infinite; }
   `;
 
   const content = (
     <div className="flex flex-col items-center justify-center space-y-10 animate-[fadeIn_0.5s_ease-in-out]">
       <style>{customStyles}</style>
 
-      {/* 🚀 ToyBlix Logo Display */}
+      {/* 🚀 Real ToyBlix Logo Display */}
       <div className="relative flex flex-col items-center justify-center animate-float mt-4">
         
         {/* Ambient Orange Background Glow */}
-        <div className="absolute w-40 h-40 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute w-40 h-40 bg-orange-500/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
 
-        {/* The Brand Name & Icon */}
-        <div className="relative z-10 flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined text-[42px] text-orange-500 animate-spin-slow">
-            toys
-          </span>
-          <h1 className="text-5xl font-black tracking-tight text-orange-500 animate-pulse-glow">
-            ToyBlix
-          </h1>
+        {/* The Brand Logo (Scaled up slightly to look good as a center loader) */}
+        <div className="relative z-10 animate-pulse-glow transform scale-125 mb-2 flex items-center justify-center">
+           <Logo />
         </div>
         
       </div>
