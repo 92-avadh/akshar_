@@ -6,7 +6,7 @@ export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({ 
     baseUrl: API_BASE_URL,
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
       const token = sessionStorage.getItem('token'); 
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
@@ -25,14 +25,12 @@ export const apiSlice = createApi({
         let url = `/products?page=${page}&limit=${limit}`;
         if (keyword) url += `&keyword=${keyword}`;
         if (tags) url += `&tags=${tags}`;
-        
         if (minPrice !== '' && minPrice !== undefined) url += `&minPrice=${minPrice}`;
         if (maxPrice !== '' && maxPrice !== undefined) url += `&maxPrice=${maxPrice}`;
         if (minRating !== '' && minRating !== undefined) url += `&minRating=${minRating}`;
         if (sort) url += `&sort=${sort}`;
         if (inStock) url += `&inStock=${inStock}`;
         if (outOfStock) url += `&outOfStock=${outOfStock}`;
-        
         return url;
       },
       providesTags: ['Product'],
@@ -96,13 +94,8 @@ export const apiSlice = createApi({
     // ==========================================
     // AUTHENTICATION
     // ==========================================
-    login: builder.mutation({ 
-      query: (data) => ({ url: '/auth/login', method: 'POST', body: data }) 
-    }),
-    register: builder.mutation({ 
-      query: (data) => ({ url: '/auth/register', method: 'POST', body: data }) 
-    }),
-    
+    login: builder.mutation({ query: (data) => ({ url: '/auth/login', method: 'POST', body: data }) }),
+    register: builder.mutation({ query: (data) => ({ url: '/auth/register', method: 'POST', body: data }) }),
     sendOtp: builder.mutation({ query: (data) => ({ url: '/auth/send-otp', method: 'POST', body: data }) }),
     verifyOtp: builder.mutation({ query: (data) => ({ url: '/auth/verify-otp', method: 'POST', body: data }) }),
     
@@ -132,34 +125,21 @@ export const apiSlice = createApi({
     }),
 
     toggleUserBanStatus: builder.mutation({
-      query: (id) => ({
-        url: `/users/${id}/ban`,
-        method: 'PUT',
-      }),
+      query: (id) => ({ url: `/users/${id}/ban`, method: 'PUT' }),
       invalidatesTags: ['User'],
     }),
 
     updateUserRole: builder.mutation({
-      query: (id) => ({
-        url: `/users/${id}/role`,
-        method: 'PUT',
-      }),
+      query: (id) => ({ url: `/users/${id}/role`, method: 'PUT' }),
       invalidatesTags: ['User'],
     }),
 
     requestAdminPromotion: builder.mutation({
-      query: () => ({
-        url: '/users/admin/request-promotion',
-        method: 'POST',
-      }),
+      query: () => ({ url: '/users/admin/request-promotion', method: 'POST' }),
     }),
 
     confirmAdminPromotion: builder.mutation({
-      query: (data) => ({
-        url: '/users/admin/confirm-promotion',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => ({ url: '/users/admin/confirm-promotion', method: 'POST', body: data }),
       invalidatesTags: ['User'], 
     }),
 
@@ -175,7 +155,6 @@ export const apiSlice = createApi({
       }),
     }),
 
-    // NEW: Cash on Delivery endpoint
     createCodOrder: builder.mutation({
       query: ({ idempotencyKey, ...data }) => ({
         url: '/orders',
@@ -238,11 +217,7 @@ export const apiSlice = createApi({
     // CONTACT MESSAGES 
     // ==========================================
     submitContactMessage: builder.mutation({
-      query: (data) => ({
-        url: '/contact',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => ({ url: '/contact', method: 'POST', body: data }),
     }),
 
     getAllContactMessages: builder.query({
@@ -280,7 +255,6 @@ export const apiSlice = createApi({
   }),
 });
 
-// EXPORT ALL HOOKS
 export const { 
   useGetProductsQuery, 
   useGetProductByIdQuery,
@@ -302,7 +276,7 @@ export const {
   useRequestAdminPromotionMutation,
   useConfirmAdminPromotionMutation, 
   useCreateOrderMutation,
-  useCreateCodOrderMutation, // <-- ADDED HERE
+  useCreateCodOrderMutation, 
   useGetMyOrdersQuery, 
   useGetAllOrdersQuery,    
   useUpdateOrderStatusMutation,

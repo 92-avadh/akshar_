@@ -7,7 +7,7 @@ import {
   useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8,
   useGetUserProfileQuery,
   useCreateDemoOrderMutation,
-  useCreateCodOrderMutation, // <-- ADDED THIS
+  useCreateCodOrderMutation,
   useUpdateUserProfileMutation,
   useValidateCouponMutation,
 } from '../features/api/apiSlice';
@@ -53,7 +53,7 @@ const Checkout = () => {
   const [createRazorpayOrder, { isLoading: isCreatingOrder }] = useCreateRazorpayOrderMutation();
   const [verifyRazorpayPayment, { isLoading: isVerifyingPayment }] = useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8();
   const [createDemoOrder, { isLoading: isCreatingDemoOrder }] = useCreateDemoOrderMutation();
-  const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); // <-- ADDED HOOK
+  const [createCodOrder, { isLoading: isCreatingCodOrder }] = useCreateCodOrderMutation(); 
   const { data: profile } = useGetUserProfileQuery();
   const [updateProfile] = useUpdateUserProfileMutation();
 
@@ -117,7 +117,6 @@ const Checkout = () => {
     toast('Coupon removed.', { icon: '🗑️' });
   };
 
-  // ADDED isCreatingCodOrder to loading state check
   const isBusy = isCreatingOrder || isVerifyingPayment || isCreatingDemoOrder || isCreatingCodOrder; 
 
   const handleInputChange = (e) => {
@@ -141,7 +140,6 @@ const Checkout = () => {
     const { flatNumber, street, landmark, city, pincode } = shippingDetails;
     const currentAddresses = profile.addresses || [];
     
-    // Check if exactly this address is already saved
     const exists = currentAddresses.some(a => 
       a.flatNumber === flatNumber && 
       a.street === street && 
@@ -150,7 +148,6 @@ const Checkout = () => {
     );
 
     if (!exists) {
-      // Append and keep only the latest 3
       const newAddresses = [...currentAddresses, { flatNumber, street, landmark, city, pincode }].slice(-3);
       try {
         await updateProfile({ name: profile.name, addresses: newAddresses }).unwrap();
@@ -235,7 +232,6 @@ const Checkout = () => {
     }
 
     try {
-      // NEW: Cash on Delivery Logic
       if (paymentMethod === 'cod') {
         await createCodOrder({
           orderItems: cartItems,
@@ -397,7 +393,6 @@ const Checkout = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {/* COD OPTION ADDED HERE */}
               <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'cod' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                 <div className="flex items-center justify-between">
                   <span className="material-symbols-outlined text-primary-container text-[28px]">local_mall</span>
