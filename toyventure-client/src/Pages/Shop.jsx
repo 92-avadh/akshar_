@@ -30,8 +30,17 @@ const defaultFilters = {
 const EMPTY_ARRAY = []; 
 
 // ==========================================
-// FIXED: Added the hidden <input> element so the label triggers the onChange event
+// Helper to resolve image paths correctly for backend uploads
 // ==========================================
+const resolveImage = (imgPath) => {
+  if (!imgPath) return 'https://via.placeholder.com/400x400?text=No+Image';
+  if (imgPath.startsWith('http') || imgPath.startsWith('data:')) return imgPath;
+  
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const baseUrl = apiBaseUrl.replace('/api', '');
+  return `${baseUrl}${imgPath}`;
+};
+
 const Checkbox = ({ label, checked, onChange }) => (
   <label className="flex items-center gap-3 cursor-pointer group">
     <input 
@@ -64,7 +73,6 @@ const Shop = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // FIXED: Split comma-separated values into arrays for initial state
   const [activeFilters, setActiveFilters] = useState({
     ...defaultFilters,
     selectedAges: initialAge ? initialAge.split(',') : [],
@@ -99,7 +107,6 @@ const Shop = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [localSearch, searchQuery, searchParams, setSearchParams]);
 
-  // FIXED: Properly handle arrays and compare URL params to state
   useEffect(() => {
     const currentAgeParam = searchParams.get('age');
     const currentTagParam = searchParams.get('tag');
@@ -162,7 +169,6 @@ const Shop = () => {
   const openSidebar = () => { setTempFilters(activeFilters); setIsSidebarOpen(true); document.body.style.overflow = 'hidden'; };
   const closeSidebar = () => { setIsSidebarOpen(false); document.body.style.overflow = 'unset'; };
   
-  // FIXED: Push updated filter arrays to the URL
   const applyFilters = () => { 
       setActiveFilters(tempFilters); 
       setPage(1); 
@@ -170,14 +176,12 @@ const Shop = () => {
       
       const newParams = new URLSearchParams(searchParams);
       
-      // Update or delete Age param
       if (tempFilters.selectedAges.length > 0) {
          newParams.set('age', tempFilters.selectedAges.join(','));
       } else {
          newParams.delete('age');
       }
       
-      // Update or delete Tag param
       if (tempFilters.selectedTags.length > 0) {
          newParams.set('tag', tempFilters.selectedTags.join(','));
       } else {
@@ -187,7 +191,6 @@ const Shop = () => {
       setSearchParams(newParams);
   };
   
-  // FIXED: Ensure age and tag params are properly cleared from URL
   const clearFilters = () => {
     setTempFilters(defaultFilters); 
     setActiveFilters(defaultFilters); 
@@ -497,6 +500,11 @@ const Shop = () => {
               {filteredProducts.map((product, index) => {
                 const isFavorited = wishlistItems.some((wItem) => wItem._id === product._id);
                 const discountPercent = getDiscountPercent(product.price, product.oldPrice);
+                
+                // Determine if there is a second image to show on hover
+                const hoverImage = (product.images && product.images.length > 1 && product.images[1] !== product.img) 
+                    ? product.images[1] 
+                    : null;
 
                 return (
                   <ScrollReveal 
@@ -506,20 +514,14 @@ const Shop = () => {
                     onMouseEnter={() => prefetchProduct(product._id)} 
                     className="flex flex-col group relative card-surface p-4 rounded-[2.5rem] hover:-translate-y-2 transition-all duration-300 shadow-sm hover:shadow-xl border border-white"
                   >
-                    <button onClick={() => { dispatch(toggleFavorite(product)); isFavorited ? toast.error('Removed from favorites') : toast.success('Added to favorites!'); }} className="absolute top-6 right-16 z-20 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-zinc-100">
+                    {/* Top Right Favorite Icon Only */}
+                    <button onClick={() => { dispatch(toggleFavorite(product)); isFavorited ? toast.error('Removed from favorites') : toast.success('Added to favorites!'); }} className="absolute top-6 right-6 z-30 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-zinc-100">
                       <span className={`material-symbols-outlined text-[20px] transition-colors ${isFavorited ? 'text-red-500 filled' : 'text-zinc-400 hover:text-red-400'}`}>favorite</span>
                     </button>
 
-                    <button 
-                      onClick={() => handleAddToCartClick(product)} 
-                      className={`absolute top-6 right-6 z-20 backdrop-blur-md p-2.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all hover:scale-110 border border-zinc-100 ${product.countInStock > 0 ? 'bg-white/90 text-primary-container hover:bg-primary-container hover:text-white' : 'bg-red-50 text-red-500 hover:bg-red-500 hover:text-white'}`}
-                    >
-                      <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
-                    </button>
-
-                    <Link to={`/product/${product._id}`} className="w-full aspect-square bg-slate-50 rounded-[2rem] overflow-hidden relative mb-5 shadow-inner border border-slate-100/50 block z-10 isolate transform-gpu flex items-center justify-center p-4">
+                    <Link to={`/product/${product._id}`} className="w-full aspect-square bg-slate-50 rounded-[2rem] overflow-hidden relative mb-5 shadow-inner border border-slate-100/50 flex flex-col items-center justify-center p-4 z-10 isolate transform-gpu">
                       {product.tag && (
-                        <div className="absolute top-3 left-3 bg-white/90 text-zinc-900 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm z-10">
+                        <div className="absolute top-3 left-3 bg-white/90 text-zinc-900 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm z-20">
                           {product.tag}
                         </div>
                       )}
@@ -532,7 +534,32 @@ const Shop = () => {
                          </div>
                       )}
 
-                      <img alt={product.title} className={`w-full h-full object-contain group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-700 ease-out mix-blend-multiply ${product.countInStock === 0 ? 'opacity-60 grayscale-[50%]' : ''}`} src={product.img} />
+                      {/* Image Logic handling multiple images */}
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        {hoverImage ? (
+                          <>
+                            <img alt={product.title} className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 mix-blend-multiply group-hover:opacity-0 group-hover:scale-95 ${product.countInStock === 0 ? 'opacity-60 grayscale-[50%]' : ''}`} src={resolveImage(product.img)} />
+                            <img alt={`${product.title} alternate`} className={`absolute inset-0 w-full h-full object-contain transition-all duration-500 mix-blend-multiply opacity-0 scale-105 group-hover:opacity-100 group-hover:scale-100 ${product.countInStock === 0 ? 'opacity-60 grayscale-[50%]' : ''}`} src={resolveImage(hoverImage)} />
+                          </>
+                        ) : (
+                           <img alt={product.title} className={`w-full h-full object-contain transition-transform duration-700 ease-out mix-blend-multiply group-hover:scale-110 ${product.countInStock === 0 ? 'opacity-60 grayscale-[50%]' : ''}`} src={resolveImage(product.img)} />
+                        )}
+                      </div>
+
+                      {/* Bottom Sliding Add To Cart Button */}
+                      <div className="absolute -bottom-16 left-0 right-0 flex justify-center px-3 transition-all duration-300 group-hover:bottom-4 z-30">
+                        <button
+                          onClick={(e) => {
+                             e.preventDefault(); // Prevent Link navigation
+                             e.stopPropagation();
+                             handleAddToCartClick(product);
+                          }}
+                          className={`w-full py-2.5 rounded-2xl backdrop-blur-md shadow-lg flex items-center justify-center gap-2 font-black transition-transform hover:scale-105 text-sm ${product.countInStock > 0 ? 'bg-zinc-900/90 text-white hover:bg-black' : 'bg-red-50/90 text-red-500 border border-red-100 hover:bg-red-100'}`}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                          {product.countInStock > 0 ? 'Add to Cart' : 'Waitlist'}
+                        </button>
+                      </div>
                     </Link>
 
                     <div className="px-2 flex flex-col flex-1 justify-between">

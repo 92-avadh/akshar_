@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion'; 
@@ -14,6 +14,18 @@ import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 import { toggleFavorite } from '../features/wishlist/wishlistSlice'; 
 import SkeletonProductDetail from '../components/SkeletonProductDetail.jsx';
 import ScrollReveal from '../components/ScrollReveal.jsx'; 
+
+// ==========================================
+// Helper to resolve image paths correctly for backend uploads
+// ==========================================
+const resolveImage = (imgPath) => {
+  if (!imgPath) return 'https://via.placeholder.com/400x400?text=No+Image';
+  if (imgPath.startsWith('http') || imgPath.startsWith('data:')) return imgPath;
+  
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const baseUrl = apiBaseUrl.replace('/api', '');
+  return `${baseUrl}${imgPath}`;
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -124,16 +136,6 @@ const ProductDetail = () => {
     return Math.round(((op - p) / op) * 100);
   };
 
-  if (isLoading) return <SkeletonProductDetail />;
-  if (error || !product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <h2 className="text-2xl font-bold text-red-500">Product not found!</h2>
-      </div>
-    );
-  }
-
-  // ================= NEW ADD TO CART LOGIC =================
   const handleAddToCart = () => {
     const variantString = [selectedColor, selectedSize].filter(Boolean).join(' - ');
     const cartPayload = { 
@@ -202,13 +204,52 @@ const ProductDetail = () => {
     setZoomPosition({ x, y });
   };
 
-  const slideNext = () => {
+  const slideNext = useCallback(() => {
     setCurrentModalIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
-  };
+  }, [galleryImages.length]);
 
-  const slidePrev = () => {
+  const slidePrev = useCallback(() => {
     setCurrentModalIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
-  };
+  }, [galleryImages.length]);
+
+  // ==========================================
+  // FIX: Keyboard Event Listener for Arrow Keys & Escape
+  // ==========================================
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isImageModalOpen) return;
+      
+      if (e.key === 'ArrowRight') {
+        slideNext();
+      } else if (e.key === 'ArrowLeft') {
+        slidePrev();
+      } else if (e.key === 'Escape') {
+        setIsImageModalOpen(false);
+      }
+    };
+
+    if (isImageModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      // Prevent scrolling while modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isImageModalOpen, slideNext, slidePrev]);
+
+  if (isLoading) return <SkeletonProductDetail />;
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <h2 className="text-2xl font-bold text-red-500">Product not found!</h2>
+      </div>
+    );
+  }
 
   const isMainProductFavorited = wishlistItems.some(w => w._id === product._id);
   const discountPercent = getDiscountPercent(displayPriceValue, displayOldPriceValue);
@@ -239,7 +280,7 @@ const ProductDetail = () => {
             onMouseMove={handleMouseMoveModal}
           >
             <img 
-              src={galleryImages[currentModalIndex]} 
+              src={resolveImage(galleryImages[currentModalIndex])} 
               alt={`${product.title} zoomed`} 
               className={`max-w-full max-h-full object-contain transition-transform duration-100 ease-linear transform-gpu ${isZooming ? 'scale-[2.5]' : 'scale-100'}`}
               style={{ transformOrigin: isZooming ? `${zoomPosition.x}% ${zoomPosition.y}%` : 'center', willChange: 'transform' }}
@@ -261,7 +302,7 @@ const ProductDetail = () => {
                           onClick={() => setCurrentModalIndex(idx)}
                           className={`w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${currentModalIndex === idx ? 'border-primary-container scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
                       >
-                          <img src={img} className="w-full h-full object-cover bg-white" />
+                          <img src={resolveImage(img)} className="w-full h-full object-cover bg-white" />
                       </button>
                   ))}
                </div>
@@ -287,7 +328,7 @@ const ProductDetail = () => {
               onClick={() => openModal(mainImage)}
             >
               <img
-                src={mainImage}
+                src={resolveImage(mainImage)}
                 alt={product.title}
                 decoding="async"
                 className={`w-full h-full object-cover mix-blend-multiply transition-transform duration-300 hover:scale-[1.03] ${displayStock === 0 ? 'opacity-80' : ''}`}
@@ -304,7 +345,7 @@ const ProductDetail = () => {
                   onClick={() => setMainImage(imgUrl)}
                   className={`w-20 h-20 shrink-0 rounded-2xl overflow-hidden border-[3px] transition-all duration-300 bg-white shadow-sm transform-gpu ${mainImage === imgUrl ? 'border-primary-container shadow-lg scale-110' : 'border-white/80 opacity-60 hover:opacity-100 hover:scale-105'}`}
                 >
-                  <img src={imgUrl} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply p-1" />
+                  <img src={resolveImage(imgUrl)} alt={`Angle ${idx + 1}`} className="w-full h-full object-cover mix-blend-multiply p-1" />
                 </button>
               ))}
             </div>
@@ -554,7 +595,7 @@ const ProductDetail = () => {
                       <span className={`material-symbols-outlined text-[20px] transition-colors ${isRelFavorited ? 'text-red-500 filled' : 'text-zinc-400 hover:text-red-400'}`}>favorite</span>
                     </button>
                     <Link to={`/product/${relProduct._id}`} className="w-full aspect-[4/3] bg-white/50 rounded-[1.5rem] overflow-hidden relative mb-4 shadow-inner border border-white/60 block z-10 isolate transform-gpu">
-                      <img alt={relProduct.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply transform-gpu" src={relProduct.img} />
+                      <img alt={relProduct.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 mix-blend-multiply transform-gpu" src={resolveImage(relProduct.img)} />
                     </Link>
                     <div className="px-2 flex flex-col flex-1">
                       <Link to={`/product/${relProduct._id}`}>
