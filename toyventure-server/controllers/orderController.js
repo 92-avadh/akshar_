@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const sendEmail = require('../utils/sendEmail');
 const generateInvoice = require('../utils/generateInvoice');
+const crypto = require('crypto'); // FIX: Added crypto for unique key generation
 
 // @desc    Create new order (specifically for COD)
 // @route   POST /api/orders
@@ -30,7 +31,9 @@ const createOrder = async (req, res) => {
             paymentStatus: 'pending', // Pending until delivery boy collects cash
             isPaid: false,
             couponCode: couponCode || null,
-            inventoryCommitted: true 
+            inventoryCommitted: true,
+            // FIX APPLIED HERE: Generate a unique idempotency key if one isn't provided
+            idempotencyKey: req.body.idempotencyKey || `cod_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`
         });
 
         const createdOrder = await order.save();
@@ -39,10 +42,10 @@ const createOrder = async (req, res) => {
         if (req.user && req.user.email) {
             sendEmail({
                 email: req.user.email,
-                subject: 'Your ToyBlix COD Order is Confirmed! 🚀',
+                subject: 'Your ToyBlix COD Order is Confirmed! 🎉',
                 html: `
                     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-                        <h2 style="color: #18181b;">Order Confirmed! 🎉</h2>
+                        <h2 style="color: #18181b;">Order Confirmed! 🥳</h2>
                         <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
                             Thank you for choosing ToyBlix! Your Cash on Delivery order <strong>#${String(createdOrder._id).slice(-8).toUpperCase()}</strong> has been successfully placed.
                         </p>
@@ -153,10 +156,10 @@ const updateOrderStatus = async (req, res) => {
 
                 sendEmail({
                     email: order.user.email,
-                    subject: `Your ToyBlix Order has been Dispatched! 🚚`,
+                    subject: `Your ToyBlix Order has been Dispatched! 📦`,
                     html: `
                         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
-                            <h2 style="color: #18181b;">It's on the way! 🚚</h2>
+                            <h2 style="color: #18181b;">It's on the way! 📦</h2>
                             <p style="color: #52525b; font-size: 16px; line-height: 1.5;">
                                 Hi ${order.user.name}, your order <strong>#${String(order._id).slice(-8).toUpperCase()}</strong> has been dispatched ${courierText}.
                             </p>

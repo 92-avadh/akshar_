@@ -111,7 +111,16 @@ const orderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 orderSchema.index({ user: 1, createdAt: -1 });
-orderSchema.index({ user: 1, idempotencyKey: 1 }, { unique: true, sparse: true });
+
+// FIX APPLIED HERE: Replaced unique/sparse with partialFilterExpression
+orderSchema.index(
+    { user: 1, idempotencyKey: 1 }, 
+    { 
+        unique: true, 
+        partialFilterExpression: { idempotencyKey: { $type: "string" } } 
+    }
+);
+
 orderSchema.index({ 'razorpay.orderId': 1 }, { unique: true, sparse: true });
 orderSchema.index({ 'razorpay.paymentId': 1 }, { unique: true, sparse: true });
 
