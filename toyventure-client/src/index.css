@@ -7,11 +7,11 @@
    ========================================== */
 @layer base {
   body {
-    @apply font-sans text-zinc-800 bg-surface; 
+    @apply font-sans text-zinc-800 bg-surface;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight; 
+    @apply font-heading tracking-tight;
   }
 
   input, textarea, button, select {
@@ -30,7 +30,6 @@ html {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* NEW: This tells the icon to become solid when the "filled" class is added */
 .material-symbols-outlined.filled {
   font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
@@ -47,33 +46,29 @@ html {
 /* ================== MERGED UI STYLES ================== */
 
 @layer components {
-  /* Premium Glassmorphism Card from First Project */
   .card-surface {
-    /* Changed bg-white/85 to bg-white/95 and removed backdrop-blur */
-    /* This looks almost identical but improves scrolling performance by 10x */
     @apply bg-white/95 border border-white/80 shadow-card dark:border-white/10 dark:bg-zinc-900/90;
   }
   
-  /* Create a specific class for large hero panels that CAN afford the blur */
   .glass-panel {
     @apply bg-white/80 backdrop-blur-md border border-white/70 shadow-card;
   }
+
   .fade-in {
     animation: fadeIn 0.5s ease-out forwards;
   }
 
   .reveal-section {
     opacity: 0;
-    /* Use translate3d to force hardware (GPU) acceleration */
     transform: translate3d(0, 32px, 0) scale(0.985);
     transition: opacity 700ms ease-out, transform 700ms cubic-bezier(0.2, 0.9, 0.2, 1);
-    /* Removed will-change to prevent VRAM overload on grid items */
   }
 
   .reveal-section.is-visible {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
   }
+
   .float-soft {
     animation: floatSoft 6s ease-in-out infinite;
   }
