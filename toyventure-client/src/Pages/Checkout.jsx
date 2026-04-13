@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   useCreateRazorpayOrderMutation,
-  useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, // <-- FIXED
   useGetUserProfileQuery,
   useCreateDemoOrderMutation,
   useCreateCodOrderMutation,
