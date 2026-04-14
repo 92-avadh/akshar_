@@ -11,8 +11,35 @@ const errorHandler = (err, req, res, next) => {
     return next(err);
   }
 
-  const statusCode = res.statusCode >= 400 ? res.statusCode : 500;
+  // 1. Determine the Status Code
+  let statusCode = res.statusCode >= 400 ? res.statusCode : 500;
+
+  // Handle Mongoose Validation Errors automatically as 400 Bad Request
+  if (err.name === 'ValidationError') {
+    statusCode = 400;
+  }
   
+  // Handle Mongoose bad ObjectId (e.g., product not found) as 404
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    statusCode = 404;
+    err.message = 'Resource not found';
+  }
+
+  // ==========================================
+  // 2. CLIENT ERRORS (400 - 499)
+  // Expected validation failures. Show the real message, DO NOT send an email.
+  // ==========================================
+  if (statusCode >= 400 && statusCode < 500) {
+    return res.status(statusCode).json({
+      message: err.message || 'Invalid request',
+      stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    });
+  }
+
+  // ==========================================
+  // 3. SERVER CRASHES (500+)
+  // Real bugs. Send the email and hide the ugly code from the user.
+  // ==========================================
   const errorPayload = {
     level: 'error',
     type: 'request_error',
@@ -25,8 +52,8 @@ const errorHandler = (err, req, res, next) => {
     time: new Date().toISOString()
   };
 
-  // Log locally without breaking the terminal with massive stacks
-  console.error(`[ERROR] ${statusCode} - ${req.originalUrl} - ${err.message}`);
+  // Log locally
+  console.error(`[CRITICAL ERROR] ${statusCode} - ${req.originalUrl} - ${err.message}`);
 
   // Fire-and-forget: Send detailed crash report to developer email
   sendEmail({
@@ -46,7 +73,7 @@ const errorHandler = (err, req, res, next) => {
     `
   }).catch(e => console.error("Failed to send crash report email:", e));
 
-  // Show fixed, user-friendly template/message to the client
+  // Show fixed, user-friendly template to the client for genuine crashes
   res.status(statusCode).json({
     message: 'Oops! Something went wrong. Our engineering team has been automatically notified and is looking into it.',
     errorId: errorPayload.requestId
