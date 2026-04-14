@@ -423,36 +423,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= STAY CONNECTED ================= */}
-      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20 flex justify-center items-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }} 
-          whileInView={{ opacity: 1, y: 0 }} 
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-[900px] bg-gradient-to-br from-red-600 via-red-800 to-red-950 rounded-[3rem] p-12 md:p-20 flex flex-col items-center justify-center gap-10 text-center mx-auto relative overflow-hidden shadow-2xl shadow-red-900/20"
-        >
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-red-500 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
-          <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_center,_white_1px,transparent_1px)] bg-[length:24px_24px] pointer-events-none"></div>
-          
-          <div className="flex flex-col items-center relative z-10">
-            <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter">Stay Connected</h3>
-            <p className="text-red-100 font-medium mt-4 max-w-md opacity-90">Get the latest minimalist toys & exclusive offers directly in your inbox.</p>
-          </div>
-          
-          <form className="flex w-full max-w-[500px] bg-white/10 backdrop-blur-md border border-white/20 rounded-full p-2 items-center mx-auto relative z-10 transition-all focus-within:bg-white/15 focus-within:border-white/30">
-            <input 
-              type="email" 
-              placeholder="Your email address" 
-              className="flex-1 bg-transparent px-6 py-3 outline-none text-white placeholder:text-red-200 font-medium"
-            />
-            <button type="button" className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-700 hover:bg-red-50 hover:scale-105 transition-all shrink-0 shadow-md">
-              <span className="material-symbols-outlined text-[20px] font-bold">arrow_forward</span>
-            </button>
-          </form>
-        </motion.div>
-      </section>
-      
     </main>
   );
 };
