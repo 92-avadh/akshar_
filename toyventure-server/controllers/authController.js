@@ -19,8 +19,7 @@ const registerUser = async (req, res, next) => {
     const { name, email, mobileNumber, password } = req.body;
 
     if (!email && !mobileNumber) {
-      res.status(400);
-      return next(new Error('Please provide an email or mobile number'));
+      return res.status(400).json({ message: 'Please provide an email or mobile number' });
     }
 
     const query = [];
@@ -30,8 +29,7 @@ const registerUser = async (req, res, next) => {
     const userExists = await User.findOne({ $or: query });
 
     if (userExists) {
-      res.status(400);
-      return next(new Error('User already exists'));
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     const user = await User.create({
@@ -51,11 +49,10 @@ const registerUser = async (req, res, next) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(400);
-      next(new Error('Invalid user data'));
+      return res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    next(error);
+    next(error); // Genuine errors will still go to your error handler
   }
 };
 
@@ -67,8 +64,7 @@ const loginUser = async (req, res, next) => {
     const { identifier, password } = req.body;
 
     if (!identifier || !password) {
-      res.status(400);
-      return next(new Error('Please provide identifier and password'));
+      return res.status(400).json({ message: 'Please provide identifier and password' });
     }
 
     const user = await User.findOne({
@@ -76,8 +72,7 @@ const loginUser = async (req, res, next) => {
     }).select('+password');
 
     if (user && user.isBanned) {
-      res.status(403);
-      return next(new Error('Your account has been banned. Please contact support.'));
+      return res.status(403).json({ message: 'Your account has been banned. Please contact support.' });
     }
 
     if (user && (await user.matchPassword(password))) {
@@ -90,8 +85,7 @@ const loginUser = async (req, res, next) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401);
-      next(new Error('Invalid credentials'));
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (error) {
     next(error);
@@ -106,8 +100,7 @@ const sendOtp = async (req, res, next) => {
     const { email, mobileNumber } = req.body;
 
     if (!email && !mobileNumber) {
-      res.status(400);
-      return next(new Error('Email or mobile number required for OTP'));
+      return res.status(400).json({ message: 'Email or mobile number required for OTP' });
     }
 
     const identifierKey = email || mobileNumber;
@@ -203,7 +196,7 @@ const sendOtp = async (req, res, next) => {
         console.log(`📧 OTP Email successfully sent to: ${identifierKey}`);
       } catch (emailError) {
         console.error('Failed to send OTP email:', emailError);
-        return next(new Error('Failed to send OTP email. Please check your email configuration.'));
+        return res.status(500).json({ message: 'Failed to send OTP email. Please check your email configuration.' });
       }
     } else {
       // Disabled 2Factor implementation, outputting to terminal instead
@@ -233,15 +226,13 @@ const verifyOtp = async (req, res, next) => {
     const { email, mobileNumber, otp } = req.body;
 
     if (!otp) {
-      res.status(400);
-      return next(new Error('OTP is required'));
+      return res.status(400).json({ message: 'OTP is required' });
     }
 
     const identifierKeyRaw = email || mobileNumber;
 
     if (!identifierKeyRaw) {
-      res.status(400);
-      return next(new Error('Email or mobile number is required'));
+      return res.status(400).json({ message: 'Email or mobile number is required' });
     }
 
     const identifierKey = String(identifierKeyRaw).trim();
@@ -260,9 +251,9 @@ const verifyOtp = async (req, res, next) => {
     }
     console.log(`------------------------------\n`);
 
+    // FIX: Using res.status().json() instead of throwing next(new Error())
     if (!challenge || challenge.otpHash !== incomingOtp || challenge.expiresAt < new Date()) {
-      res.status(401);
-      return next(new Error('Invalid or expired OTP'));
+      return res.status(401).json({ message: 'Invalid or expired OTP' });
     }
 
     await OtpChallenge.deleteOne({ _id: challenge._id });
@@ -272,8 +263,7 @@ const verifyOtp = async (req, res, next) => {
     });
 
     if (user && user.isBanned) {
-      res.status(403);
-      return next(new Error('Your account has been banned. Please contact support.'));
+      return res.status(403).json({ message: 'Your account has been banned. Please contact support.' });
     }
 
     if (!user) {
