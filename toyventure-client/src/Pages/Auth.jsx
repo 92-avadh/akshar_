@@ -16,7 +16,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
   
-  // NEW: State for Terms and Conditions agreement
+  // State for Terms and Conditions agreement
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   const navigate = useNavigate();
@@ -104,11 +104,11 @@ const Auth = () => {
       }
 
     } catch (err) {
-      toast.error(err?.data?.message || 'Invalid OTP. Please check the code and try again.');
+      // FIX: Show the invalid OTP message from backend, but DON'T kick them back to step 1
+      toast.error(err?.data?.message || 'Invalid or Expired OTP. Please check the code and try again.');
       
+      // Just clear the OTP input so they can try re-typing it
       setOtp('');
-      setIdentifier('');
-      setStep(1);
     }
   };
 
@@ -186,7 +186,6 @@ const Auth = () => {
               />
             </div>
 
-            {/* NEW: Terms and Conditions Checkbox */}
             <div className="flex items-start gap-3 mt-4 bg-red-50/30 p-3 rounded-xl border border-red-50/50">
               <input
                 type="checkbox"
@@ -207,7 +206,6 @@ const Auth = () => {
               </label>
             </div>
 
-            {/* Button disables if identifier is empty OR terms are not agreed to */}
             <button 
               type="submit" 
               disabled={isSending || !identifier || !agreeTerms} 
@@ -234,7 +232,8 @@ const Auth = () => {
               />
             </div>
 
-            <button type="submit" disabled={isVerifying || otp.length < 4} className="w-full py-4 mt-4 bg-red-600 text-white font-black text-lg rounded-2xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
+            {/* FIX: Changed otp.length < 4 to otp.length < 6 */}
+            <button type="submit" disabled={isVerifying || otp.length < 6} className="w-full py-4 mt-4 bg-red-600 text-white font-black text-lg rounded-2xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
               {isVerifying ? 'Verifying...' : 'Verify & Continue'}
               {!isVerifying && <span className="material-symbols-outlined text-[20px]">verified_user</span>}
             </button>
