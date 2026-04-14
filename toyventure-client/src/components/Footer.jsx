@@ -1,16 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import toast from "react-hot-toast";
-// Import the correct contact mutation from apiSlice
-import { useSubmitContactMessageMutation } from '../features/api/apiSlice';
 
 const Footer = () => {
   const [offset, setOffset] = React.useState(0);
-  const [email, setEmail] = useState("");
-  
-  // Hooking up the correct mutation your contact page uses
-  const [submitMessage, { isLoading }] = useSubmitContactMessageMutation();
 
   React.useEffect(() => {
     const handleScroll = () => setOffset(window.scrollY);
@@ -18,73 +11,42 @@ const Footer = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSubscribe = async (e) => {
-    e.preventDefault();
-    if (!email) return;
-
-    try {
-      // Send the subscription as a contact message so the Admin sees it in the bell icon!
-      await submitMessage({
-        name: "Newsletter Subscriber",
-        email: email,
-        message: `Please add ${email} to the newsletter mailing list.`,
-      }).unwrap();
-      
-      toast.success("Successfully subscribed! 🎉", {
-        style: { borderRadius: '16px', background: '#333', color: '#fff' }
-      });
-      setEmail(""); // Clear the input
-    } catch (error) {
-      toast.error("Failed to subscribe. Please try again.");
-      console.error(error);
-    }
-  };
-
   return (
-    <footer className="relative bg-red-950 pt-16 pb-48 overflow-hidden mt-auto w-full flex-shrink-0 group">
+    <footer className="relative bg-red-950 pt-16 pb-48 overflow-hidden mt-auto w-full group flex-shrink-0">
 
       {/* ================= PREMIUM BACKGROUND ================= */}
       <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-red-900 to-red-800/40 z-0"></div>
 
       {/* Soft Glow */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-red-900/30 blur-[140px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-red-900/30 blur-[140px] rounded-full"></div>
 
       {/* ================= CONTENT WRAPPER ================= */}
       <div className="relative z-20 max-w-[1400px] mx-auto px-6 md:px-12">
         
-        {/* ================= STAY CONNECTED ================= */}
-        <div className="w-full max-w-[900px] bg-gradient-to-br from-red-600 via-red-800 to-red-950 rounded-[3rem] p-12 md:p-20 flex flex-col items-center justify-center gap-10 text-center mx-auto relative overflow-hidden shadow-2xl shadow-red-900/20 mb-20 border border-white/5">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-red-500 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
-          <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_center,_white_1px,transparent_1px)] bg-[length:24px_24px] pointer-events-none"></div>
+        {/* ================= STAY CONNECTED (Moved from Home) ================= */}
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 md:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
+          {/* Subtle accent glow behind the newsletter box */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500/20 blur-3xl rounded-full"></div>
           
-          <div className="flex flex-col items-center relative z-10">
-            <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter">Stay Connected</h3>
-            <p className="text-red-100 font-medium mt-4 max-w-md opacity-90">Get the latest minimalist toys & exclusive offers directly in your inbox.</p>
+          <div className="max-w-md relative z-10 text-center md:text-left">
+            <h3 className="text-3xl font-black text-white mb-2 tracking-tight">Stay Connected</h3>
+            <p className="text-red-100/80 text-sm leading-relaxed">
+              Join our newsletter for the latest toy drops, exclusive educational kits, and playful updates directly to your inbox.
+            </p>
           </div>
           
-          <form 
-            onSubmit={handleSubscribe}
-            className="flex w-full max-w-[500px] bg-white/10 backdrop-blur-md rounded-full p-2 items-center mx-auto relative z-10 transition-all focus-within:bg-white/15" 
-          >
+          <form className="flex w-full md:w-auto bg-white/20 backdrop-blur-sm rounded-full p-1.5 flex-grow max-w-md shadow-inner relative z-10" onSubmit={(e) => e.preventDefault()}>
             <input 
               type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email address" 
-              className="flex-1 bg-transparent px-6 py-3 border-none outline-none focus:ring-0 focus:outline-none text-white placeholder:text-red-200 font-medium"
+              placeholder="Enter your email address..." 
+              className="w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none text-white placeholder:text-red-200 px-5 py-3 text-sm"
               required
-              disabled={isLoading}
             />
             <button 
               type="submit" 
-              disabled={isLoading}
-              className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-700 hover:bg-red-50 hover:scale-105 transition-all shrink-0 shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+              className="bg-white text-red-700 font-bold px-6 py-3 rounded-full hover:bg-red-50 transition-colors shadow-md shrink-0 text-sm"
             >
-              {isLoading ? (
-                <span className="material-symbols-outlined text-[20px] font-bold animate-spin">sync</span>
-              ) : (
-                <span className="material-symbols-outlined text-[20px] font-bold">arrow_forward</span>
-              )}
+              Subscribe
             </button>
           </form>
         </div>
@@ -130,7 +92,7 @@ const Footer = () => {
 
       {/* ================= CLEAN SVG SCENE ================= */}
       <div className="absolute bottom-0 w-full h-[280px] z-10 pointer-events-none overflow-hidden">
-        <svg viewBox="0 0 1440 400" preserveAspectRatio="none" className="w-full h-full block">
+        <svg viewBox="0 0 1440 400" preserveAspectRatio="none" className="w-full h-full">
 
           {/* BACK HILL */}
           <path
