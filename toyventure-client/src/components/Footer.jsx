@@ -15,9 +15,9 @@ const Footer = () => {
     <footer className="relative bg-red-950 pt-28 pb-52 overflow-hidden mt-20 group">
 
       {/* ================= PREMIUM BACKGROUND ================= */}
-      <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-red-900/90 to-red-800/50 z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-red-900 to-red-800/40 z-0"></div>
 
-      {/* Glow */}
+      {/* Soft Glow */}
       <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-red-900/30 blur-[140px] rounded-full"></div>
 
       {/* ================= CONTENT ================= */}
@@ -60,28 +60,22 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* ================= PREMIUM SVG SCENE ================= */}
-      <div className="absolute bottom-0 w-full h-[360px] z-10">
+      {/* ================= CLEAN SVG SCENE ================= */}
+      <div className="absolute bottom-0 w-full h-[320px] z-10">
 
         <svg viewBox="0 0 1440 400" className="w-full h-full">
 
-          {/* SKY */}
-          <defs>
-            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#fecaca"/>
-              <stop offset="100%" stopColor="#7f1d1d"/>
-            </linearGradient>
-          </defs>
+          {/* DARK SKY (NO WHITE) */}
+          <rect width="1440" height="400" fill="#7f1d1d" />
 
-          <rect width="1440" height="400" fill="url(#sky)" />
-
-          {/* HILLS */}
+          {/* BACK HILL */}
           <path
             d="M0,260 C300,200 600,300 900,240 C1200,180 1440,260 1440,260 L1440,400 L0,400 Z"
-            fill="#15803d"
+            fill="#14532d"
             style={{ transform: `translateY(${offset * 0.05}px)` }}
           />
 
+          {/* FRONT HILL */}
           <path
             d="M0,300 C300,260 600,320 900,280 C1200,240 1440,320 1440,320 L1440,400 L0,400 Z"
             fill="#22c55e"
@@ -90,56 +84,32 @@ const Footer = () => {
 
           {/* ================= CARTOON KIDS ================= */}
 
-          {/* LEFT BOY */}
+          {/* LEFT */}
           <g transform={`translate(300, ${250 - offset * 0.12})`}>
-            <circle cx="0" cy="-40" r="22" fill="#fde68a"/>
+            <circle cy="-40" r="22" fill="#fde68a"/>
             <rect x="-20" y="-10" width="40" height="60" rx="14" fill="#f97316"/>
             <circle cx="-8" cy="-45" r="3" fill="#000"/>
             <circle cx="8" cy="-45" r="3" fill="#000"/>
-            <path d="M-8 -35 Q0 -30 8 -35" stroke="#000" strokeWidth="2" fill="none"/>
+            <path d="M-8 -35 Q0 -30 8 -35" stroke="#000" strokeWidth="2"/>
           </g>
 
-          {/* CENTER GIRL */}
+          {/* CENTER */}
           <g transform={`translate(720, ${230 - offset * 0.18})`}>
-            <circle cx="0" cy="-50" r="24" fill="#fca5a5"/>
+            <circle cy="-50" r="24" fill="#fca5a5"/>
             <rect x="-22" y="-10" width="44" height="70" rx="16" fill="#a78bfa"/>
             <circle cx="-8" cy="-55" r="3" fill="#000"/>
             <circle cx="8" cy="-55" r="3" fill="#000"/>
-            <path d="M-10 -45 Q0 -38 10 -45" stroke="#000" strokeWidth="2" fill="none"/>
+            <path d="M-10 -45 Q0 -38 10 -45" stroke="#000" strokeWidth="2"/>
           </g>
 
-          {/* RIGHT BOY */}
+          {/* RIGHT */}
           <g transform={`translate(1100, ${250 - offset * 0.12})`}>
-            <circle cx="0" cy="-40" r="22" fill="#fde68a"/>
+            <circle cy="-40" r="22" fill="#fde68a"/>
             <rect x="-20" y="-10" width="40" height="60" rx="14" fill="#3b82f6"/>
             <circle cx="-8" cy="-45" r="3" fill="#000"/>
             <circle cx="8" cy="-45" r="3" fill="#000"/>
-            <path d="M-8 -35 Q0 -30 8 -35" stroke="#000" strokeWidth="2" fill="none"/>
+            <path d="M-8 -35 Q0 -30 8 -35" stroke="#000" strokeWidth="2"/>
           </g>
-
-          {/* ================= FLOATING TOYS ================= */}
-
-          {/* Floating Cube */}
-          <rect
-            x="500"
-            y={180 - offset * 0.25}
-            width="20"
-            height="20"
-            rx="4"
-            fill="#facc15"
-          >
-            <animate attributeName="y" values="180;160;180" dur="4s" repeatCount="indefinite"/>
-          </rect>
-
-          {/* Ball */}
-          <circle
-            cx="950"
-            cy={170 - offset * 0.3}
-            r="10"
-            fill="#38bdf8"
-          >
-            <animate attributeName="cy" values="170;150;170" dur="3s" repeatCount="indefinite"/>
-          </circle>
 
         </svg>
       </div>
