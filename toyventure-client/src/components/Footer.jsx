@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
 import toast from "react-hot-toast";
-// Import your contact mutation from apiSlice
-import { useCreateContactMessageMutation } from '../features/api/apiSlice';
+// Import the correct contact mutation from apiSlice
+import { useSubmitContactMessageMutation } from '../features/api/apiSlice';
 
 const Footer = () => {
   const [offset, setOffset] = React.useState(0);
   const [email, setEmail] = useState("");
   
-  // Hooking up the same mutation your contact page uses
-  const [createMessage, { isLoading }] = useCreateContactMessageMutation();
+  // Hooking up the correct mutation your contact page uses
+  const [submitMessage, { isLoading }] = useSubmitContactMessageMutation();
 
   React.useEffect(() => {
     const handleScroll = () => setOffset(window.scrollY);
@@ -24,10 +24,9 @@ const Footer = () => {
 
     try {
       // Send the subscription as a contact message so the Admin sees it in the bell icon!
-      await createMessage({
+      await submitMessage({
         name: "Newsletter Subscriber",
         email: email,
-        subject: "New Subscription Request",
         message: `Please add ${email} to the newsletter mailing list.`,
       }).unwrap();
       
@@ -54,37 +53,38 @@ const Footer = () => {
       <div className="relative z-20 max-w-[1400px] mx-auto px-6 md:px-12">
         
         {/* ================= STAY CONNECTED ================= */}
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-8 md:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden">
-          {/* Subtle accent glow behind the newsletter box */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-red-500/20 blur-3xl rounded-full pointer-events-none"></div>
+        <div className="w-full max-w-[900px] bg-gradient-to-br from-red-600 via-red-800 to-red-950 rounded-[3rem] p-12 md:p-20 flex flex-col items-center justify-center gap-10 text-center mx-auto relative overflow-hidden shadow-2xl shadow-red-900/20 mb-20 border border-white/5">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-red-500 rounded-full blur-[100px] opacity-30 pointer-events-none"></div>
+          <div className="absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_center,_white_1px,transparent_1px)] bg-[length:24px_24px] pointer-events-none"></div>
           
-          <div className="max-w-md relative z-10 text-center md:text-left">
-            <h3 className="text-3xl font-black text-white mb-2 tracking-tight">Stay Connected</h3>
-            <p className="text-red-100/80 text-sm leading-relaxed">
-              Join our newsletter for the latest toy drops, exclusive educational kits, and playful updates directly to your inbox.
-            </p>
+          <div className="flex flex-col items-center relative z-10">
+            <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter">Stay Connected</h3>
+            <p className="text-red-100 font-medium mt-4 max-w-md opacity-90">Get the latest minimalist toys & exclusive offers directly in your inbox.</p>
           </div>
           
           <form 
-            className="flex w-full md:w-auto bg-white/20 backdrop-blur-sm rounded-full p-1.5 flex-grow max-w-md shadow-inner relative z-10" 
             onSubmit={handleSubscribe}
+            className="flex w-full max-w-[500px] bg-white/10 backdrop-blur-md rounded-full p-2 items-center mx-auto relative z-10 transition-all focus-within:bg-white/15" 
           >
             <input 
               type="email" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email address..." 
-              // Notice border-0, focus:border-0, focus:ring-0 to remove ALL borders
-              className="w-full bg-transparent border-0 outline-none focus:ring-0 focus:border-0 focus:outline-none text-white placeholder:text-red-200 px-5 py-3 text-sm"
+              placeholder="Your email address" 
+              className="flex-1 bg-transparent px-6 py-3 border-none outline-none focus:ring-0 focus:outline-none text-white placeholder:text-red-200 font-medium"
               required
               disabled={isLoading}
             />
             <button 
               type="submit" 
               disabled={isLoading}
-              className="bg-white text-red-700 font-bold px-6 py-3 rounded-full hover:bg-red-50 transition-colors shadow-md shrink-0 text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-700 hover:bg-red-50 hover:scale-105 transition-all shrink-0 shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Sending..." : "Subscribe"}
+              {isLoading ? (
+                <span className="material-symbols-outlined text-[20px] font-bold animate-spin">sync</span>
+              ) : (
+                <span className="material-symbols-outlined text-[20px] font-bold">arrow_forward</span>
+              )}
             </button>
           </form>
         </div>
