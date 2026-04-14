@@ -124,23 +124,23 @@ const Navbar = () => {
       <nav className={`fixed w-full z-50 transition-all duration-500 ease-in-out ${isScrolled ? 'pt-4 pb-2' : 'py-6'}`}>
         <div className="max-w-[1300px] mx-auto px-4 sm:px-6 relative">
           
-          {/* Main Navbar Bar - Morphs into Premium Red Gradient when scrolled */}
+          {/* Main Navbar Bar - Morphs into Glassy Water Red Gradient when scrolled */}
           <div className={`relative flex items-center justify-between rounded-full transition-all duration-500 ease-in-out ${
             isScrolled 
-            ? 'bg-gradient-to-r from-red-950 via-red-900 to-red-950 backdrop-blur-xl border border-red-800/60 shadow-xl shadow-red-950/30 px-6 py-3' 
+            ? 'bg-red-500/10 bg-gradient-to-r from-red-500/10 via-transparent to-red-600/10 backdrop-blur-xl saturate-150 border border-white/40 shadow-[0_8px_32px_rgba(220,38,38,0.15)] px-6 py-3' 
             : 'bg-transparent px-2'
           }`}>
             
             {/* Left: Logo */}
             <Link to="/" className="flex items-center gap-2 group z-20">
-              <Logo className={`w-9 h-9 md:w-10 md:h-10 transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-slate-900'}`} />
-              <span className={`font-black text-2xl tracking-tight transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-slate-900'}`}>
-                Toy<span className={isScrolled ? 'text-red-400' : 'text-red-600'}>Blix</span>
+              <Logo className="w-9 h-9 md:w-10 md:h-10 text-slate-900 transition-transform duration-300 group-hover:scale-105" />
+              <span className="font-black text-2xl tracking-tight text-slate-900 transition-colors duration-300">
+                Toy<span className="text-red-600">Blix</span>
               </span>
             </Link>
 
             {/* Middle: Desktop Links */}
-            <div className={`hidden md:flex items-center gap-1 p-1 rounded-full transition-colors duration-300 ${isScrolled ? 'bg-red-950/40 border border-red-800/40' : 'bg-transparent'}`}>
+            <div className={`hidden md:flex items-center gap-1 p-1 rounded-full transition-colors duration-300 ${isScrolled ? 'bg-white/20 border border-white/30 shadow-inner' : 'bg-transparent'}`}>
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
@@ -149,7 +149,7 @@ const Navbar = () => {
                     location.pathname === link.path 
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/30' // Red Box for Active Link
                     : isScrolled
-                      ? 'text-red-100 hover:text-white hover:bg-red-800/60' // Dark Red Mode Inactive Links
+                      ? 'text-slate-700 hover:text-red-700 hover:bg-white/50' // Glassy Mode Inactive Links
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' // Light Mode Inactive Links
                   }`}
                 >
@@ -163,12 +163,12 @@ const Navbar = () => {
               
               {/* Favorites Icon */}
               <Link to="/favorites" className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 hidden sm:flex ${
-                isScrolled ? 'text-red-100 hover:bg-red-800/80 hover:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                isScrolled ? 'text-slate-700 hover:bg-white/50 hover:text-red-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}>
                 <span className="material-symbols-outlined text-[22px]">favorite</span>
                 {wishlistItemsCount > 0 && (
                   <span className={`absolute top-0 right-0 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                    isScrolled ? 'bg-red-500 border-red-900' : 'bg-red-600 border-white'
+                    isScrolled ? 'bg-red-500 border-white/50' : 'bg-red-600 border-white'
                   }`}>
                     {wishlistItemsCount}
                   </span>
@@ -179,12 +179,12 @@ const Navbar = () => {
               {isAdmin && (
                 <div className="relative hidden sm:block">
                   <button onClick={() => setIsNotifOpen(!isNotifOpen)} className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                    isScrolled ? 'text-red-100 hover:bg-red-800/80 hover:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                    isScrolled ? 'text-slate-700 hover:bg-white/50 hover:text-red-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                   }`} title="Admin Alerts">
                     <span className="material-symbols-outlined text-[22px]">notifications</span>
                     {totalNotifications > 0 && (
                       <span className={`absolute top-0 right-0 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                        isScrolled ? 'bg-red-500 border-red-900' : 'bg-red-600 border-white'
+                        isScrolled ? 'bg-red-500 border-white/50' : 'bg-red-600 border-white'
                       }`}>
                         {totalNotifications}
                       </span>
@@ -193,7 +193,8 @@ const Navbar = () => {
 
                   {/* Notification Dropdown Panel */}
                   {isNotifOpen && (
-                    <div className="absolute right-0 mt-4 w-[340px] bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                    <div className="absolute right-0 mt-4 w-[340px] bg-white/95 backdrop-blur-xl rounded-[2rem] border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                      {/* ... (Dropdown Content Remains Unchanged) ... */}
                       <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
                         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                           <span className="material-symbols-outlined text-red-600 text-[18px]">notifications_active</span> Alerts
@@ -232,12 +233,12 @@ const Navbar = () => {
 
               {/* Cart Icon */}
               <Link to="/cart" className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                isScrolled ? 'text-red-100 hover:bg-red-800/80 hover:text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                isScrolled ? 'text-slate-700 hover:bg-white/50 hover:text-red-600' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}>
                 <span className="material-symbols-outlined text-[22px]">shopping_cart</span>
                 {cartItemsCount > 0 && (
                   <span className={`absolute top-0 right-0 w-4 h-4 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                    isScrolled ? 'bg-red-500 border-red-900' : 'bg-red-600 border-white'
+                    isScrolled ? 'bg-red-500 border-white/50' : 'bg-red-600 border-white'
                   }`}>
                     {cartItemsCount}
                   </span>
@@ -252,17 +253,17 @@ const Navbar = () => {
                       onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                       className={`flex items-center gap-2 border pl-1.5 pr-3 py-1.5 rounded-full transition-colors duration-300 outline-none ${
                         isScrolled 
-                        ? 'bg-red-900/40 border-red-800/50 hover:bg-red-800/80' 
+                        ? 'bg-white/30 border-white/40 hover:bg-white/50 shadow-sm' 
                         : 'bg-white border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isScrolled ? 'bg-red-700 text-white' : 'bg-red-50 text-red-600'
+                        isScrolled ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600'
                       }`}>
                         {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <span className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${isProfileDropdownOpen ? 'rotate-180' : ''} ${
-                        isScrolled ? 'text-red-200' : 'text-slate-500'
+                        isScrolled ? 'text-slate-700' : 'text-slate-500'
                       }`}>
                         expand_more
                       </span>
@@ -270,7 +271,8 @@ const Navbar = () => {
 
                     {/* Profile Dropdown */}
                     {isProfileDropdownOpen && (
-                      <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                      <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-3xl border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                        {/* ... (Dropdown Content Remains Unchanged) ... */}
                         <div className="px-4 py-4 border-b border-slate-50">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Signed in</p>
                           <p className="text-sm font-bold text-slate-900 truncate">{userInfo.name || 'User'}</p>
@@ -301,7 +303,7 @@ const Navbar = () => {
                   </>
                 ) : (
                   <Link to="/auth" className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 relative z-50 ${
-                    isScrolled ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-slate-900 text-white hover:bg-slate-800'
+                    isScrolled ? 'bg-red-600/90 backdrop-blur-md text-white hover:bg-red-600 border border-red-500/50' : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}>
                     <span className="material-symbols-outlined text-[18px] hidden sm:block">login</span>
                     Log In
@@ -313,7 +315,7 @@ const Navbar = () => {
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ml-1 z-50 relative ${
-                  isScrolled ? 'bg-red-900/60 text-white border border-red-800/50 hover:bg-red-800' : 'bg-slate-50 text-slate-900'
+                  isScrolled ? 'bg-white/30 text-slate-800 border border-white/40 hover:bg-white/50' : 'bg-slate-50 text-slate-900'
                 }`}
               >
                 <span className="material-symbols-outlined text-[24px]">
@@ -326,7 +328,7 @@ const Navbar = () => {
 
           {/* Mobile Navigation Menu */}
           {isMobileMenuOpen && (
-            <div className="md:hidden absolute top-[110%] left-4 right-4 bg-white border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-4 flex flex-col gap-2 animate-[slideDown_0.3s_ease-out] z-40">
+            <div className="md:hidden absolute top-[110%] left-4 right-4 bg-white/95 backdrop-blur-xl border border-white rounded-3xl shadow-xl shadow-slate-200/50 p-4 flex flex-col gap-2 animate-[slideDown_0.3s_ease-out] z-40">
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
