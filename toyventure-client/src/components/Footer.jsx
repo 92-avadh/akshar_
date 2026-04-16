@@ -7,17 +7,20 @@ import footerBg from "../assets/footer-bg.png";
 
 const Footer = () => {
   return (
-    // Removed pb-12 here so the copyright bar sits flush at the bottom
     <footer className="relative pt-32 pb-0 overflow-hidden mt-auto w-full flex-shrink-0 border-t border-red-900/30">
 
       {/* ================= BACKGROUND IMAGE ================= */}
+      {/* Changed backgroundPosition to bring the kids into better view */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${footerBg})` }}
+        className="absolute inset-0 z-0 bg-cover bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${footerBg})`,
+          backgroundPosition: "center 25%" 
+        }}
       ></div>
 
-      {/* Overlay: Changed from heavy red to a subtle neutral dark tint so the image shows clearly */}
-      <div className="absolute inset-0 bg-black/30 z-[1] backdrop-blur-[1px]"></div>
+      {/* Overlay: Removed backdrop-blur for a clean, flat tint */}
+      <div className="absolute inset-0 bg-black/40 z-[1]"></div>
 
       {/* ================= CLOUDS ================= */}
       <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
@@ -52,8 +55,8 @@ const Footer = () => {
       {/* ================= CONTENT ================= */}
       <div className="relative z-20 max-w-[1200px] mx-auto px-8 md:px-12">
         
-        {/* NEWSLETTER SECTION */}
-        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-10 md:p-14 mb-24 flex flex-col lg:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden">
+        {/* NEWSLETTER SECTION - Removed glassmorphism, using clean transparent black */}
+        <div className="bg-black/40 border border-white/10 rounded-3xl p-10 md:p-14 mb-24 flex flex-col lg:flex-row items-center justify-between gap-10 shadow-xl relative overflow-hidden">
           
           <div className="absolute -top-32 -right-32 w-80 h-80 bg-red-500/20 blur-3xl rounded-full pointer-events-none"></div>
           
@@ -66,7 +69,7 @@ const Footer = () => {
             </p>
           </div>
           
-          <form className="flex w-full lg:w-auto bg-white/10 backdrop-blur-md rounded-full p-2 flex-grow max-w-md shadow-inner relative z-10 border border-white/10">
+          <form className="flex w-full lg:w-auto bg-black/40 rounded-full p-2 flex-grow max-w-md shadow-inner relative z-10 border border-white/10">
             <input
               type="email"
               placeholder="Enter your email address"
@@ -79,12 +82,12 @@ const Footer = () => {
         </div>
 
         {/* SPACIOUS LINKS GRID */}
-        {/* Increased padding-bottom to pb-32 to create more space under the links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-12 gap-y-16 pb-32">
           
           {/* Brand Column */}
           <div className="lg:col-span-2 flex flex-col items-center md:items-start">
-            <div className="flex items-center gap-4 mb-8 bg-black/20 p-4 rounded-2xl border border-white/5 shadow-xl backdrop-blur-sm inline-flex">
+            {/* Removed glassmorphism, using clean transparent black */}
+            <div className="flex items-center gap-4 mb-8 bg-black/40 p-4 rounded-2xl border border-white/5 shadow-xl inline-flex">
               <Logo className="w-10 h-10 text-white" />
               <span className="text-white font-black text-3xl tracking-tight">ToyBlix</span>
             </div>
@@ -126,8 +129,8 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* COPYRIGHT - Reduced size with py-4 and added bg-black/30 for clean separation */}
-      <div className="relative z-30 w-full text-center text-white/70 text-sm py-4 border-t border-white/10 bg-black/30 backdrop-blur-md">
+      {/* COPYRIGHT - Removed glassmorphism blur */}
+      <div className="relative z-30 w-full text-center text-white/70 text-sm py-4 border-t border-white/10 bg-black/50">
         <p>© {new Date().getFullYear()} ToyBlix. Designed for joyful play ✨</p>
       </div>
 
