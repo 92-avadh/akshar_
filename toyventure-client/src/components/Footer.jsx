@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 // Ensure this path matches where you saved your background image
-import footerBg from "../assets/footer-bg.jpg";
+import footerBg from "../assets/footer-bg.png";
 
 const Footer = () => {
   return (
