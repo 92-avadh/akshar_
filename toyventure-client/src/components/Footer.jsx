@@ -88,11 +88,23 @@ const Footer = () => {
           </div>
           
           {/* FIXED: Static white rounded pill — no focus-within shape/color changes */}
-          <div className="flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10">
+          <div
+            className="flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10"
+            style={{ outline: "none", border: "none" }}
+          >
             <input
               type="email"
               placeholder="Enter your email address"
-              className="w-full bg-transparent text-zinc-900 placeholder:text-zinc-400 px-6 py-4 text-base outline-none font-medium"
+              className="w-full bg-transparent text-zinc-900 placeholder:text-zinc-400 px-6 py-4 text-base font-medium rounded-full"
+              style={{
+                outline: "none",
+                boxShadow: "none",
+                border: "none",
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+                appearance: "none",
+                backgroundColor: "transparent",
+              }}
             />
             <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full hover:bg-red-700 active:scale-95 transition-all shadow-md whitespace-nowrap">
               Subscribe
