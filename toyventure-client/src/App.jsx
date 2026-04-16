@@ -53,7 +53,8 @@ function App() {
           <Route path="/returns" element={<Returns />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
-          
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/catalog" element={<AdminCatalog />} />
           {/* Catch-all route for 404 pages */}
           <Route path="*" element={<NotFound />} />
         </Routes>
