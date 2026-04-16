@@ -107,7 +107,7 @@ const Cart = () => {
             </button>
           </div>
 
-          {/* --- NEW: Global Cart Warning for Out of Stock --- */}
+          {/* --- Global Cart Warning for Out of Stock --- */}
           {hasOutOfStockItems && (
               <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl flex items-start gap-3 shadow-sm animate-pulse">
                   <span className="material-symbols-outlined mt-0.5">error</span>
@@ -129,44 +129,51 @@ const Cart = () => {
               const hasStockError = isOutOfStock || isExceedingStock;
 
               return (
-                <div key={`${item._id}-${item.variant}`} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-center gap-6 relative border ${hasStockError ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
+                <div key={`${item._id}-${item.variant}`} className={`card-surface p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row items-start md:items-center gap-6 relative border ${hasStockError ? 'border-red-400 bg-red-50/50' : 'border-white shadow-sm'}`}>
                   
-                  <Link to={`/product/${item._id}`} className="w-24 h-24 md:w-32 md:h-32 bg-white/60 rounded-[1.5rem] p-2 flex-shrink-0 shadow-inner">
-                    <img src={item.img || item.image} alt={item.title || item.name} className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 hover:scale-110 ${item.countInStock === 0 ? 'grayscale opacity-60' : ''}`} />
-                  </Link>
-
-                  <div className="flex-1 text-center md:text-left">
-                    <Link to={`/product/${item._id}`}>
-                      <h3 className="font-bold text-zinc-800 text-lg hover:text-primary-container transition-colors line-clamp-2">{item.title || item.name}</h3>
+                  <div className="flex gap-4 md:contents w-full">
+                    <Link to={`/product/${item._id}`} className="w-24 h-24 md:w-32 md:h-32 bg-white/60 rounded-[1.5rem] p-2 flex-shrink-0 shadow-inner">
+                      <img src={item.img || item.image} alt={item.title || item.name} className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 hover:scale-110 ${item.countInStock === 0 ? 'grayscale opacity-60' : ''}`} />
                     </Link>
-                    {item.variant && <p className="text-xs font-bold text-zinc-400 mt-1 uppercase tracking-widest">{item.variant}</p>}
-                    <p className="text-zinc-500 font-bold text-sm mt-1">₹{itemPrice.toLocaleString('en-IN')}</p>
-                    
-                    {/* --- Item-level Out of Stock Badge --- */}
-                    {isOutOfStock && (
-                        <p className="text-red-500 text-xs font-bold mt-2 flex items-center gap-1 justify-center md:justify-start">
-                            <span className="material-symbols-outlined text-[14px]">warning</span> Out of Stock
-                        </p>
-                    )}
+
+                    <div className="flex-1 text-left">
+                      <Link to={`/product/${item._id}`}>
+                        <h3 className="font-bold text-zinc-800 text-lg hover:text-primary-container transition-colors line-clamp-2 pr-8">{item.title || item.name}</h3>
+                      </Link>
+                      {item.variant && <p className="text-xs font-bold text-zinc-400 mt-1 uppercase tracking-widest">{item.variant}</p>}
+                      <p className="text-zinc-500 font-bold text-sm mt-1 md:hidden">₹{itemPrice.toLocaleString('en-IN')} x {itemQty}</p>
+                      <p className="text-zinc-500 font-bold text-sm mt-1 hidden md:block">₹{itemPrice.toLocaleString('en-IN')}</p>
+                      
+                      {/* --- Item-level Out of Stock Badge --- */}
+                      {isOutOfStock && (
+                          <p className="text-red-500 text-xs font-bold mt-2 flex items-center gap-1 justify-start">
+                              <span className="material-symbols-outlined text-[14px]">warning</span> Out of Stock
+                          </p>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
-                    <button onClick={() => handleDecrease(item)} disabled={isOutOfStock} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors disabled:opacity-50">-</button>
-                    <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
-                    <button 
-                      onClick={() => handleIncrease(item)} 
-                      disabled={itemQty >= item.countInStock || isOutOfStock}
-                      className={`font-black text-xl w-6 flex justify-center items-center transition-colors ${itemQty >= item.countInStock ? 'text-zinc-300 cursor-not-allowed' : 'text-zinc-500 hover:text-green-500'}`}
-                    >+</button>
+                  {/* Wrapper to fix mobile alignment - Forces row layout on mobile */}
+                  <div className="flex items-center justify-between w-full md:w-auto mt-2 md:mt-0 gap-4">
+                    <div className="flex items-center gap-4 bg-white/60 rounded-full px-4 py-2 shadow-inner border border-white">
+                      <button onClick={() => handleDecrease(item)} disabled={isOutOfStock} className="text-zinc-500 hover:text-red-500 font-black text-xl w-6 flex justify-center items-center transition-colors disabled:opacity-50">-</button>
+                      <span className="font-black text-zinc-800 w-6 text-center">{itemQty}</span>
+                      <button 
+                        onClick={() => handleIncrease(item)} 
+                        disabled={itemQty >= item.countInStock || isOutOfStock}
+                        className={`font-black text-xl w-6 flex justify-center items-center transition-colors ${itemQty >= item.countInStock ? 'text-zinc-300 cursor-not-allowed' : 'text-zinc-500 hover:text-green-500'}`}
+                      >+</button>
+                    </div>
+
+                    <div className="text-xl font-black text-zinc-800 text-right md:w-28">
+                      ₹{itemTotal.toLocaleString('en-IN')}
+                    </div>
                   </div>
 
-                  <div className="text-xl font-black text-zinc-800 w-28 text-right">
-                    ₹{itemTotal.toLocaleString('en-IN')}
-                  </div>
-
+                  {/* Fixed Delete Button Position */}
                   <button 
                     onClick={() => dispatch(removeFromCart(item._id))}
-                    className="md:absolute top-4 right-4 text-zinc-400 hover:text-red-500 transition-colors p-2 bg-white rounded-full shadow-sm md:shadow-none md:bg-transparent"
+                    className="absolute top-4 right-4 text-zinc-400 hover:text-red-500 transition-colors p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm md:shadow-none md:bg-transparent z-10"
                     title="Remove Item"
                   >
                     <span className="material-symbols-outlined text-[20px]">close</span>

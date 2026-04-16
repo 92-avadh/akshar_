@@ -106,7 +106,6 @@ const Navbar = () => {
     }
   };
 
-  // --- FIXED: Capitalized paths changed to lowercase below ---
   const navLinks = isAdmin
     ? [
         { name: 'Dashboard', path: '/admin' },
@@ -132,8 +131,8 @@ const Navbar = () => {
             : 'bg-transparent px-2'
           }`}>
             
-            {/* Left: Logo */}
-            <Link to="/" className="flex items-center gap-2 group z-20">
+            {/* Left: Logo - FIXED with shrink-0 */}
+            <Link to="/" className="flex items-center gap-2 group z-20 shrink-0">
               <Logo className={`w-9 h-9 md:w-10 md:h-10 transition-transform duration-300 group-hover:scale-105 ${isScrolled ? 'text-white' : 'text-slate-900'}`} />
               <span className={`font-black text-2xl tracking-tight transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-slate-900'}`}>
                 Toy<span className={isScrolled ? 'text-red-200' : 'text-red-600'}>Blix</span>
@@ -246,7 +245,7 @@ const Navbar = () => {
               </Link>
 
               {/* Profile / Auth Button */}
-              <div className="relative ml-1 z-50">
+              <div className="relative ml-1 z-50 flex items-center">
                 {userInfo ? (
                   <>
                     <button 
@@ -271,7 +270,7 @@ const Navbar = () => {
 
                     {/* Profile Dropdown */}
                     {isProfileDropdownOpen && (
-                      <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-3xl border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                      <div className="absolute right-0 mt-14 w-56 bg-white/95 backdrop-blur-xl rounded-3xl border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
                         <div className="px-4 py-4 border-b border-slate-50">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Signed in</p>
                           <p className="text-sm font-bold text-slate-900 truncate">{userInfo.name || 'User'}</p>
@@ -301,7 +300,8 @@ const Navbar = () => {
                     )}
                   </>
                 ) : (
-                  <Link to="/auth" className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 relative z-50 ${
+                  // FIXED: Added whitespace-nowrap and shrink-0 to prevent text jumping on scroll
+                  <Link to="/auth" className={`flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 relative z-50 whitespace-nowrap shrink-0 ${
                     isScrolled ? 'bg-white text-red-700 hover:bg-red-50 shadow-sm' : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}>
                     <span className="material-symbols-outlined text-[18px] hidden sm:block">login</span>
@@ -313,7 +313,7 @@ const Navbar = () => {
               {/* Mobile Menu Toggle Button */}
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ml-1 z-50 relative ${
+                className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ml-1 z-50 relative shrink-0 ${
                   isScrolled ? 'bg-red-800 text-white hover:bg-red-900' : 'bg-slate-50 text-slate-900'
                 }`}
               >
