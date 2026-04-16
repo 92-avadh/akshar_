@@ -3,14 +3,13 @@ import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 // Ensure this path matches where you saved your background image
-import footerBg from "../assets/footer-bg.png";
+import footerBg from "../assets/footer-bg.jpg";
 
 const Footer = () => {
   return (
     <footer className="relative pt-32 pb-0 overflow-hidden mt-auto w-full flex-shrink-0 border-t border-red-900/30">
 
       {/* ================= BACKGROUND IMAGE ================= */}
-      {/* Changed backgroundPosition to bring the kids into better view */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-no-repeat"
         style={{ 
@@ -19,7 +18,7 @@ const Footer = () => {
         }}
       ></div>
 
-      {/* Overlay: Removed backdrop-blur for a clean, flat tint */}
+      {/* Overlay: Clean flat tint */}
       <div className="absolute inset-0 bg-black/40 z-[1]"></div>
 
       {/* ================= CLOUDS ================= */}
@@ -55,7 +54,7 @@ const Footer = () => {
       {/* ================= CONTENT ================= */}
       <div className="relative z-20 max-w-[1200px] mx-auto px-8 md:px-12">
         
-        {/* NEWSLETTER SECTION - Removed glassmorphism, using clean transparent black */}
+        {/* NEWSLETTER SECTION */}
         <div className="bg-black/40 border border-white/10 rounded-3xl p-10 md:p-14 mb-24 flex flex-col lg:flex-row items-center justify-between gap-10 shadow-xl relative overflow-hidden">
           
           <div className="absolute -top-32 -right-32 w-80 h-80 bg-red-500/20 blur-3xl rounded-full pointer-events-none"></div>
@@ -69,13 +68,14 @@ const Footer = () => {
             </p>
           </div>
           
-          <form className="flex w-full lg:w-auto bg-black/40 rounded-full p-2 flex-grow max-w-md shadow-inner relative z-10 border border-white/10">
+          {/* Updated Form: White Background, Red Button, Dark Text */}
+          <form className="flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10 focus-within:ring-4 focus-within:ring-red-500/30 transition-all">
             <input
               type="email"
               placeholder="Enter your email address"
-              className="w-full bg-transparent text-white placeholder:text-white/60 px-6 py-4 text-base outline-none"
+              className="w-full bg-transparent text-zinc-900 placeholder:text-zinc-400 px-6 py-4 text-base outline-none font-medium"
             />
-            <button className="bg-white text-zinc-900 font-bold px-8 py-4 rounded-full hover:bg-gray-100 hover:scale-105 transition-all shadow-lg">
+            <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full hover:bg-red-700 active:scale-95 transition-all shadow-md whitespace-nowrap">
               Subscribe
             </button>
           </form>
@@ -86,8 +86,7 @@ const Footer = () => {
           
           {/* Brand Column */}
           <div className="lg:col-span-2 flex flex-col items-center md:items-start">
-            {/* Removed glassmorphism, using clean transparent black */}
-            <div className="flex items-center gap-4 mb-8 bg-black/40 p-4 rounded-2xl border border-white/5 shadow-xl inline-flex">
+            <div className="flex items-center gap-4 mb-10 bg-black/40 p-4 rounded-2xl border border-white/5 shadow-xl inline-flex">
               <Logo className="w-10 h-10 text-white" />
               <span className="text-white font-black text-3xl tracking-tight">ToyBlix</span>
             </div>
@@ -98,8 +97,10 @@ const Footer = () => {
 
           {/* Explore Column */}
           <div className="text-center md:text-left">
-            <h4 className="text-white font-black mb-8 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Explore</h4>
-            <ul className="space-y-5 text-white/80 text-base font-medium">
+            {/* Increased bottom margin to mb-10 */}
+            <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Explore</h4>
+            {/* Increased vertical spacing to space-y-8 */}
+            <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/shop" className="hover:text-white hover:translate-x-1 inline-block transition-all">All Toys</Link></li>
               <li><Link to="/about" className="hover:text-white hover:translate-x-1 inline-block transition-all">Our Story</Link></li>
               <li><Link to="/contact" className="hover:text-white hover:translate-x-1 inline-block transition-all">Contact Us</Link></li>
@@ -108,8 +109,10 @@ const Footer = () => {
 
           {/* Support Column */}
           <div className="text-center md:text-left">
-            <h4 className="text-white font-black mb-8 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Support</h4>
-            <ul className="space-y-5 text-white/80 text-base font-medium">
+            {/* Increased bottom margin to mb-10 */}
+            <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Support</h4>
+            {/* Increased vertical spacing to space-y-8 */}
+            <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/shipping" className="hover:text-white hover:translate-x-1 inline-block transition-all">Shipping Info</Link></li>
               <li><Link to="/returns" className="hover:text-white hover:translate-x-1 inline-block transition-all">Easy Returns</Link></li>
               <li><Link to="/safety-standards" className="hover:text-white hover:translate-x-1 inline-block transition-all">Safety Standards</Link></li>
@@ -118,8 +121,10 @@ const Footer = () => {
 
           {/* Legal Column */}
           <div className="text-center md:text-left">
-            <h4 className="text-white font-black mb-8 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Legal</h4>
-            <ul className="space-y-5 text-white/80 text-base font-medium">
+            {/* Increased bottom margin to mb-10 */}
+            <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Legal</h4>
+            {/* Increased vertical spacing to space-y-8 */}
+            <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/privacy-policy" className="hover:text-white hover:translate-x-1 inline-block transition-all">Privacy Policy</Link></li>
               <li><Link to="/terms" className="hover:text-white hover:translate-x-1 inline-block transition-all">Terms of Service</Link></li>
               <li><Link to="/cookies" className="hover:text-white hover:translate-x-1 inline-block transition-all">Cookie Policy</Link></li>
@@ -129,7 +134,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* COPYRIGHT - Removed glassmorphism blur */}
+      {/* COPYRIGHT */}
       <div className="relative z-30 w-full text-center text-white/70 text-sm py-4 border-t border-white/10 bg-black/50">
         <p>© {new Date().getFullYear()} ToyBlix. Designed for joyful play ✨</p>
       </div>
