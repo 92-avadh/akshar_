@@ -87,17 +87,17 @@ const Footer = () => {
             </p>
           </div>
           
-          {/* Updated Form: Changes from White/Rounded to Blue/Square on focus */}
-          <form className="group flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10 focus-within:bg-blue-600 focus-within:rounded-none focus-within:ring-4 focus-within:ring-blue-400/50 transition-all duration-300">
+          {/* FIXED: Static white rounded pill — no focus-within shape/color changes */}
+          <div className="flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10">
             <input
               type="email"
               placeholder="Enter your email address"
-              className="w-full bg-transparent text-zinc-900 group-focus-within:text-white placeholder:text-zinc-400 group-focus-within:placeholder:text-blue-200 px-6 py-4 text-base outline-none font-medium transition-colors"
+              className="w-full bg-transparent text-zinc-900 placeholder:text-zinc-400 px-6 py-4 text-base outline-none font-medium"
             />
-            <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full group-focus-within:bg-white group-focus-within:text-blue-700 group-focus-within:rounded-none hover:bg-red-700 group-focus-within:hover:bg-blue-50 active:scale-95 transition-all shadow-md whitespace-nowrap">
+            <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full hover:bg-red-700 active:scale-95 transition-all shadow-md whitespace-nowrap">
               Subscribe
             </button>
-          </form>
+          </div>
         </div>
 
         {/* SPACIOUS LINKS GRID */}
