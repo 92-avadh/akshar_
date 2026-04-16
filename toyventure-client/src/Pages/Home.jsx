@@ -3,17 +3,17 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'fram
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart, setPendingItem } from '../features/cart/cartSlice';
+import { useGetProductsQuery } from '../features/api/apiSlice';
 import toast from 'react-hot-toast';
 
-// Import Swiper React components and styles
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// ==========================================
-// UTILITY: HARDWARE ACCELERATED MAGNETIC BUTTON
-// ==========================================
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const ASSET_BASE_URL = import.meta.env.VITE_ASSET_BASE_URL || API_BASE_URL.replace(/\/api\/?$/, '');
+
 const MagneticButton = ({ children, className, variant = 'dark', onClick }) => {
   const ref = useRef(null);
   const x = useMotionValue(0);
@@ -45,9 +45,6 @@ const MagneticButton = ({ children, className, variant = 'dark', onClick }) => {
   );
 };
 
-// ==========================================
-// MAIN PAGE
-// ==========================================
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -56,7 +53,15 @@ const Home = () => {
   const heroY = useTransform(scrollYProgress, [0, 0.2], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
-  // --- DATA ARRAYS ---
+  // NEW: Fetching Live Popular Data from the DB limit 4 
+  const { data: popularData, isLoading: isLoadingPopular } = useGetProductsQuery({ isPopular: 'true', limit: 4 });
+  const popularProducts = popularData?.products || [];
+
+  const resolveImage = (imgSrc) => {
+    if (!imgSrc) return '';
+    return imgSrc.startsWith('/uploads') ? `${ASSET_BASE_URL}${imgSrc}` : imgSrc;
+  };
+
   const heroBanners = [
     { id: 1, image: '/assets/banner-1.jpg', alt: 'Joy Moments', },
     { id: 2, image: '/assets/banner-2.jpg', alt: 'Dino Adventure',  },
@@ -64,17 +69,8 @@ const Home = () => {
     { id: 4, image: '/assets/banner-4.jpg', alt: 'Construction', }, 
     { id: 5, image: '/assets/banner-5.jpg', alt: 'Creative Play', }, 
     { id: 6, image: '/assets/banner-6.jpg', alt: 'Chefs', }, 
-
   ];
 
-  const products = [
-    { _id: '1', name: "Eco-Wooden Rail", title: "Eco-Wooden Rail", price: 899, originalPrice: 1199, tag: "Eco Friendly", img: "https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" },
-    { _id: '2', name: "Diecast Metal Truck", title: "Diecast Metal Truck", price: 599, originalPrice: 699, tag: "Collectible", img: "https://images.unsplash.com/photo-1594787317666-41793740284e?ixlib=rb-4.0.3" },
-    { _id: '3', name: "STEM Building Set", title: "STEM Building Set", price: 1199, originalPrice: 1499, tag: "Best Seller", img: "https://images.unsplash.com/photo-1555448248-2571daf6344b?ixlib=rb-4.0.3" },
-    { _id: '4', name: "Artisan Craft Kit", title: "Artisan Craft Kit", price: 699, originalPrice: 899, tag: "New", img: "https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3" }
-  ];
-
-  // Restored Bento Categories
   const categories = [
     { name: "Imaginative Play", desc: "Let their stories unfold", size: "md:col-span-2 md:row-span-2 h-[400px] md:h-[500px]", img: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?q=80&w=1200&auto=format&fit=crop" },
     { name: "Building & STEM", desc: "Engineer the future", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop" },
@@ -105,7 +101,6 @@ const Home = () => {
   ];
   const infiniteCategories = [...runningCategories, ...runningCategories];
 
-  // ================= CART LOGIC =================
   const handleAddToCart = (product) => {
     const userInfoData = sessionStorage.getItem('userInfo');
     const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') ? JSON.parse(userInfoData) : null;
@@ -125,8 +120,6 @@ const Home = () => {
       {/* ================= HERO SECTION WITH SLIDER ================= */}
       <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
-          
-          {/* Left: Text Content */}
           <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } }} className="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left z-20">
             <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mb-8 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-xs font-bold uppercase tracking-widest">
               <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span></span>
@@ -143,33 +136,17 @@ const Home = () => {
             </motion.div>
           </motion.div>
 
-          {/* Right: AI Images Slider (Auto-slides gracefully every 2s, swipable) */}
           <div className="lg:col-span-7 relative w-full h-[350px] md:h-[500px] flex items-center justify-center">
-            <Swiper
-              modules={[Pagination, Autoplay]}
-              spaceBetween={20}
-              slidesPerView={1}
-              loop={true}
-              speed={1000} /* Controls the smoothness of the slide transition (1s glide) */
-              autoplay={{ delay: 2000, disableOnInteraction: false }} /* Waits 2s before sliding */
-              pagination={{ clickable: true, dynamicBullets: true }}
-              className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white"
-            >
+            <Swiper modules={[Pagination, Autoplay]} spaceBetween={20} slidesPerView={1} loop={true} speed={1000} autoplay={{ delay: 2000, disableOnInteraction: false }} pagination={{ clickable: true, dynamicBullets: true }} className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white">
               {heroBanners.map((banner) => (
                 <SwiperSlide key={banner.id} className="overflow-hidden rounded-[2rem] cursor-pointer bg-red-50">
                   <Link to={banner.link} className="w-full h-full block">
-                    <img 
-                      src={banner.image} 
-                      alt={banner.alt} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 ease-out"
-                      loading="eager"
-                    />
+                    <img src={banner.image} alt={banner.alt} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 ease-out" loading="eager" />
                   </Link>
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
-          
         </div>
       </motion.section>
 
@@ -178,11 +155,7 @@ const Home = () => {
         <div className="flex gap-8 w-max px-4 will-change-transform transform-gpu" style={{ animation: "marquee-fast 20s linear infinite" }}>
           <style>{`@keyframes marquee-fast { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
           {infiniteCategories.map((cat, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => navigate(`/shop?tag=${encodeURIComponent(cat)}`)}
-              className="flex items-center gap-8 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-            >
+            <div key={idx} onClick={() => navigate(`/shop?tag=${encodeURIComponent(cat)}`)} className="flex items-center gap-8 shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
               <span className="text-white font-black uppercase tracking-widest text-sm md:text-base whitespace-nowrap">{cat}</span>
               <span className="material-symbols-outlined text-red-300 text-sm">star</span>
             </div>
@@ -196,18 +169,10 @@ const Home = () => {
           <h2 className="text-red-600 font-bold uppercase tracking-widest text-xs mb-3">Find The Perfect Toy</h2>
           <h3 className="text-4xl md:text-5xl font-black text-red-950 tracking-tighter">Shop by Age</h3>
         </div>
-        
         <div className="flex overflow-x-auto gap-8 px-6 pb-12 pt-4 max-w-[1440px] mx-auto snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
-          
           {shopByAgeData.map((item, idx) => (
-            <motion.div 
-              key={idx} 
-              onClick={() => navigate(`/shop?age=${encodeURIComponent(item.age)}`)}
-              whileHover={{ scale: 1.05 }} 
-              className={`shrink-0 snap-center w-56 h-56 md:w-64 md:h-64 ${item.bgColor} border ${item.borderColor} shadow-sm hover:shadow-xl hover:shadow-red-900/10 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-300 ${item.color}`} 
-              style={{ borderRadius: item.radius }}
-            >
+            <motion.div key={idx} onClick={() => navigate(`/shop?age=${encodeURIComponent(item.age)}`)} whileHover={{ scale: 1.05 }} className={`shrink-0 snap-center w-56 h-56 md:w-64 md:h-64 ${item.bgColor} border ${item.borderColor} shadow-sm hover:shadow-xl hover:shadow-red-900/10 flex flex-col items-center justify-center p-6 cursor-pointer transition-all duration-300 ${item.color}`} style={{ borderRadius: item.radius }}>
                <span className="text-4xl md:text-5xl mb-3">{item.icon}</span>
                <h4 className="font-black text-2xl md:text-3xl tracking-tight leading-none text-center">{item.age}</h4>
                <p className="font-bold text-red-950/60 text-sm mt-2 uppercase tracking-wider">{item.label}</p>
@@ -228,37 +193,44 @@ const Home = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group bg-white border border-red-100 rounded-[2rem] overflow-hidden hover:shadow-xl hover:shadow-red-900/10 transition-all duration-500 relative flex flex-col">
-              
-              <div className="p-3">
-                <div className="relative h-60 p-6 flex items-center justify-center bg-red-50/50 rounded-3xl overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
-                  <img loading="lazy" decoding="async" src={product.img} alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out" />
-                  <div className="absolute top-4 left-4 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
-                    {product.tag}
+          {isLoadingPopular ? (
+            // Skeleton Loaders
+            [1, 2, 3, 4].map((i) => <div key={i} className="bg-red-50/50 animate-pulse border border-red-100 rounded-[2rem] h-96"></div>)
+          ) : popularProducts.length === 0 ? (
+             <div className="col-span-1 sm:col-span-2 lg:col-span-4 text-center py-12 text-red-950/50 font-bold">No items have been marked as Popular by the Admin yet.</div>
+          ) : (
+            popularProducts.map((product, idx) => (
+              <motion.div key={product._id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group bg-white border border-red-100 rounded-[2rem] overflow-hidden hover:shadow-xl hover:shadow-red-900/10 transition-all duration-500 relative flex flex-col cursor-pointer" onClick={() => navigate(`/product/${product._id}`)}>
+                
+                <div className="p-3">
+                  <div className="relative h-60 p-6 flex items-center justify-center bg-red-50/50 rounded-3xl overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
+                    <img loading="lazy" decoding="async" src={resolveImage(product.img)} alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    <div className="absolute top-4 left-4 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                      {product.tag || 'Popular'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="px-6 pb-8 pt-4 flex-1 flex flex-col justify-between relative z-10">
-                <h3 className="text-lg font-bold leading-tight mb-4 text-red-950">{product.title}</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-black text-red-950">₹{product.price}</span>
-                  <span className="text-sm font-medium text-red-950/40 line-through">₹{product.originalPrice}</span>
+                
+                <div className="px-6 pb-8 pt-4 flex-1 flex flex-col justify-between relative z-10">
+                  <h3 className="text-lg font-bold leading-tight mb-4 text-red-950">{product.title}</h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl font-black text-red-950">₹{product.price}</span>
+                    {product.oldPrice > 0 && <span className="text-sm font-medium text-red-950/40 line-through">₹{product.oldPrice}</span>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-20">
-                <button onClick={() => handleAddToCart(product)} className="w-full bg-red-600 text-white rounded-2xl py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30">
-                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Cart
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-20">
+                  <button onClick={(e) => { e.stopPropagation(); handleAddToCart(product); }} className="w-full bg-red-600 text-white rounded-2xl py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30">
+                    <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Cart
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </section>
 
-      {/* ================= BENTO CATEGORIES (RESTORED) ================= */}
+      {/* ================= BENTO CATEGORIES ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
         <div className="mb-12 text-center">
             <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Wonder Play.</h2>
@@ -334,14 +306,7 @@ const Home = () => {
               { icon: 'sell', title: 'Daily Offer', subtitle: 'Explore fresh deals' },
               { icon: 'workspace_premium', title: 'Quality Guarantee', subtitle: 'Premium toy materials' }
             ].map((feature, idx) => (
-              <motion.div 
-                key={idx} 
-                initial={{ opacity: 0, y: 20 }} 
-                whileInView={{ opacity: 1, y: 0 }} 
-                viewport={{ once: true }} 
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-red-50/50 transition-colors duration-300 group"
-              >
+              <motion.div key={idx} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="flex flex-col items-center text-center p-6 rounded-3xl hover:bg-red-50/50 transition-colors duration-300 group">
                 <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-6 group-hover:scale-110 group-hover:bg-red-100 group-hover:shadow-lg group-hover:shadow-red-600/10 transition-all duration-300">
                   <span className="material-symbols-outlined text-4xl">{feature.icon}</span>
                 </div>

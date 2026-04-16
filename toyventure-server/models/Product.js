@@ -21,78 +21,35 @@ const variantSchema = mongoose.Schema({
 
 const productSchema = mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'User',
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    img: {
-      type: String,
-      required: true,
-    },
-    images: [
-      { type: String }
-    ],
-    tag: {
-      type: String,
-    },
-    category: {
-      type: String,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
+    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
+    title: { type: String, required: true },
+    img: { type: String, required: true },
+    images: [{ type: String }],
+    tag: { type: String },
+    category: { type: String },
+    description: { type: String, required: true },
     reviews: [reviewSchema],
-    rating: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    numReviews: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    price: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    oldPrice: {
-      type: Number,
-      default: 0,
-    },
-    countInStock: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    notifyList: [{
-      type: String
-    }],
+    rating: { type: Number, required: true, default: 0 },
+    numReviews: { type: Number, required: true, default: 0 },
+    price: { type: Number, required: true, default: 0 },
+    oldPrice: { type: Number, default: 0 },
+    countInStock: { type: Number, required: true, default: 0 },
+    
+    // NEW FIELD ADDED HERE:
+    isPopular: { type: Boolean, default: false },
+    
+    notifyList: [{ type: String }],
     variants: [variantSchema] 
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// ==========================================
-// PRODUCTION PERFORMANCE INDEXES
-// ==========================================
-// 1. Text Index: Allows lightning-fast full-text search instead of slow $regex
+// Indexes
 productSchema.index({ title: 'text', description: 'text', tag: 'text', category: 'text' });
-
-// 2. Standard Indexes: Optimizes sorting and filtering by price, rating, and creation date
 productSchema.index({ price: 1, rating: -1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ tag: 1, category: 1 });
+productSchema.index({ isPopular: 1 });
 
 const Product = mongoose.model('Product', productSchema);
-
 module.exports = Product;
