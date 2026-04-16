@@ -7,11 +7,9 @@ import toast from 'react-hot-toast';
 
 // Import Swiper React components and styles
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
-import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import 'swiper/css/effect-fade';
 
 // ==========================================
 // UTILITY: HARDWARE ACCELERATED MAGNETIC BUTTON
@@ -74,6 +72,13 @@ const Home = () => {
     { _id: '4', name: "Artisan Craft Kit", title: "Artisan Craft Kit", price: 699, originalPrice: 899, tag: "New", img: "https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3" }
   ];
 
+  // Restored Bento Categories
+  const categories = [
+    { name: "Imaginative Play", desc: "Let their stories unfold", size: "md:col-span-2 md:row-span-2 h-[400px] md:h-[500px]", img: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?q=80&w=1200&auto=format&fit=crop" },
+    { name: "Building & STEM", desc: "Engineer the future", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop" },
+    { name: "Creative Arts", desc: "Unleash inner artists", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop" },
+  ];
+
   const shopByAgeData = [
     { age: "0-12 MO", label: "Infants", sublabel: "Newborn to First Steps", color: "text-red-400", bgColor: "bg-red-50", borderColor: "border-red-100", radius: "40% 60% 70% 30% / 40% 50% 60% 50%", icon: "🍼" },
     { age: "12-36 MO", label: "Toddlers", sublabel: "Walking & Exploring", color: "text-red-500", bgColor: "bg-red-50", borderColor: "border-red-200", radius: "50% 50% 30% 70% / 60% 30% 70% 40%", icon: "🧸" },
@@ -115,7 +120,7 @@ const Home = () => {
   return (
     <main className="bg-white text-red-950 min-h-screen font-sans overflow-x-hidden selection:bg-red-100 relative fade-in">
       
-      {/* ================= RESTORED HERO SECTION WITH SLIDER ================= */}
+      {/* ================= HERO SECTION WITH SLIDER ================= */}
       <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
           
@@ -136,18 +141,15 @@ const Home = () => {
             </motion.div>
           </motion.div>
 
-          {/* Right: AI Images Slider */}
+          {/* Right: AI Images Slider (Auto-slides every 1s, swipable) */}
           <div className="lg:col-span-7 relative w-full h-[350px] md:h-[500px] flex items-center justify-center">
             <Swiper
-              modules={[Navigation, Pagination, Autoplay, EffectFade]}
-              effect="fade"
-              fadeEffect={{ crossFade: true }}
-              spaceBetween={0}
+              modules={[Pagination, Autoplay]}
+              spaceBetween={20}
               slidesPerView={1}
               loop={true}
-              autoplay={{ delay: 3500, disableOnInteraction: false }}
+              autoplay={{ delay: 1000, disableOnInteraction: false }}
               pagination={{ clickable: true, dynamicBullets: true }}
-              navigation={true}
               className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white"
             >
               {heroBanners.map((banner) => (
@@ -247,6 +249,31 @@ const Home = () => {
                 <button onClick={() => handleAddToCart(product)} className="w-full bg-red-600 text-white rounded-2xl py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30">
                   <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span> Add to Cart
                 </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ================= BENTO CATEGORIES (RESTORED) ================= */}
+      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
+        <div className="mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Universes of Play.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {categories.map((cat, idx) => (
+            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[2rem] overflow-hidden bg-red-50 cursor-pointer ${cat.size}`}>
+              <img loading="lazy" decoding="async" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
+              <div className="absolute inset-0 bg-gradient-to-t from-red-950/80 to-transparent opacity-80"></div>
+              
+              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                <div>
+                  <h3 className="text-2xl font-black text-white">{cat.name}</h3>
+                  <p className="text-red-50 font-medium text-sm mt-1 opacity-90">{cat.desc}</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 group-hover:bg-white group-hover:text-red-600 transition-all duration-300">
+                  <span className="material-symbols-outlined -rotate-45">arrow_forward</span>
+                </div>
               </div>
             </motion.div>
           ))}
