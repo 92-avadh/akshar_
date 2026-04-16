@@ -58,11 +58,13 @@ const Home = () => {
 
   // --- DATA ARRAYS ---
   const heroBanners = [
-    { id: 1, image: '/assets/banner-dino.jpg', alt: 'Dino-Mite Adventures', },
-    { id: 2, image: '/assets/banner-chefs.jpg', alt: 'Little Chefs Big Dreams',  },
-    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival', },
-    { id: 4, image: '/assets/banner4.jpg', alt: 'Adventure Awaits', }, 
-    { id: 5, image: '/assets/banner6.jpg', alt: 'Creative Play', }, 
+    { id: 1, image: '/assets/banner-1.jpg', alt: 'Joy Moments', },
+    { id: 2, image: '/assets/banner-2.jpg', alt: 'Dino Adventure',  },
+    { id: 3, image: '/assets/banner-3.jpg', alt: 'playing kids', },
+    { id: 4, image: '/assets/banner-4.jpg', alt: 'Construction', }, 
+    { id: 5, image: '/assets/banner-5.jpg', alt: 'Creative Play', }, 
+    { id: 6, image: '/assets/banner-6.jpg', alt: 'Chefs', }, 
+
   ];
 
   const products = [
