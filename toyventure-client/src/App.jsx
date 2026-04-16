@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useGetProductsQuery } from '../features/api/apiSlice';
-import Hero from '../assets/hero.png';
-import SkeletonCard from '../components/SkeletonCard';
+import { useGetProductsQuery } from './features/api/apiSlice';
+import Hero from './assets/hero.png';
+import SkeletonCard from './components/SkeletonCard';
 
 const Home = () => {
   // Fetch real products from your backend
