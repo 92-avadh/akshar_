@@ -174,3 +174,39 @@ html {
     scrollbar-width: none; /* Firefox */
   }
 }
+/* ================= SWIPER HERO CUSTOMIZATION ================= */
+.hero-swiper {
+  padding-bottom: 0px !important; /* Remove bottom padding if using effect-fade */
+}
+
+/* Make navigation buttons small, round, and elegant */
+.hero-swiper .swiper-button-next,
+.hero-swiper .swiper-button-prev {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #dc2626 !important; /* Tailwind red-600 */
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(4px) !important;
+  transition: all 0.3s ease;
+}
+
+.hero-swiper .swiper-button-next:hover,
+.hero-swiper .swiper-button-prev:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  transform: scale(1.1);
+}
+
+/* Make the actual arrow icon inside the button smaller */
+.hero-swiper .swiper-button-next::after,
+.hero-swiper .swiper-button-prev::after {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+/* Red active dot for pagination */
+.hero-swiper .swiper-pagination-bullet-active {
+  background-color: #dc2626 !important;
+}

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart, setPendingItem } from '../features/cart/cartSlice';
@@ -7,10 +7,11 @@ import toast from 'react-hot-toast';
 
 // Import Swiper React components and styles
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 
 // ==========================================
 // UTILITY: HARDWARE ACCELERATED MAGNETIC BUTTON
@@ -53,15 +54,17 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { scrollYProgress } = useScroll(); 
+  const heroY = useTransform(scrollYProgress, [0, 0.2], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+
   // --- DATA ARRAYS ---
-  
   const heroBanners = [
-    { id: 1, image: '/assets/banner-dino.jpg', alt: 'Dino-Mite Adventures', },
-    { id: 2, image: '/assets/banner-chefs.jpg', alt: 'Little Chefs Big Dreams', },
-    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival', },
-    { id: 4, image: '/assets/banner4.jpg', alt: 'Rc Trucks',},
-    { id: 5, image: '/assets/banner5.jpg', alt: 'Childrens', }, 
-    { id: 6, image: '/assets/banner6.jpg', alt: 'Construction', },
+    { id: 1, image: '/assets/banner-dino.jpg', alt: 'Dino-Mite Adventures', link: '/shop?category=action-figures' },
+    { id: 2, image: '/assets/banner-chefs.jpg', alt: 'Little Chefs Big Dreams', link: '/shop?category=educational' },
+    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival', link: '/shop?category=soft-toys' },
+    { id: 4, image: '/assets/banner-4.jpg', alt: 'Adventure Awaits', link: '/shop' }, 
+    { id: 5, image: '/assets/banner-5.jpg', alt: 'Creative Play', link: '/shop' }, 
   ];
 
   const products = [
@@ -112,51 +115,61 @@ const Home = () => {
   return (
     <main className="bg-white text-red-950 min-h-screen font-sans overflow-x-hidden selection:bg-red-100 relative fade-in">
       
-      {/* ================= NEW CAROUSEL HERO SECTION ================= */}
-      <section className="relative w-full pt-28 pb-8 px-4 sm:px-6 max-w-[1500px] mx-auto z-10">
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={20}
-          slidesPerView={1}
-          centeredSlides={true}
-          loop={true}
-          autoplay={{
-            delay: 3500,
-            disableOnInteraction: false,
-          }}
-          pagination={{ clickable: true, dynamicBullets: true }}
-          navigation={true}
-          breakpoints={{
-            // Tablet: Show 2 images
-            768: {
-              slidesPerView: 2,
-              spaceBetween: 24,
-            },
-            // Desktop: Show 3 smaller, balanced images
-            1024: {
-              slidesPerView: 3, 
-              spaceBetween: 30,
-            },
-          }}
-          className="w-full h-[220px] sm:h-[300px] md:h-[350px] lg:h-[400px] hero-swiper rounded-[2rem]"
-        >
-          {heroBanners.map((banner) => (
-            <SwiperSlide key={banner.id} className="overflow-hidden rounded-[2rem] shadow-xl shadow-red-900/10 cursor-pointer transition-transform duration-300">
-              <Link to={banner.link} className="w-full h-full block">
-                <img 
-                  src={banner.image} 
-                  alt={banner.alt} 
-                  className="w-full h-full object-cover rounded-[2rem] hover:scale-105 transition-transform duration-700 ease-out"
-                  loading="eager"
-                />
-              </Link>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </section>
+      {/* ================= RESTORED HERO SECTION WITH SLIDER ================= */}
+      <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
+          
+          {/* Left: Text Content */}
+          <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } }} className="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left z-20">
+            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mb-8 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-xs font-bold uppercase tracking-widest">
+              <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span></span>
+              Fresh Arrivals
+            </motion.div>
+            <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-5xl md:text-7xl font-black tracking-tighter text-red-950 leading-[1.05] mb-6">
+              Dive into the <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">Universe of Play.</span>
+            </motion.h1>
+            <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg text-red-950/60 font-medium max-w-lg mb-10 leading-relaxed">
+              Step into a world of minimal, sustainable, and wonderfully engaging toys designed to nurture creativity.
+            </motion.p>
+            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+              <Link to="/shop" className="w-full sm:w-auto"><MagneticButton variant="dark" className="w-full justify-center">Start Exploring <span className="material-symbols-outlined text-sm">arrow_forward</span></MagneticButton></Link>
+            </motion.div>
+          </motion.div>
+
+          {/* Right: AI Images Slider */}
+          <div className="lg:col-span-7 relative w-full h-[350px] md:h-[500px] flex items-center justify-center">
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay, EffectFade]}
+              effect="fade"
+              fadeEffect={{ crossFade: true }}
+              spaceBetween={0}
+              slidesPerView={1}
+              loop={true}
+              autoplay={{ delay: 3500, disableOnInteraction: false }}
+              pagination={{ clickable: true, dynamicBullets: true }}
+              navigation={true}
+              className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white"
+            >
+              {heroBanners.map((banner) => (
+                <SwiperSlide key={banner.id} className="overflow-hidden rounded-[2rem] cursor-pointer bg-red-50">
+                  <Link to={banner.link} className="w-full h-full block">
+                    <img 
+                      src={banner.image} 
+                      alt={banner.alt} 
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 ease-out"
+                      loading="eager"
+                    />
+                  </Link>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+          
+        </div>
+      </motion.section>
 
       {/* ================= INFINITE CATEGORY STRIP ================= */}
-      <section className="py-5 bg-red-600 border-y border-red-700 overflow-hidden relative z-20 flex mt-4">
+      <section className="py-5 bg-red-600 border-y border-red-700 overflow-hidden relative z-20 flex">
         <div className="flex gap-8 w-max px-4 will-change-transform transform-gpu" style={{ animation: "marquee-fast 20s linear infinite" }}>
           <style>{`@keyframes marquee-fast { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
           {infiniteCategories.map((cat, idx) => (
