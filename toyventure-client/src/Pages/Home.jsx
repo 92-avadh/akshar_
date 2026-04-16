@@ -60,11 +60,9 @@ const Home = () => {
   const heroBanners = [
     { id: 1, image: '/assets/banner-dino.jpg', alt: 'Dino-Mite Adventures', },
     { id: 2, image: '/assets/banner-chefs.jpg', alt: 'Little Chefs Big Dreams',  },
-    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival',  },
-    { id: 4, image: '/assets/banner4.jpg', alt: 'RC Trucks',  }, 
-    { id: 5, image: '/assets/banner5.jpg', alt: 'Childrens',  }, 
-    { id: 6, image: '/assets/banner6.jpg', alt: 'Construction',  }, 
-
+    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival', },
+    { id: 4, image: '/assets/banner4.jpg', alt: 'Adventure Awaits', }, 
+    { id: 5, image: '/assets/banner6.jpg', alt: 'Creative Play', }, 
   ];
 
   const products = [
@@ -143,14 +141,15 @@ const Home = () => {
             </motion.div>
           </motion.div>
 
-          {/* Right: AI Images Slider (Auto-slides every 1s, swipable) */}
+          {/* Right: AI Images Slider (Auto-slides gracefully every 2s, swipable) */}
           <div className="lg:col-span-7 relative w-full h-[350px] md:h-[500px] flex items-center justify-center">
             <Swiper
               modules={[Pagination, Autoplay]}
               spaceBetween={20}
               slidesPerView={1}
               loop={true}
-              autoplay={{ delay: 1000, disableOnInteraction: false }}
+              speed={1000} /* Controls the smoothness of the slide transition (1s glide) */
+              autoplay={{ delay: 2000, disableOnInteraction: false }} /* Waits 2s before sliding */
               pagination={{ clickable: true, dynamicBullets: true }}
               className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white"
             >
@@ -260,7 +259,7 @@ const Home = () => {
       {/* ================= BENTO CATEGORIES (RESTORED) ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
         <div className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Universes of Play.</h2>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Wonder Play.</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {categories.map((cat, idx) => (
