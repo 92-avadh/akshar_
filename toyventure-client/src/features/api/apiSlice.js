@@ -89,7 +89,7 @@ export const {
   useGetUserProfileQuery, useUpdateUserProfileMutation,
   useGetAllUsersQuery, useToggleUserBanStatusMutation, useUpdateUserRoleMutation, useRequestAdminPromotionMutation, useConfirmAdminPromotionMutation, 
   useCreateOrderMutation, useCreateCodOrderMutation, useGetMyOrdersQuery, useGetAllOrdersQuery, useUpdateOrderStatusMutation,
-  useCreateRazorpayOrderMutation, useVer9yMnTm4NSzvG9rrwjM2ec8xZgh1cafXH8, useCreateDemoOrderMutation,
+  useCreateRazorpayOrderMutation, useVerifyRazorpayPaymentMutation, useCreateDemoOrderMutation,
   useSubmitContactMessageMutation, useGetAllContactMessagesQuery,
   useGetAllCouponsQuery, useCreateCouponMutation, useDeleteCouponMutation, useToggleCouponMutation, useValidateCouponMutation,
 } = apiSlice;
