@@ -108,47 +108,43 @@ html {
 .animate-floatSlow {
   animation: floatSlow 5s ease-in-out infinite;
 }
+
 /* ================= CLOUD ANIMATION ================= */
 
 .cloud {
   position: absolute;
-  opacity: 0.8;
+  opacity: 0.15; /* Kept subtle so it doesn't distract from the links */
 }
 
 /* Individual clouds */
 .cloud1 {
   top: 40px;
-  left: -200px;
   width: 120px;
-  animation: moveCloud 40s linear infinite, floatCloud 6s ease-in-out infinite;
+  animation: moveCloud 45s linear infinite, floatCloud 6s ease-in-out infinite;
 }
 
 .cloud2 {
-  top: 100px;
-  left: -250px;
+  top: 150px;
   width: 90px;
-  animation: moveCloud 55s linear infinite, floatCloud 7s ease-in-out infinite;
+  animation: moveCloud 60s linear infinite, floatCloud 7s ease-in-out infinite;
+  animation-delay: -15s;
 }
 
 .cloud3 {
-  top: 70px;
-  left: -300px;
+  top: 80px;
   width: 140px;
-  animation: moveCloud 70s linear infinite, floatCloud 8s ease-in-out infinite;
+  animation: moveCloud 75s linear infinite, floatCloud 8s ease-in-out infinite;
+  animation-delay: -30s;
 }
 
-/* Horizontal movement */
+/* Horizontal movement using 'left' avoids overriding the 'transform' floating effect */
 @keyframes moveCloud {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(120vw);
-  }
+  0% { left: -200px; }
+  100% { left: 100vw; }
 }
 
-/* Slight floating */
+/* Slight floating using transform */
 @keyframes floatCloud {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-12px); }
 }
