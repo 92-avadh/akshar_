@@ -288,7 +288,6 @@ const Home = () => {
           <div className="flex gap-6 w-max px-6 will-change-transform transform-gpu py-4" style={{ animation: "marquee 40s linear infinite" }}>
             <style>{`@keyframes marquee { 0% { transform: translateX(-50%); } 100% { transform: translateX(0%); } }`}</style>
             {infiniteReviews.map((review, idx) => (
-              {/* FIXED: Changed width to w-[85vw] for perfect mobile fit */}
               <div key={idx} className="w-[85vw] max-w-[320px] md:w-[400px] md:max-w-none shrink-0 bg-red-50/30 border border-red-100 p-8 md:p-10 rounded-[2rem]">
                 <div className="flex text-red-500 mb-6">{[...Array(5)].map((_, i) => <span key={i} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>)}</div>
                 <p className="text-red-950/70 font-medium mb-8 leading-relaxed line-clamp-4">"{review.text}"</p>
