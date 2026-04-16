@@ -1,9 +1,16 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart, setPendingItem } from '../features/cart/cartSlice';
 import toast from 'react-hot-toast';
+
+// Import Swiper React components and styles
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 // ==========================================
 // UTILITY: HARDWARE ACCELERATED MAGNETIC BUTTON
@@ -46,10 +53,13 @@ const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // OPTIMIZATION: Default window scroll is heavily optimized by Framer Motion
-  const { scrollYProgress } = useScroll(); 
-  const heroY = useTransform(scrollYProgress, [0, 0.2], ["0%", "30%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  // --- DATA ARRAYS ---
+  
+  const heroBanners = [
+    { id: 1, image: '/assets/banner-dino.jpg', alt: 'Dino-Mite Adventures', link: '/shop?category=action-figures' },
+    { id: 2, image: '/assets/banner-chefs.jpg', alt: 'Little Chefs Big Dreams', link: '/shop?category=educational' },
+    { id: 3, image: '/assets/banner-bear.jpg', alt: 'Wonder Toy Festival', link: '/shop?category=soft-toys' },
+  ];
 
   const products = [
     { _id: '1', name: "Eco-Wooden Rail", title: "Eco-Wooden Rail", price: 899, originalPrice: 1199, tag: "Eco Friendly", img: "https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" },
@@ -58,125 +68,23 @@ const Home = () => {
     { _id: '4', name: "Artisan Craft Kit", title: "Artisan Craft Kit", price: 699, originalPrice: 899, tag: "New", img: "https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3" }
   ];
 
-  const categories = [
-    { name: "Imaginative Play", desc: "Let their stories unfold", size: "md:col-span-2 md:row-span-2 h-[400px] md:h-[500px]", img: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?q=80&w=1200&auto=format&fit=crop" },
-    { name: "Building & STEM", desc: "Engineer the future", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop" },
-    { name: "Creative Arts", desc: "Unleash inner artists", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop" },
+  const shopByCategories = [
+    { id: 1, name: 'Soft Toys', image: 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=400&q=80', link: '/shop?category=soft-toys' },
+    { id: 2, name: 'Action Figures', image: 'https://images.unsplash.com/photo-1594787317666-41793740284e?auto=format&fit=crop&w=400&q=80', link: '/shop?category=action-figures' },
+    { id: 3, name: 'Puzzles', image: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?auto=format&fit=crop&w=400&q=80', link: '/shop?category=puzzles' },
+    { id: 4, name: 'Educational', image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80', link: '/shop?category=educational' },
+    { id: 5, name: 'Board Games', image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80', link: '/shop?category=board-games' },
+    { id: 6, name: 'Vehicles', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=400&q=80', link: '/shop?category=vehicles' },
   ];
 
   const shopByAgeData = [
-    {
-      age: "0-12 MO",
-      label: "Infants",
-      sublabel: "Newborn to First Steps",
-      section: "Infants",
-      color: "text-red-400",
-      bgColor: "bg-red-50",
-      borderColor: "border-red-100",
-      radius: "40% 60% 70% 30% / 40% 50% 60% 50%",
-      icon: "🍼",
-      subcategories: ["Onesies", "Sleepwear", "Swaddles", "Rompers", "Booties", "Bibs"],
-      sizes: ["NB", "0-3M", "3-6M", "6-9M", "9-12M"],
-      genderFilters: ["Boy", "Girl", "Neutral"],
-      highlights: ["Ultra-soft fabrics", "Snap closures", "Hypoallergenic"],
-      productCount: 120,
-    },
-    {
-      age: "12-36 MO",
-      label: "Toddlers",
-      sublabel: "Walking & Exploring",
-      section: "Infants",
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      borderColor: "border-red-200",
-      radius: "50% 50% 30% 70% / 60% 30% 70% 40%",
-      icon: "🧸",
-      subcategories: ["T-Shirts", "Leggings", "Shorts", "Dresses", "PJs", "First Shoes"],
-      sizes: ["12-18M", "18-24M", "2T"],
-      genderFilters: ["Boy", "Girl", "Neutral"],
-      highlights: ["Elastic waistbands", "Easy pull-on", "Durable knees"],
-      productCount: 110,
-    },
-    {
-      age: "2-5 YRS",
-      label: "Preschool",
-      sublabel: "Creative & Curious",
-      section: "Little Kids",
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-      borderColor: "border-red-200",
-      radius: "70% 30% 50% 50% / 30% 40% 60% 70%",
-      icon: "🎨",
-      subcategories: ["Tops", "Bottoms", "Dresses", "Activewear", "Outerwear", "Swimwear"],
-      sizes: ["2T", "3T", "4T", "5T"],
-      genderFilters: ["Boy", "Girl", "Neutral"],
-      highlights: ["Art-friendly", "Washable prints", "Play-proof"],
-      productCount: 130,
-    },
-    {
-      age: "5-7 YRS",
-      label: "Kindergarten",
-      sublabel: "School Ready",
-      section: "Little Kids",
-      color: "text-red-700",
-      bgColor: "bg-red-100",
-      borderColor: "border-red-300",
-      radius: "30% 70% 60% 40% / 50% 60% 40% 50%",
-      icon: "🎒",
-      subcategories: ["Uniforms", "Tops", "Bottoms", "Activewear", "Rainwear", "Sneakers"],
-      sizes: ["XS (4-5)", "S (6-7)"],
-      genderFilters: ["Boy", "Girl", "Neutral"],
-      highlights: ["School-ready", "Active-friendly", "Stain resistant"],
-      productCount: 115,
-    },
-    {
-      age: "7-10 YRS",
-      label: "Grade School",
-      sublabel: "Full of Energy",
-      section: "Big Kids",
-      color: "text-red-700",
-      bgColor: "bg-red-100",
-      borderColor: "border-red-300",
-      radius: "60% 40% 40% 60% / 40% 60% 50% 50%",
-      icon: "⚽",
-      subcategories: ["Graphic Tees", "Jeans", "Hoodies", "Activewear", "Shorts", "Sneakers"],
-      sizes: ["S (7-8)", "M (9-10)"],
-      genderFilters: ["Boy", "Girl", "Neutral"],
-      highlights: ["Sporty styles", "Reinforced knees", "Weekend looks"],
-      productCount: 135,
-    },
-    {
-      age: "10-14 YRS",
-      label: "Tweens",
-      sublabel: "Finding Their Style",
-      section: "Big Kids",
-      color: "text-red-800",
-      bgColor: "bg-red-100",
-      borderColor: "border-red-300",
-      radius: "45% 55% 55% 45% / 55% 45% 55% 45%",
-      icon: "🎧",
-      subcategories: ["Streetwear", "Denim", "Hoodies", "Joggers", "Layer Pieces", "Accessories"],
-      sizes: ["L (11-12)", "XL (12-13)", "XXL (13-14)"],
-      genderFilters: ["Boy", "Girl", "Unisex"],
-      highlights: ["Trend-forward", "Self-expression", "Casual & cool"],
-      productCount: 150,
-    },
-    {
-      age: "14+ YRS",
-      label: "Teens",
-      sublabel: "Young Adults",
-      section: "Teens",
-      color: "text-rose-800",
-      bgColor: "bg-rose-100",
-      borderColor: "border-rose-400",
-      radius: "50% 50% 40% 60% / 40% 50% 60% 50%",
-      icon: "🛍️",
-      subcategories: ["Premium Basics", "Outerwear", "Formal", "Athleisure", "Denim", "Accessories"],
-      sizes: ["XS", "S", "M", "L", "XL"],
-      genderFilters: ["Male", "Female", "Unisex"],
-      highlights: ["Adult sizing", "Fashion-forward", "Occasion wear"],
-      productCount: 160,
-    },
+    { age: "0-12 MO", label: "Infants", sublabel: "Newborn to First Steps", color: "text-red-400", bgColor: "bg-red-50", borderColor: "border-red-100", radius: "40% 60% 70% 30% / 40% 50% 60% 50%", icon: "🍼" },
+    { age: "12-36 MO", label: "Toddlers", sublabel: "Walking & Exploring", color: "text-red-500", bgColor: "bg-red-50", borderColor: "border-red-200", radius: "50% 50% 30% 70% / 60% 30% 70% 40%", icon: "🧸" },
+    { age: "2-5 YRS", label: "Preschool", sublabel: "Creative & Curious", color: "text-red-600", bgColor: "bg-red-50", borderColor: "border-red-200", radius: "70% 30% 50% 50% / 30% 40% 60% 70%", icon: "🎨" },
+    { age: "5-7 YRS", label: "Kindergarten", sublabel: "School Ready", color: "text-red-700", bgColor: "bg-red-100", borderColor: "border-red-300", radius: "30% 70% 60% 40% / 50% 60% 40% 50%", icon: "🎒" },
+    { age: "7-10 YRS", label: "Grade School", sublabel: "Full of Energy", color: "text-red-700", bgColor: "bg-red-100", borderColor: "border-red-300", radius: "60% 40% 40% 60% / 40% 60% 50% 50%", icon: "⚽" },
+    { age: "10-14 YRS", label: "Tweens", sublabel: "Finding Their Style", color: "text-red-800", bgColor: "bg-red-100", borderColor: "border-red-300", radius: "45% 55% 55% 45% / 55% 45% 55% 45%", icon: "🎧" },
+    { age: "14+ YRS", label: "Teens", sublabel: "Young Adults", color: "text-rose-800", bgColor: "bg-rose-100", borderColor: "border-rose-400", radius: "50% 50% 40% 60% / 40% 50% 60% 50%", icon: "🛍️" },
   ];
 
   const reviews = [
@@ -193,7 +101,7 @@ const Home = () => {
   ];
   const infiniteCategories = [...runningCategories, ...runningCategories];
 
-  // ================= NEW ADD TO CART LOGIC =================
+  // ================= CART LOGIC =================
   const handleAddToCart = (product) => {
     const userInfoData = sessionStorage.getItem('userInfo');
     const userInfo = (userInfoData && userInfoData !== 'null' && userInfoData !== 'undefined') ? JSON.parse(userInfoData) : null;
@@ -210,42 +118,46 @@ const Home = () => {
   return (
     <main className="bg-white text-red-950 min-h-screen font-sans overflow-x-hidden selection:bg-red-100 relative fade-in">
       
-      {/* ================= HERO SECTION ================= */}
-      <motion.section style={{ y: heroY, opacity: heroOpacity }} className="relative min-h-[90vh] flex items-center justify-center px-6 z-10 pt-28 pb-16 max-w-[1440px] mx-auto pointer-events-auto will-change-transform transform-gpu">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
-          <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } } }} className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left z-20">
-            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="mb-8 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-600 text-xs font-bold uppercase tracking-widest">
-              <span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span></span>
-              Fresh Arrivals
-            </motion.div>
-            <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-5xl md:text-7xl font-black tracking-tighter text-red-950 leading-[1.05] mb-6">
-              Dive into the <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">Universe of Play.</span>
-            </motion.h1>
-            <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg text-red-950/60 font-medium max-w-lg mb-10 leading-relaxed">
-              Step into a world of minimal, sustainable, and wonderfully engaging toys designed to nurture creativity.
-            </motion.p>
-            <motion.div variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <Link to="/shop" className="w-full sm:w-auto"><MagneticButton variant="dark" className="w-full justify-center">Start Exploring <span className="material-symbols-outlined text-sm">arrow_forward</span></MagneticButton></Link>
-            </motion.div>
-          </motion.div>
-
-          <div className="lg:col-span-6 relative h-[500px] lg:h-[650px] w-full flex items-center justify-center">
-            <motion.div initial={{ opacity: 0, y: 50, rotate: -3 }} animate={{ opacity: 1, y: 0, rotate: -2 }} transition={{ duration: 0.8, delay: 0.2 }} className="absolute z-10 w-[280px] sm:w-[320px] bg-white p-5 rounded-[2rem] border border-red-50 shadow-2xl shadow-red-900/10 group hover:rotate-0 hover:scale-[1.02] transition-all duration-500">
-              <div className="bg-red-50/50 rounded-2xl h-[280px] p-6 mb-5 flex items-center justify-center relative overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
-                <img loading="eager" decoding="async" src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?ixlib=rb-4.0.3" alt="Wooden Toy" className="w-full h-full object-contain mix-blend-multiply" />
-                <div className="absolute top-4 left-4 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">Eco-Friendly</div>
-              </div>
-              <div className="px-2 pb-2 text-center">
-                <h3 className="font-bold text-lg text-red-950 mb-1">Wooden Rail Express</h3>
-                <p className="text-red-950/60 font-medium">₹899</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </motion.section>
+      {/* ================= NEW CAROUSEL HERO SECTION ================= */}
+      <section className="relative w-full pt-28 pb-8 px-4 sm:px-6 max-w-[1500px] mx-auto z-10">
+        <Swiper
+          modules={[Navigation, Pagination, Autoplay]}
+          spaceBetween={20}
+          slidesPerView={1}
+          centeredSlides={true}
+          loop={true}
+          autoplay={{
+            delay: 4000,
+            disableOnInteraction: false,
+          }}
+          pagination={{ clickable: true, dynamicBullets: true }}
+          navigation={true}
+          breakpoints={{
+            // When window width is >= 768px (Desktop/Tablet)
+            768: {
+              slidesPerView: 1.5, // Shows main image + peeking edges of next/prev
+              spaceBetween: 30,
+            },
+          }}
+          className="w-full h-[250px] sm:h-[400px] md:h-[500px] lg:h-[550px] hero-swiper rounded-[2rem]"
+        >
+          {heroBanners.map((banner) => (
+            <SwiperSlide key={banner.id} className="overflow-hidden rounded-[2rem] shadow-xl shadow-red-900/10 cursor-pointer transition-transform duration-300">
+              <Link to={banner.link} className="w-full h-full block">
+                <img 
+                  src={banner.image} 
+                  alt={banner.alt} 
+                  className="w-full h-full object-cover rounded-[2rem] hover:scale-105 transition-transform duration-700 ease-out"
+                  loading="eager"
+                />
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </section>
 
       {/* ================= INFINITE CATEGORY STRIP ================= */}
-      <section className="py-5 bg-red-600 border-y border-red-700 overflow-hidden relative z-20 flex">
+      <section className="py-5 bg-red-600 border-y border-red-700 overflow-hidden relative z-20 flex mt-4">
         <div className="flex gap-8 w-max px-4 will-change-transform transform-gpu" style={{ animation: "marquee-fast 20s linear infinite" }}>
           <style>{`@keyframes marquee-fast { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }`}</style>
           {infiniteCategories.map((cat, idx) => (
@@ -261,14 +173,47 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ================= SHOP BY CATEGORY (Circular) ================= */}
+      <section className="py-24 bg-white relative z-20 border-b border-red-50">
+        <div className="max-w-[1440px] mx-auto px-6">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-4xl md:text-5xl font-black text-red-950 tracking-tighter">
+              Shop by <span className="text-red-600">Category</span>
+            </h2>
+            <p className="text-red-950/60 mt-3 font-medium text-lg">Find the perfect toy for every adventure</p>
+          </div>
+
+          <div className="flex overflow-x-auto hide-scrollbar gap-6 md:gap-10 pb-8 snap-x justify-start lg:justify-center">
+            {shopByCategories.map((cat) => (
+              <Link 
+                key={cat.id} 
+                to={cat.link} 
+                className="flex flex-col items-center gap-4 group shrink-0 snap-center w-[120px] md:w-[160px]"
+              >
+                <div className="w-28 h-28 md:w-40 md:h-40 rounded-full border-[6px] border-white shadow-xl shadow-red-900/5 bg-red-50 overflow-hidden transition-all duration-500 ease-out group-hover:border-red-100 group-hover:-translate-y-3 group-hover:shadow-2xl group-hover:shadow-red-900/10">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.name} 
+                    className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="font-black text-red-950 text-sm md:text-lg text-center transition-colors duration-300 group-hover:text-red-600">
+                  {cat.name}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ================= SHOP BY AGE ================= */}
-      <section className="bg-red-50/30 py-24 relative z-20 border-y border-red-50">
+      <section className="bg-red-50/30 py-24 relative z-20 border-b border-red-50">
         <div className="max-w-[1440px] mx-auto px-6 text-center mb-16">
           <h2 className="text-red-600 font-bold uppercase tracking-widest text-xs mb-3">Find The Perfect Toy</h2>
           <h3 className="text-4xl md:text-5xl font-black text-red-950 tracking-tighter">Shop by Age</h3>
         </div>
         
-        {/* Scrollable Container */}
         <div className="flex overflow-x-auto gap-8 px-6 pb-12 pt-4 max-w-[1440px] mx-auto snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
           
@@ -330,31 +275,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= BENTO CATEGORIES ================= */}
-      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
-        <div className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Universes of Play.</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {categories.map((cat, idx) => (
-            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[2rem] overflow-hidden bg-red-50 cursor-pointer ${cat.size}`}>
-              <img loading="lazy" decoding="async" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
-              <div className="absolute inset-0 bg-gradient-to-t from-red-950/80 to-transparent opacity-80"></div>
-              
-              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                <div>
-                  <h3 className="text-2xl font-black text-white">{cat.name}</h3>
-                  <p className="text-red-50 font-medium text-sm mt-1 opacity-90">{cat.desc}</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 group-hover:bg-white group-hover:text-red-600 transition-all duration-300">
-                  <span className="material-symbols-outlined -rotate-45">arrow_forward</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
       {/* ================= EDITORIAL PARALLAX ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
         <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative h-[70vh] rounded-[3rem] overflow-hidden">
@@ -369,7 +289,9 @@ const Home = () => {
               <p className="text-red-950/70 font-medium mb-8 leading-relaxed">
                 In a world of screens, we champion the physical. Toys that demand touch, inspire storytelling, and withstand the test of time.
               </p>
-              <MagneticButton variant="dark" className="w-max">Read Our Manifesto</MagneticButton>
+              <Link to="/about">
+                <MagneticButton variant="dark" className="w-max">Read Our Manifesto</MagneticButton>
+              </Link>
             </div>
           </div>
         </motion.div>
