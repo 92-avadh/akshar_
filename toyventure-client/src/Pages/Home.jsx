@@ -58,13 +58,10 @@ const Home = () => {
     { _id: '4', name: "Artisan Craft Kit", title: "Artisan Craft Kit", price: 699, originalPrice: 899, tag: "New", img: "https://images.unsplash.com/photo-1558060370-d644479cb6f7?ixlib=rb-4.0.3" }
   ];
 
-  const shopByCategories = [
-    { id: 1, name: 'Soft Toys', image: 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=400&q=80', link: '/shop?category=soft-toys' },
-    { id: 2, name: 'Action Figures', image: 'https://images.unsplash.com/photo-1594787317666-41793740284e?auto=format&fit=crop&w=400&q=80', link: '/shop?category=action-figures' },
-    { id: 3, name: 'Puzzles', image: 'https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?auto=format&fit=crop&w=400&q=80', link: '/shop?category=puzzles' },
-    { id: 4, name: 'Educational', image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80', link: '/shop?category=educational' },
-    { id: 5, name: 'Board Games', image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80', link: '/shop?category=board-games' },
-    { id: 6, name: 'Vehicles', image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=400&q=80', link: '/shop?category=vehicles' },
+  const categories = [
+    { name: "Imaginative Play", desc: "Let their stories unfold", size: "md:col-span-2 md:row-span-2 h-[400px] md:h-[500px]", img: "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?q=80&w=1200&auto=format&fit=crop" },
+    { name: "Building & STEM", desc: "Engineer the future", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?q=80&w=800&auto=format&fit=crop" },
+    { name: "Creative Arts", desc: "Unleash inner artists", size: "md:col-span-1 md:row-span-1 h-[240px]", img: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop" },
   ];
 
   const shopByAgeData = [
@@ -333,37 +330,28 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= SHOP BY CATEGORY (Replaced Bento Categories) ================= */}
-      <section className="py-24 bg-white relative z-20 border-t border-red-50">
-        <div className="max-w-[1440px] mx-auto px-6">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-red-950 tracking-tighter">
-              Shop by <span className="text-red-600">Category</span>
-            </h2>
-            <p className="text-red-950/60 mt-3 font-medium text-lg">Find the perfect toy for every adventure</p>
-          </div>
-
-          <div className="flex overflow-x-auto hide-scrollbar gap-6 md:gap-10 pb-8 snap-x justify-start lg:justify-center">
-            {shopByCategories.map((cat) => (
-              <Link 
-                key={cat.id} 
-                to={cat.link} 
-                className="flex flex-col items-center gap-4 group shrink-0 snap-center w-[120px] md:w-[160px]"
-              >
-                <div className="w-28 h-28 md:w-40 md:h-40 rounded-full border-[6px] border-white shadow-xl shadow-red-900/5 bg-red-50 overflow-hidden transition-all duration-500 ease-out group-hover:border-red-100 group-hover:-translate-y-3 group-hover:shadow-2xl group-hover:shadow-red-900/10">
-                  <img 
-                    src={cat.image} 
-                    alt={cat.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
-                    loading="lazy"
-                  />
+      {/* ================= BENTO CATEGORIES ================= */}
+      <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
+        <div className="mb-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Universes of Play.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {categories.map((cat, idx) => (
+            <motion.div key={idx} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className={`group relative rounded-[2rem] overflow-hidden bg-red-50 cursor-pointer ${cat.size}`}>
+              <img loading="lazy" decoding="async" src={cat.img} alt={cat.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
+              <div className="absolute inset-0 bg-gradient-to-t from-red-950/80 to-transparent opacity-80"></div>
+              
+              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                <div>
+                  <h3 className="text-2xl font-black text-white">{cat.name}</h3>
+                  <p className="text-red-50 font-medium text-sm mt-1 opacity-90">{cat.desc}</p>
                 </div>
-                <span className="font-black text-red-950 text-sm md:text-lg text-center transition-colors duration-300 group-hover:text-red-600">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
-          </div>
+                <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white shrink-0 group-hover:bg-white group-hover:text-red-600 transition-all duration-300">
+                  <span className="material-symbols-outlined -rotate-45">arrow_forward</span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
