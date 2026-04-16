@@ -124,10 +124,10 @@ const Navbar = () => {
       <nav className={`fixed w-full z-50 transition-all duration-500 ease-in-out ${isScrolled ? 'pt-4 pb-2' : 'py-6'}`}>
         <div className="max-w-[1300px] mx-auto px-4 sm:px-6 relative">
           
-          {/* Main Navbar Bar - Solid Red background when scrolled */}
+          {/* Main Navbar Bar - Solid Red background when scrolled (Darker Red-700) */}
           <div className={`relative flex items-center justify-between rounded-full transition-all duration-500 ease-in-out ${
             isScrolled 
-            ? 'bg-red-600 shadow-lg shadow-red-600/20 px-6 py-3' 
+            ? 'bg-red-700 shadow-lg shadow-red-700/30 px-6 py-3' 
             : 'bg-transparent px-2'
           }`}>
             
@@ -140,16 +140,16 @@ const Navbar = () => {
             </Link>
 
             {/* Middle: Desktop Links */}
-            <div className={`hidden md:flex items-center gap-1 p-1 rounded-full transition-colors duration-300 ${isScrolled ? 'bg-red-700/50 shadow-inner' : 'bg-transparent'}`}>
+            <div className={`hidden md:flex items-center gap-1 p-1 rounded-full transition-colors duration-300 ${isScrolled ? 'bg-red-800/50 shadow-inner' : 'bg-transparent'}`}>
               {navLinks.map((link) => (
                 <Link 
                   key={link.name} 
                   to={link.path} 
                   className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
                     location.pathname === link.path 
-                    ? (isScrolled ? 'bg-white text-red-600 shadow-md' : 'bg-red-600 text-white shadow-md shadow-red-600/30') // Active Link Colors
+                    ? (isScrolled ? 'bg-white text-red-700 shadow-md' : 'bg-red-600 text-white shadow-md shadow-red-600/30') // Active Link Colors
                     : isScrolled
-                      ? 'text-red-50 hover:text-white hover:bg-red-500' // Solid Red Mode Inactive Links
+                      ? 'text-red-50 hover:text-white hover:bg-red-600' // Solid Red Mode Inactive Links
                       : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50' // Light Mode Inactive Links
                   }`}
                 >
@@ -163,12 +163,12 @@ const Navbar = () => {
               
               {/* Favorites Icon */}
               <Link to="/favorites" className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 hidden sm:flex ${
-                isScrolled ? 'text-white hover:bg-red-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                isScrolled ? 'text-white hover:bg-red-800' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}>
                 <span className="material-symbols-outlined text-[22px]">favorite</span>
                 {wishlistItemsCount > 0 && (
                   <span className={`absolute top-0 right-0 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                    isScrolled ? 'bg-white text-red-600 border-red-600' : 'bg-red-600 text-white border-white'
+                    isScrolled ? 'bg-white text-red-700 border-red-700' : 'bg-red-600 text-white border-white'
                   }`}>
                     {wishlistItemsCount}
                   </span>
@@ -179,12 +179,12 @@ const Navbar = () => {
               {isAdmin && (
                 <div className="relative hidden sm:block">
                   <button onClick={() => setIsNotifOpen(!isNotifOpen)} className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                    isScrolled ? 'text-white hover:bg-red-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                    isScrolled ? 'text-white hover:bg-red-800' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
                   }`} title="Admin Alerts">
                     <span className="material-symbols-outlined text-[22px]">notifications</span>
                     {totalNotifications > 0 && (
                       <span className={`absolute top-0 right-0 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                        isScrolled ? 'bg-white text-red-600 border-red-600' : 'bg-red-600 text-white border-white'
+                        isScrolled ? 'bg-white text-red-700 border-red-700' : 'bg-red-600 text-white border-white'
                       }`}>
                         {totalNotifications}
                       </span>
@@ -232,12 +232,12 @@ const Navbar = () => {
 
               {/* Cart Icon */}
               <Link to="/cart" className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                isScrolled ? 'text-white hover:bg-red-700' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
+                isScrolled ? 'text-white hover:bg-red-800' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}>
                 <span className="material-symbols-outlined text-[22px]">shopping_cart</span>
                 {cartItemsCount > 0 && (
                   <span className={`absolute top-0 right-0 w-4 h-4 text-[10px] font-bold rounded-full flex items-center justify-center border-2 box-content ${
-                    isScrolled ? 'bg-white text-red-600 border-red-600' : 'bg-red-600 text-white border-white'
+                    isScrolled ? 'bg-white text-red-700 border-red-700' : 'bg-red-600 text-white border-white'
                   }`}>
                     {cartItemsCount}
                   </span>
@@ -252,12 +252,12 @@ const Navbar = () => {
                       onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                       className={`flex items-center gap-2 border pl-1.5 pr-3 py-1.5 rounded-full transition-colors duration-300 outline-none ${
                         isScrolled 
-                        ? 'bg-red-700 border-red-500 hover:bg-red-800 shadow-sm' 
+                        ? 'bg-red-800 border-red-600 hover:bg-red-900 shadow-sm' 
                         : 'bg-white border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isScrolled ? 'bg-white text-red-600' : 'bg-red-50 text-red-600'
+                        isScrolled ? 'bg-white text-red-700' : 'bg-red-50 text-red-600'
                       }`}>
                         {userInfo.name ? userInfo.name.charAt(0).toUpperCase() : 'U'}
                       </div>
@@ -301,7 +301,7 @@ const Navbar = () => {
                   </>
                 ) : (
                   <Link to="/auth" className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 relative z-50 ${
-                    isScrolled ? 'bg-white text-red-600 hover:bg-red-50 shadow-sm' : 'bg-slate-900 text-white hover:bg-slate-800'
+                    isScrolled ? 'bg-white text-red-700 hover:bg-red-50 shadow-sm' : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}>
                     <span className="material-symbols-outlined text-[18px] hidden sm:block">login</span>
                     Log In
@@ -313,7 +313,7 @@ const Navbar = () => {
               <button 
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-300 ml-1 z-50 relative ${
-                  isScrolled ? 'bg-red-700 text-white hover:bg-red-800' : 'bg-slate-50 text-slate-900'
+                  isScrolled ? 'bg-red-800 text-white hover:bg-red-900' : 'bg-slate-50 text-slate-900'
                 }`}
               >
                 <span className="material-symbols-outlined text-[24px]">
