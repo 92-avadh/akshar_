@@ -16,7 +16,8 @@ import Auth from './Pages/Auth';
 import Profile from './Pages/Profile';
 import SafetyStandards from './Pages/SafetyStandards';
 import NotFound from './Pages/NotFound';
-
+import AdminDashboard from './Pages/AdminDashboard';
+import AdminCatalog from './Pages/AdminCatalog';
 // --- NEW PAGE IMPORTS ADDED HERE ---
 import About from './Pages/About';
 import Contact from './Pages/Contact';
