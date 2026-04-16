@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+
+// Fixed relative import paths from ../ to ./
 import { useGetProductsQuery } from './features/api/apiSlice';
 import Hero from './assets/hero.png';
 import SkeletonCard from './components/SkeletonCard';
