@@ -268,9 +268,9 @@ const Navbar = () => {
                       </span>
                     </button>
 
-                    {/* Profile Dropdown */}
+                    {/* Profile Dropdown - FIXED with top-full mt-2 to open downwards */}
                     {isProfileDropdownOpen && (
-                      <div className="absolute right-0 mt-14 w-56 bg-white/95 backdrop-blur-xl rounded-3xl border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-3xl border border-white shadow-xl shadow-slate-200/50 overflow-hidden animate-[fadeIn_0.2s_ease-out] z-50 p-2">
                         <div className="px-4 py-4 border-b border-slate-50">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Signed in</p>
                           <p className="text-sm font-bold text-slate-900 truncate">{userInfo.name || 'User'}</p>
@@ -332,6 +332,7 @@ const Navbar = () => {
                 <Link 
                   key={link.name} 
                   to={link.path} 
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`px-5 py-4 rounded-2xl text-sm font-bold transition-all flex items-center justify-between ${
                     location.pathname === link.path 
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/30' // Red Box for Active Link
@@ -344,6 +345,7 @@ const Navbar = () => {
               ))}
               <Link 
                 to="/favorites" 
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`px-5 py-4 rounded-2xl text-sm font-bold transition-all flex items-center justify-between ${
                   location.pathname === '/favorites' 
                   ? 'bg-red-600 text-white shadow-md shadow-red-600/30' 

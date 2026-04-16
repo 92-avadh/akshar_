@@ -102,10 +102,8 @@ const Profile = () => {
       setIsDownloading(true);
       const token = sessionStorage.getItem('token');
       
-      // FIX: Use VITE_API_BASE_URL to match Redux, falling back to /api
       const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       
-      // FIX: Ensure path appends correctly to the base URL
       const response = await fetch(`${baseUrl}/orders/${orderId}/invoice`, {
         method: 'GET',
         headers: {
@@ -182,8 +180,8 @@ const Profile = () => {
           
           {/* ORDERS TAB */}
           {activeTab === 'orders' && (
-            <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-sm border border-red-50 min-h-[400px]">
-              <h1 className="text-3xl font-black text-red-950 mb-8 border-b border-red-50 pb-4">Order History</h1>
+            <div className="bg-white/80 backdrop-blur-md p-4 sm:p-8 rounded-[2.5rem] shadow-sm border border-red-50 min-h-[400px]">
+              <h1 className="text-2xl sm:text-3xl font-black text-red-950 mb-6 sm:mb-8 border-b border-red-50 pb-4">Order History</h1>
               {loadingOrders ? (
                 <div className="flex justify-center py-10"><p className="font-bold text-red-950/60">Loading orders...</p></div>
               ) : orders && orders.length > 0 ? (
@@ -192,7 +190,7 @@ const Profile = () => {
                     const fulfillMeta = getFulfillmentMeta(order.orderStatus);
                     const payMeta = getPaymentMeta(order.paymentStatus);
                     return (
-                      <div key={order._id} className="bg-red-50/30 p-6 rounded-3xl border border-red-50 shadow-sm flex flex-col gap-4 hover:shadow-md transition-all hover:bg-red-50/60">
+                      <div key={order._id} className="bg-red-50/30 p-5 sm:p-6 rounded-3xl border border-red-50 shadow-sm flex flex-col gap-4 hover:shadow-md transition-all hover:bg-red-50/60">
                         {/* Top Header Row */}
                         <div className="flex flex-col md:flex-row justify-between gap-4">
                           <div>
@@ -228,20 +226,20 @@ const Profile = () => {
                           </div>
                         </div>
 
-                        {/* Delivery Timeline UI */}
-                        <div className="mt-2 border-t border-red-100/60 pt-6">
-                           <div className="relative flex justify-between items-center w-full px-2">
+                        {/* FIXED: Delivery Timeline UI for Mobile */}
+                        <div className="mt-4 border-t border-red-100/60 pt-4 sm:pt-6">
+                           <div className="relative flex justify-between items-start sm:items-center w-full px-1 sm:px-2">
                              {/* Static Background Track */}
-                             <div className="absolute left-2 right-2 top-3 -translate-y-1/2 h-1 bg-red-100 rounded-full z-0"></div>
+                             <div className="absolute left-3 right-3 top-2.5 sm:top-3 -translate-y-1/2 h-[3px] sm:h-1 bg-red-100 rounded-full z-0"></div>
                              
                              {/* Dynamic Progress Track */}
                              <div 
-                               className="absolute left-2 top-3 -translate-y-1/2 h-1 bg-red-600 rounded-full z-0 transition-all duration-700 ease-in-out" 
+                               className="absolute left-3 top-2.5 sm:top-3 -translate-y-1/2 h-[3px] sm:h-1 bg-red-600 rounded-full z-0 transition-all duration-700 ease-in-out" 
                                style={{ 
                                  width: `calc(${
                                   ['created', 'confirmed', 'packed', 'dispatched', 'delivered', 'fulfilled'].indexOf(order.orderStatus) >= 4 ? 100 : 
                                   (['created', 'confirmed', 'packed', 'dispatched'].indexOf(order.orderStatus) / 4) * 100
-                                 }% - 16px)` 
+                                 }% - 24px)` 
                                }}
                              ></div>
 
@@ -259,15 +257,16 @@ const Profile = () => {
                                const isCompleted = idx <= (currentIdx === -1 ? 0 : currentIdx);
 
                                return (
-                                 <div key={step.id} className="flex flex-col items-center gap-2 relative z-10 w-16">
-                                   <div className={`w-6 h-6 rounded-full flex items-center justify-center border-[3px] transition-colors duration-500 bg-white shadow-sm
+                                 <div key={step.id} className="flex flex-col items-center relative z-10 w-12 sm:w-16">
+                                   <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center border-2 sm:border-[3px] transition-colors duration-500 bg-white shadow-sm
                                      ${isCompleted ? 'border-red-600 text-red-600' : 'border-red-100 text-transparent'}
                                    `}>
-                                      {isCompleted && <div className="w-2.5 h-2.5 bg-red-600 rounded-full"></div>}
+                                      {isCompleted && <div className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 bg-red-600 rounded-full"></div>}
                                    </div>
-                                   <div className={`text-[10px] sm:text-xs font-bold text-center ${isCompleted ? 'text-red-950' : 'text-red-950/40'}`}>
+                                   <div className={`text-[9px] sm:text-xs font-bold text-center mt-1 sm:mt-2 leading-tight ${isCompleted ? 'text-red-950' : 'text-red-950/40'}`}>
                                      {step.label}
-                                     {step.date && <div className="text-[9px] font-medium text-red-950/40 mt-0.5">{new Date(step.date).toLocaleDateString('en-IN', {day: 'numeric', month: 'short'})}</div>}
+                                     {/* Hides the date on tiny mobile screens to prevent overlap */}
+                                     {step.date && <div className="hidden sm:block text-[9px] font-medium text-red-950/40 mt-0.5">{new Date(step.date).toLocaleDateString('en-IN', {day: 'numeric', month: 'short'})}</div>}
                                    </div>
                                  </div>
                                );
@@ -354,8 +353,8 @@ const Profile = () => {
 
           {/* EDIT PROFILE TAB */}
           {activeTab === 'edit' && (
-            <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-sm border border-red-50 min-h-[400px]">
-              <h1 className="text-3xl font-black text-red-950 mb-8 border-b border-red-50 pb-4">Edit Profile</h1>
+            <div className="bg-white/80 backdrop-blur-md p-4 sm:p-8 rounded-[2.5rem] shadow-sm border border-red-50 min-h-[400px]">
+              <h1 className="text-2xl sm:text-3xl font-black text-red-950 mb-6 sm:mb-8 border-b border-red-50 pb-4">Edit Profile</h1>
 
               <form onSubmit={handleUpdateProfile} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
