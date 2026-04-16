@@ -17,6 +17,14 @@ import Profile from './Pages/Profile';
 import SafetyStandards from './Pages/SafetyStandards';
 import NotFound from './Pages/NotFound';
 
+// --- NEW PAGE IMPORTS ADDED HERE ---
+import About from './Pages/About';
+import Contact from './Pages/Contact';
+import ShippingInfo from './Pages/ShippingInfo';
+import Returns from './Pages/Returns';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import Terms from './Pages/Terms';
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -37,6 +45,14 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/safety-standards" element={<SafetyStandards />} />
+          
+          {/* --- NEW ROUTES ADDED HERE --- */}
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/shipping" element={<ShippingInfo />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
           
           {/* Catch-all route for 404 pages */}
           <Route path="*" element={<NotFound />} />

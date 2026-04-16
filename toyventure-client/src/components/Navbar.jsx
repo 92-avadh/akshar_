@@ -106,6 +106,7 @@ const Navbar = () => {
     }
   };
 
+  // --- FIXED: Capitalized paths changed to lowercase below ---
   const navLinks = isAdmin
     ? [
         { name: 'Dashboard', path: '/admin' },
@@ -115,8 +116,8 @@ const Navbar = () => {
     : [
         { name: 'Home', path: '/' },
         { name: 'Shop', path: '/shop' },
-        { name: 'About', path: '/About' },
-        { name: 'Contact', path: '/Contact' },
+        { name: 'About', path: '/about' },
+        { name: 'Contact', path: '/contact' },
       ];
 
   return (
