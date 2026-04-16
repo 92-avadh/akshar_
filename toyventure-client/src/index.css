@@ -137,6 +137,21 @@ html {
   animation-delay: -30s;
 }
 
+/* --- New Clouds --- */
+.cloud4 {
+  top: 200px;
+  width: 80px;
+  animation: moveCloud 50s linear infinite, floatCloud 5s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.cloud5 {
+  top: 30px;
+  width: 160px;
+  animation: moveCloud 85s linear infinite, floatCloud 9s ease-in-out infinite;
+  animation-delay: -45s;
+}
+
 /* Horizontal movement using 'left' avoids overriding the 'transform' floating effect */
 @keyframes moveCloud {
   0% { left: -200px; }

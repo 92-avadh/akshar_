@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 // Ensure this path matches where you saved your background image
-import footerBg from "../assets/footer-bg.png";
+import footerBg from "../assets/footer-bg.jpg";
 
 const Footer = () => {
   return (
@@ -49,6 +49,25 @@ const Footer = () => {
             <rect x="35" y="40" width="70" height="20" />
           </g>
         </svg>
+
+        {/* --- NEW CLOUDS ADDED BELOW --- */}
+        <svg className="cloud cloud4" viewBox="0 0 80 40">
+          <g fill="#ffffff">
+            <circle cx="20" cy="25" r="10" />
+            <circle cx="40" cy="15" r="15" />
+            <circle cx="60" cy="25" r="10" />
+            <rect x="20" y="25" width="40" height="10" />
+          </g>
+        </svg>
+
+        <svg className="cloud cloud5" viewBox="0 0 160 80">
+          <g fill="#ffffff">
+            <circle cx="40" cy="50" r="25" />
+            <circle cx="80" cy="30" r="30" />
+            <circle cx="120" cy="50" r="25" />
+            <rect x="40" y="50" width="80" height="25" />
+          </g>
+        </svg>
       </div>
 
       {/* ================= CONTENT ================= */}
@@ -68,14 +87,14 @@ const Footer = () => {
             </p>
           </div>
           
-          {/* Updated Form: White Background, Red Button, Dark Text */}
-          <form className="flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10 focus-within:ring-4 focus-within:ring-red-500/30 transition-all">
+          {/* Updated Form: Changes from White/Rounded to Blue/Square on focus */}
+          <form className="group flex w-full lg:w-auto bg-white rounded-full p-1.5 flex-grow max-w-md shadow-2xl relative z-10 focus-within:bg-blue-600 focus-within:rounded-none focus-within:ring-4 focus-within:ring-blue-400/50 transition-all duration-300">
             <input
               type="email"
               placeholder="Enter your email address"
-              className="w-full bg-transparent text-zinc-900 placeholder:text-zinc-400 px-6 py-4 text-base outline-none font-medium"
+              className="w-full bg-transparent text-zinc-900 group-focus-within:text-white placeholder:text-zinc-400 group-focus-within:placeholder:text-blue-200 px-6 py-4 text-base outline-none font-medium transition-colors"
             />
-            <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full hover:bg-red-700 active:scale-95 transition-all shadow-md whitespace-nowrap">
+            <button className="bg-red-600 text-white font-bold px-8 py-4 rounded-full group-focus-within:bg-white group-focus-within:text-blue-700 group-focus-within:rounded-none hover:bg-red-700 group-focus-within:hover:bg-blue-50 active:scale-95 transition-all shadow-md whitespace-nowrap">
               Subscribe
             </button>
           </form>
@@ -97,9 +116,7 @@ const Footer = () => {
 
           {/* Explore Column */}
           <div className="text-center md:text-left">
-            {/* Increased bottom margin to mb-10 */}
             <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Explore</h4>
-            {/* Increased vertical spacing to space-y-8 */}
             <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/shop" className="hover:text-white hover:translate-x-1 inline-block transition-all">All Toys</Link></li>
               <li><Link to="/about" className="hover:text-white hover:translate-x-1 inline-block transition-all">Our Story</Link></li>
@@ -109,9 +126,7 @@ const Footer = () => {
 
           {/* Support Column */}
           <div className="text-center md:text-left">
-            {/* Increased bottom margin to mb-10 */}
             <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Support</h4>
-            {/* Increased vertical spacing to space-y-8 */}
             <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/shipping" className="hover:text-white hover:translate-x-1 inline-block transition-all">Shipping Info</Link></li>
               <li><Link to="/returns" className="hover:text-white hover:translate-x-1 inline-block transition-all">Easy Returns</Link></li>
@@ -121,9 +136,7 @@ const Footer = () => {
 
           {/* Legal Column */}
           <div className="text-center md:text-left">
-            {/* Increased bottom margin to mb-10 */}
             <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Legal</h4>
-            {/* Increased vertical spacing to space-y-8 */}
             <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/privacy-policy" className="hover:text-white hover:translate-x-1 inline-block transition-all">Privacy Policy</Link></li>
               <li><Link to="/terms" className="hover:text-white hover:translate-x-1 inline-block transition-all">Terms of Service</Link></li>
