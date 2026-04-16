@@ -53,7 +53,7 @@ const Home = () => {
   const heroY = useTransform(scrollYProgress, [0, 0.2], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
-  // NEW: Fetching Live Popular Data from the DB limit 4 
+  // Fetching Live Popular Data from the DB limit 4 
   const { data: popularData, isLoading: isLoadingPopular } = useGetProductsQuery({ isPopular: 'true', limit: 4 });
   const popularProducts = popularData?.products || [];
 
@@ -184,7 +184,8 @@ const Home = () => {
 
       {/* ================= EXPLORE POPULAR TOY SET ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+        {/* FIX: Centered text on mobile, aligned right for desktop */}
+        <div className="flex flex-col md:flex-row justify-between items-center md:items-end text-center md:text-left mb-16 gap-8">
           <div>
             <h2 className="text-red-600 font-bold uppercase tracking-widest text-xs mb-3">Editor's Picks</h2>
             <h3 className="text-4xl md:text-5xl font-black tracking-tighter text-red-950">Explore Popular Sets</h3>
@@ -261,15 +262,16 @@ const Home = () => {
           <motion.div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3')] bg-cover bg-center" initial={{ scale: 1.1 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ duration: 1.5, ease: "easeOut" }}></motion.div>
           <div className="absolute inset-0 bg-red-950/10"></div>
           
-          <div className="absolute inset-0 p-8 md:p-16 flex flex-col justify-end items-start">
-            <div className="bg-white/95 backdrop-blur-xl border border-white p-10 md:p-14 rounded-[2rem] max-w-xl shadow-2xl shadow-red-950/20">
+          {/* FIX: Centered box and text on mobile */}
+          <div className="absolute inset-0 p-6 md:p-16 flex flex-col justify-end items-center md:items-start">
+            <div className="bg-white/95 backdrop-blur-xl border border-white p-8 md:p-14 rounded-[2rem] max-w-xl shadow-2xl shadow-red-950/20 text-center md:text-left">
               <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-6 leading-tight text-red-950">
                 The Art of <br /><span className="text-red-600">Unplugged</span> Joy.
               </h2>
               <p className="text-red-950/70 font-medium mb-8 leading-relaxed">
                 In a world of screens, we champion the physical. Toys that demand touch, inspire storytelling, and withstand the test of time.
               </p>
-              <Link to="/about">
+              <Link to="/about" className="flex justify-center md:justify-start">
                 <MagneticButton variant="dark" className="w-max">Read Our Manifesto</MagneticButton>
               </Link>
             </div>
