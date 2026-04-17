@@ -77,6 +77,8 @@ const Checkout = () => {
       city: addressObj.city || '',
       pincode: String(addressObj.pincode || ''),
     }));
+    // NEW: Added toast notification for address selection
+    toast.success('Address selected!');
   };
 
   React.useEffect(() => {
@@ -222,7 +224,7 @@ const Checkout = () => {
       modal: {
         confirm_close: true,
         ondismiss: () => {
-          toast('Checkout closed. You can retry payment from this page.', { icon: 'i' });
+          toast.error('Payment failed, please try again later ❌');
         },
       },
     });
@@ -258,7 +260,7 @@ const Checkout = () => {
         
         dispatch(clearCart());
         await handleAutoSaveAddress();
-        toast.success('Order Placed Successfully! Get ready for fun ✨');
+        toast.success('Order confirmed! 🚚✨');
         navigate('/profile');
         return;
       }

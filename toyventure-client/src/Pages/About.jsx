@@ -13,7 +13,7 @@ const About = () => {
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto mb-20 fade-in">
           <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight text-slate-900">
-            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800">ToyBlix</span>
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-800 pr-2 pb-1 inline-block">ToyBlix</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed">
             We believe that play is the serious work of childhood. Our mission is to ignite imagination and bring joy to kids of all ages with toys that inspire, educate, and entertain.

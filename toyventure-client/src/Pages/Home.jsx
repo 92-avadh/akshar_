@@ -110,7 +110,7 @@ const Home = () => {
       navigate('/cart');
     } else {
       dispatch(addToCart({ ...product, qty: 1 }));
-      toast.success(`${product.name || product.title} added to Cart!`, { icon: '🎒', style: { border: '1px solid #fecaca', color: '#450a0a' } });
+      toast.success('Added to your cart 🎒', { style: { border: '1px solid #fecaca', color: '#450a0a' } });
     }
   };
 
@@ -126,7 +126,7 @@ const Home = () => {
               Fresh Arrivals
             </motion.div>
             <motion.h1 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-5xl md:text-7xl font-black tracking-tighter text-red-950 leading-[1.05] mb-6">
-              Dive into the <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">Universe of Play.</span>
+              Dive into the <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700 pr-2 pb-1 inline-block">Universe of Play.</span>
             </motion.h1>
             <motion.p variants={{ hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="text-lg text-red-950/60 font-medium max-w-lg mb-10 leading-relaxed">
               Step into a world of minimal, sustainable, and wonderfully engaging toys designed to nurture creativity.
@@ -136,7 +136,7 @@ const Home = () => {
             </motion.div>
           </motion.div>
 
-          <div className="lg:col-span-7 relative w-full h-[350px] md:h-[500px] flex items-center justify-center">
+          <div className="lg:col-span-7 relative w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-video flex items-center justify-center">
             <Swiper modules={[Pagination, Autoplay]} spaceBetween={20} slidesPerView={1} loop={true} speed={1000} autoplay={{ delay: 2000, disableOnInteraction: false }} pagination={{ clickable: true, dynamicBullets: true }} className="w-full h-full hero-swiper rounded-[2rem] shadow-2xl shadow-red-900/10 border-4 border-white">
               {heroBanners.map((banner) => (
                 <SwiperSlide key={banner.id} className="overflow-hidden rounded-[2rem] cursor-pointer bg-red-50">

@@ -67,7 +67,8 @@ const Auth = () => {
       const payload = isPhone ? { mobileNumber: identifier } : { email: identifier };
       const res = await sendOtp(payload).unwrap();
       
-      toast.success(res.message || `OTP sent successfully!`);
+      // EXPLICIT NOTIFICATION: "OTP sent successfully!"
+      toast.success('OTP sent! ✉️');
       setStep(2); 
     } catch (err) {
       toast.error(err?.data?.message || 'Failed to send OTP. Please try again.');
@@ -96,7 +97,7 @@ const Auth = () => {
           }
 
           const firstName = res.name ? res.name.split(' ')[0] : 'User';
-          toast.success(`Welcome back, ${firstName}!`);
+          toast.success(`Welcome back, ${firstName}! 🌟`);
           setTimeout(() => {
               navigate(redirect);
               window.location.reload(); 
@@ -104,10 +105,7 @@ const Auth = () => {
       }
 
     } catch (err) {
-      // FIX: Show the invalid OTP message from backend, but DON'T kick them back to step 1
       toast.error(err?.data?.message || 'Invalid or Expired OTP. Please check the code and try again.');
-      
-      // Just clear the OTP input so they can try re-typing it
       setOtp('');
     }
   };
@@ -132,7 +130,7 @@ const Auth = () => {
             dispatch(clearPendingItem());
         }
 
-        toast.success(`Welcome to ToyBlix, ${name.split(' ')[0]}!`);
+        toast.success('Successfully registered! 🎉');
         
         setTimeout(() => {
             navigate(redirect);
@@ -232,7 +230,6 @@ const Auth = () => {
               />
             </div>
 
-            {/* FIX: Changed otp.length < 4 to otp.length < 6 */}
             <button type="submit" disabled={isVerifying || otp.length < 6} className="w-full py-4 mt-4 bg-red-600 text-white font-black text-lg rounded-2xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">
               {isVerifying ? 'Verifying...' : 'Verify & Continue'}
               {!isVerifying && <span className="material-symbols-outlined text-[20px]">verified_user</span>}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast'; // IMPORTED TOAST
 import { useSubmitContactMessageMutation } from '../features/api/apiSlice';
 
 const Contact = () => {
@@ -16,9 +17,12 @@ const Contact = () => {
     try {
       await submitMessage(formData).unwrap();
       setStatus('Thanks for reaching out! We will get back to you soon.');
+      // NEW: Added toast notification for form submission
+      toast.success('Message sent successfully!', { icon: '✉️' });
       setFormData({ name: '', email: '', message: '' }); // Clear form
     } catch (err) {
       setStatus('Sorry, something went wrong. Please try again.');
+      toast.error('Failed to send message. Please try again later.');
     }
   };
 
@@ -32,7 +36,7 @@ const Contact = () => {
         {/* Contact Information */}
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl md:text-5xl font-black text-red-950 mb-6 tracking-tight">
-            Let's <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700 italic">Connect!</span>
+            Let's <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700 italic pr-2 pb-1 inline-block">Connect!</span>
           </h1>
           <p className="text-red-950/70 font-medium text-lg mb-10 leading-relaxed">
             Have a question about an order, a specific toy, or just want to say hello? Our friendly team at ToyBlix is always here to help you out.

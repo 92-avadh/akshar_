@@ -155,7 +155,7 @@ const ProductDetail = () => {
       if (displayStock === 0) {
           toast.error(`Added to cart, but currently out of stock. Checkout is disabled until restocked.`);
       } else {
-          toast.success(`${product.title} added to your cart!`); 
+          toast.success('Added to your cart 🎒'); 
       }
     }
   };
@@ -165,7 +165,7 @@ const ProductDetail = () => {
     if (!notifyEmail) return toast.error("Please enter an email address.");
     try {
       const res = await notifyMeWhenAvailable({ productId: id, email: notifyEmail }).unwrap();
-      toast.success(res.message || "You're on the list! We'll email you when it's back.");
+      toast.success(res.message || "You're on the list! 🎈");
       setNotifyEmail('');
     } catch (err) {
       toast.error("Failed to sign up for notifications.");
@@ -176,7 +176,7 @@ const ProductDetail = () => {
     e.preventDefault();
     try {
       await createReview({ productId: id, rating, comment }).unwrap();
-      toast.success('🎉 Review submitted successfully!'); 
+      toast.success('Thanks for the review! ⭐'); 
       setRating(5); setComment('');
     } catch (err) {
       toast.error(err?.data?.message || 'Failed to submit review.');

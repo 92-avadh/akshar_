@@ -230,7 +230,7 @@ const Shop = () => {
        if(product.countInStock === 0) {
          toast.error(`Added to cart waitlist (currently out of stock)`);
        } else {
-         toast.success(`${product.title} added to cart!`); 
+         toast.success('Added to your cart 🎒'); 
        }
     }
   };
