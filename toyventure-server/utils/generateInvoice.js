@@ -1,9 +1,12 @@
 const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 const generateInvoice = (order, user) => {
     return new Promise((resolve, reject) => {
         try {
-            const doc = new PDFDocument({ margin: 50 });
+            // Initialize document with A4 size
+            const doc = new PDFDocument({ size: 'A4', margin: 50 });
             const buffers = [];
 
             doc.on('data', buffers.push.bind(buffers));
@@ -12,81 +15,175 @@ const generateInvoice = (order, user) => {
                 resolve(pdfData);
             });
 
-            // Header
+            // ==========================================
+            // 1. HEADER & COMPANY INFO (From Contact.jsx)
+            // ==========================================
+            
+            // LOGO LOGIC: 
+            // If you have a logo file on your server (e.g., in a 'public' folder), put the path here.
+            // If the file exists, it uses the image. If not, it falls back to a stylized text logo.
+            const logoPath = path.join(__dirname, '../public/logo.png'); 
+            
+            if (fs.existsSync(logoPath)) {
+                doc.image(logoPath, 50, 45, { width: 100 });
+            } else {
+                // Fallback Text Logo
+                doc.fillColor('#dc2626') // Red color matching your theme
+                   .font('Helvetica-Bold')
+                   .fontSize(28)
+                   .text('ToyBlix', 50, 45);
+            }
+
+            // Company Contact Details
             doc.fillColor('#444444')
-                .fontSize(20)
-                .text('ToyBlix', 50, 57)
-                .fontSize(10)
-                .text('Invoice Number: ' + String(order._id).slice(-8).toUpperCase(), 200, 50, { align: 'right' })
-                .text('Date: ' + new Date(order.createdAt || Date.now()).toLocaleDateString(), 200, 65, { align: 'right' })
-                .text('Payment Status: ' + (order.paymentStatus || 'Paid').toUpperCase(), 200, 80, { align: 'right' })
-                .moveDown();
+               .fontSize(10)
+               .font('Helvetica-Bold')
+               .text('(Akshar-Toys)', 50, 75)
+               .font('Helvetica')
+               .text('YogiChowk-Katargam, Surat, Gujarat', 50, 90)
+               .text('Phone: +91 9898528152 / +91 9974530204', 50, 105)
+               .text('Email: toyblix@gmail.com', 50, 120);
 
-            doc.moveTo(50, 100).lineTo(550, 100).stroke();
+            // ==========================================
+            // 2. INVOICE DETAILS (Top Right)
+            // ==========================================
+            doc.fillColor('#333333')
+               .fontSize(24)
+               .font('Helvetica-Bold')
+               .text('INVOICE', 400, 45, { align: 'right' });
 
-            // Customer Details
+            doc.fontSize(10)
+               .font('Helvetica')
+               .text(`Invoice No: ${String(order._id).slice(-8).toUpperCase()}`, 350, 75, { align: 'right' })
+               .text(`Date: ${new Date(order.createdAt || Date.now()).toLocaleDateString()}`, 350, 90, { align: 'right' })
+               .text(`Status: ${(order.paymentStatus || 'Paid').toUpperCase()}`, 350, 105, { align: 'right' });
+
+            // Draw a subtle separator line
+            doc.moveTo(50, 145).lineTo(545, 145).lineWidth(0.5).stroke('#e5e5e5');
+
+            // ==========================================
+            // 3. CUSTOMER DETAILS
+            // ==========================================
             const shipping = order.shippingDetails || {};
             doc.fillColor('#333333')
-                .fontSize(14)
-                .text('Billed To', 50, 120)
-                .fontSize(10)
-                .text(user.name || shipping.fullName || 'Customer', 50, 140)
-                .text(`${shipping.flatNumber}, ${shipping.street}`, 50, 155)
-                .text(shipping.landmark ? `${shipping.landmark}` : '', 50, 170)
-                .text(`${shipping.city} - ${shipping.pincode}`, 50, 185)
-                .text(`Phone: ${shipping.phone || user.mobileNumber || ''}`, 50, 200)
-                .moveDown();
+               .fontSize(12)
+               .font('Helvetica-Bold')
+               .text('Billed To:', 50, 165)
+               .fontSize(10)
+               .font('Helvetica')
+               .text(user.name || shipping.fullName || 'Customer', 50, 185)
+               .text(`${shipping.flatNumber || ''}, ${shipping.street || ''}`.replace(/^, /, ''), 50, 200);
             
-            doc.moveTo(50, 230).lineTo(550, 230).stroke();
+            if (shipping.landmark) {
+                doc.text(shipping.landmark, 50, 215);
+                doc.text(`${shipping.city || ''} - ${shipping.pincode || ''}`, 50, 230);
+                doc.text(`Phone: ${shipping.phone || user.mobileNumber || ''}`, 50, 245);
+            } else {
+                doc.text(`${shipping.city || ''} - ${shipping.pincode || ''}`, 50, 215);
+                doc.text(`Phone: ${shipping.phone || user.mobileNumber || ''}`, 50, 230);
+            }
 
-            // Table Header
-            let y = 250;
-            doc.fontSize(10).font('Helvetica-Bold');
-            doc.text('Item', 50, y);
-            doc.text('Qty', 350, y, { width: 50, align: 'center' });
-            doc.text('Price', 400, y, { width: 50, align: 'right' });
-            doc.text('Total', 480, y, { width: 70, align: 'right' });
-            
-            doc.moveTo(50, y + 15).lineTo(550, y + 15).stroke();
-            doc.font('Helvetica');
-            y += 25;
+            // ==========================================
+            // 4. ITEMS TABLE
+            // ==========================================
+            let y = 290;
 
-            // Order Items
+            // Table Header Background
+            doc.rect(50, y, 495, 25).fill('#fef2f2'); // Light red background matching your theme
+
+            // Table Header Text
+            doc.fillColor('#dc2626')
+               .fontSize(10)
+               .font('Helvetica-Bold');
+            doc.text('Item Description', 60, y + 8);
+            doc.text('Qty', 350, y + 8, { width: 40, align: 'center' });
+            doc.text('Price', 410, y + 8, { width: 60, align: 'right' });
+            doc.text('Total', 480, y + 8, { width: 55, align: 'right' });
+
+            y += 35;
+            doc.font('Helvetica').fillColor('#333333');
+
+            // Order Items Loop
             (order.orderItems || []).forEach(item => {
-                const title = (item.title || 'Product').substring(0, 30);
+                const title = (item.title || 'Product').substring(0, 45); // Truncate long names
                 const qty = item.qty || 1;
                 const price = parseFloat(item.price) || 0;
                 const total = price * qty;
 
-                doc.text(title, 50, y);
-                doc.text(qty.toString(), 350, y, { width: 50, align: 'center' });
-                doc.text(`Rs ${price.toFixed(2)}`, 400, y, { width: 50, align: 'right' });
-                doc.text(`Rs ${total.toFixed(2)}`, 480, y, { width: 70, align: 'right' });
-                y += 20;
+                doc.text(title, 60, y);
+                doc.text(qty.toString(), 350, y, { width: 40, align: 'center' });
+                doc.text(`Rs ${price.toFixed(2)}`, 410, y, { width: 60, align: 'right' });
+                doc.text(`Rs ${total.toFixed(2)}`, 480, y, { width: 55, align: 'right' });
+                
+                y += 25;
+                
+                // Add a page break if table gets too long
+                if (y > 700) {
+                    doc.addPage();
+                    y = 50;
+                }
             });
 
-            doc.moveTo(50, y).lineTo(550, y).stroke();
-            y += 15;
+            // Table Bottom Border
+            doc.moveTo(50, y - 5).lineTo(545, y - 5).stroke('#e5e5e5');
+            y += 10;
 
-            // Totals
+            // ==========================================
+            // 5. TOTALS CALCULATION
+            // ==========================================
             const subtotal = order.orderItems.reduce((acc, item) => acc + (parseFloat(item.price) * (item.qty || 1)), 0);
+            
             if (subtotal !== order.totalPrice) {
                 const discount = subtotal - order.totalPrice;
-                doc.font('Helvetica-Bold').text('Total Discount:', 350, y, { width: 100, align: 'right' });
-                doc.text(`-Rs ${discount.toFixed(2)}`, 450, y, { width: 100, align: 'right' });
+                doc.fontSize(10).font('Helvetica').text('Subtotal:', 350, y, { width: 100, align: 'right' });
+                doc.text(`Rs ${subtotal.toFixed(2)}`, 460, y, { width: 75, align: 'right' });
+                y += 18;
+
+                doc.font('Helvetica').fillColor('#16a34a').text('Discount:', 350, y, { width: 100, align: 'right' });
+                doc.text(`-Rs ${discount.toFixed(2)}`, 460, y, { width: 75, align: 'right' });
                 y += 20;
             }
 
-            doc.font('Helvetica-Bold').fontSize(12);
-            doc.text('Final Amount:', 350, y, { width: 100, align: 'right' });
-            doc.text(`Rs ${order.totalPrice.toFixed(2)}`, 450, y, { width: 100, align: 'right' });
+            // Final Amount Box
+            doc.rect(340, y - 5, 205, 30).fill('#fafafa').stroke('#e5e5e5');
+            doc.fillColor('#333333').font('Helvetica-Bold').fontSize(12);
+            doc.text('Final Amount:', 350, y + 3, { width: 100, align: 'right' });
+            doc.fillColor('#dc2626').text(`Rs ${order.totalPrice.toFixed(2)}`, 460, y + 3, { width: 75, align: 'right' });
 
-            // Footer
-            doc.fontSize(10).font('Helvetica').text(
+            // ==========================================
+            // 6. TERMS & CONDITIONS (From Terms.jsx)
+            // ==========================================
+            y += 50;
+            
+            // Check if we need a new page for T&C
+            if (y > 650) {
+                doc.addPage();
+                y = 50;
+            }
+
+            doc.fillColor('#333333')
+               .fontSize(10)
+               .font('Helvetica-Bold')
+               .text('Terms & Conditions:', 50, y);
+            
+            doc.fillColor('#666666')
+               .fontSize(8)
+               .font('Helvetica')
+               .text('1. Online Store Terms: By using our services, you agree to our policies. Products may not be used for illegal purposes.', 50, y + 15)
+               .text('2. Products and Pricing: Prices are subject to change without notice. We reserve the right to modify or cancel orders.', 50, y + 27)
+               .text('3. Intellectual Property: All products and brand assets are the property of ToyBlix and are protected by law.', 50, y + 39);
+
+            // ==========================================
+            // 7. FOOTER
+            // ==========================================
+            doc.fillColor('#999999')
+               .fontSize(9)
+               .font('Helvetica-Oblique')
+               .text(
                 'Thank you for shopping with ToyBlix - Where Imagination Comes to Life!',
                 50,
-                700,
-                { align: 'center', width: 500 }
+                780, // Positioned at the very bottom of the A4 page
+                { align: 'center', width: 495 }
             );
 
             doc.end();
