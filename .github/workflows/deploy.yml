@@ -62,40 +62,9 @@ jobs:
             pm2 restart all || pm2 start server.js --name "toyblix-server"
             pm2 save
             
-            # 5. Write Nginx config to support React Router (SPA fallback)
+            # 5. Configure Nginx for SPA routing (React Router fallback)
             echo "Configuring Nginx for SPA routing..."
-            sudo bash -c 'cat > /etc/nginx/sites-available/default <<EOF
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-
-    root /var/www/html;
-    index index.html;
-
-    server_name _;
-
-    # React Router SPA fallback — serve index.html for all unknown paths
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    # Proxy API requests to the Node.js backend
-    location /api/ {
-        proxy_pass http://localhost:5000/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-    }
-
-    # Proxy uploads/static assets served by Express
-    location /uploads/ {
-        proxy_pass http://localhost:5000/uploads/;
-        proxy_set_header Host \$host;
-    }
-}
-EOF'
+            sudo cp /home/ubuntu/akshar_/nginx/default.conf /etc/nginx/sites-available/default
 
             # 6. Transfer to Nginx & Bounce Web Server
             echo "Preparing frontend..."
