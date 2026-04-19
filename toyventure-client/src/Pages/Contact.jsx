@@ -108,19 +108,43 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* INTERACTIVE STORE LOCATION MAP */}
+      {/* INTERACTIVE STORE LOCATION MAPS */}
       <div className="max-w-[1100px] mx-auto px-6 relative z-10">
-        <div className="bg-white/80 backdrop-blur-md p-4 rounded-[3rem] shadow-sm border border-red-50 overflow-hidden h-[400px] md:h-[500px]">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119066.41709462828!2d72.73989495147572!3d21.159340298313175!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xfe4558290938b042!2sSurat%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
-            width="100%" 
-            height="100%" 
-            style={{ border: 0 }} 
-            allowFullScreen="" 
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade"
-            className="rounded-[2.5rem] opacity-90 grayscale hover:grayscale-0 transition-all duration-500 shadow-inner"
-          ></iframe>
+        <h3 className="text-2xl font-black text-red-950 mb-6 text-center">Visit Our Stores</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Yogichowk Branch Map */}
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-red-950 px-4 text-center md:text-left">Yogichowk Branch</h4>
+            <div className="bg-white/80 backdrop-blur-md p-4 rounded-[3rem] shadow-sm border border-red-50 overflow-hidden h-[300px] md:h-[400px]">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3574.064227363709!2d72.89185187508632!3d21.21791008047915!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f3d785b0825%3A0x9ee7f5c29584ecae!2sAkshar%20Toy%20Yogichowk%20Surat!5e1!3m2!1sen!2sin!4v1776581600141!5m2!1sen!2sin" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen="" 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="rounded-[2.5rem] opacity-90 grayscale hover:grayscale-0 transition-all duration-500 shadow-inner"
+              ></iframe>
+            </div>
+          </div>
+          
+          {/* Katargam Branch Map */}
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-red-950 px-4 text-center md:text-left">Katargam Branch</h4>
+            <div className="bg-white/80 backdrop-blur-md p-4 rounded-[3rem] shadow-sm border border-red-50 overflow-hidden h-[300px] md:h-[400px]">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d57179.97113758508!2d72.83169615703196!3d21.23095583857503!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f001385d785%3A0x86b62011ae8f2f31!2sAkshar%20Toy%20Katargam%20Surat.!5e1!3m2!1sen!2sin!4v1776581687373!5m2!1sen!2sin" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen="" 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="rounded-[2.5rem] opacity-90 grayscale hover:grayscale-0 transition-all duration-500 shadow-inner"
+              ></iframe>
+            </div>
+          </div>
         </div>
       </div>
     </main>
