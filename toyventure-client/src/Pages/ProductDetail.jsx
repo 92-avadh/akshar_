@@ -485,6 +485,12 @@ const ProductDetail = () => {
               <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 bg-white/60 px-3 py-2 rounded-full border border-white"><span className="material-symbols-outlined text-blue-500 text-[16px]">local_shipping</span> Free Delivery</div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 bg-white/60 px-3 py-2 rounded-full border border-white"><span className="material-symbols-outlined text-orange-500 text-[16px]">replay</span> 30-Day Returns</div>
             </div>
+
+            {/* Visual Disclaimer */}
+            <div className="mt-6 flex items-start gap-2.5 text-xs font-medium text-zinc-500 bg-amber-50/40 p-4 rounded-2xl border border-amber-100 shadow-sm transition-all hover:shadow-md">
+              <span className="material-symbols-outlined text-amber-500 text-[18px] shrink-0">info</span>
+              <p className="leading-relaxed"><strong>Please Note:</strong> Product images are for illustrative purposes. Due to enhancements and variations, the actual physical item may slightly differ in color tone, design, or packaging.</p>
+            </div>
           </div>
         </div>
 

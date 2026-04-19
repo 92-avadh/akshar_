@@ -159,7 +159,10 @@ const Footer = () => {
       </div>
 
       {/* COPYRIGHT */}
-      <div className="relative z-30 w-full text-center text-white/70 text-sm py-4 border-t border-white/10 bg-black/50">
+      <div className="relative z-30 w-full text-center text-white/70 text-sm py-6 border-t border-white/10 bg-black/50">
+        <p className="mb-3 italic text-white/50 text-xs max-w-3xl mx-auto px-6 leading-relaxed">
+          Disclaimer: Product images shown are for illustrative purposes. The actual product may slightly differ from what is displayed.
+        </p>
         <p>© {new Date().getFullYear()} ToyBlix. Designed for joyful play ✨</p>
       </div>
 
