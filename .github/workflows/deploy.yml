@@ -43,8 +43,9 @@ jobs:
             # 1. Enter the project directory
             cd /home/ubuntu/akshar_
             
-            # 2. Pull the latest changes securely
-            git pull origin main --rebase
+            # 2. Pull the latest changes (force reset to match remote exactly)
+            git fetch origin main
+            git reset --hard origin/main
             
             # Load Node Environment
             export NVM_DIR="$HOME/.nvm"
