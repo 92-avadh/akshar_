@@ -102,7 +102,7 @@ const Checkout = () => {
     }
   }, [profile]);
 
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('razorpay');
   const [checkoutRequestKey] = useState(() => createCheckoutRequestKey());
 
   // Coupon State
@@ -451,31 +451,13 @@ const Checkout = () => {
                 <span className="text-xs text-zinc-500 font-medium">Pay with cash when your package arrives at your doorstep.</span>
               </label>
               
-              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'card' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
+              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'razorpay' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
                 <div className="flex items-center justify-between">
-                  <span className="material-symbols-outlined text-primary-container text-[28px]">credit_card</span>
-                  <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
+                  <span className="material-symbols-outlined text-primary-container text-[28px]">account_balance_wallet</span>
+                  <input type="radio" name="payment" value="razorpay" checked={paymentMethod === 'razorpay'} onChange={() => setPaymentMethod('razorpay')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
                 </div>
-                <span className="font-black text-zinc-800 text-lg">Card</span>
-                <span className="text-xs text-zinc-500 font-medium">Open secure Checkout with credit/debit cards enabled.</span>
-              </label>
-
-              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'upi' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="material-symbols-outlined text-primary-container text-[28px]">qr_code_scanner</span>
-                  <input type="radio" name="payment" value="upi" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
-                </div>
-                <span className="font-black text-zinc-800 text-lg">UPI</span>
-                <span className="text-xs text-zinc-500 font-medium">Use GPay, PhonePe, Paytm, or any UPI app.</span>
-              </label>
-              
-              <label className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col gap-2 shadow-sm hover:shadow-md ${paymentMethod === 'demo' ? 'border-primary-container bg-primary-container/5' : 'border-white bg-white/60'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="material-symbols-outlined text-primary-container text-[28px]">bug_report</span>
-                  <input type="radio" name="payment" value="demo" checked={paymentMethod === 'demo'} onChange={() => setPaymentMethod('demo')} className="w-5 h-5 text-primary-container focus:ring-primary-container" />
-                </div>
-                <span className="font-black text-zinc-800 text-lg">Demo Payment</span>
-                <span className="text-xs text-zinc-500 font-medium">Bypass gateway and process a test transaction.</span>
+                <span className="font-black text-zinc-800 text-lg">Pay Online</span>
+                <span className="text-xs text-zinc-500 font-medium">Securely pay via Credit/Debit Card, UPI, or NetBanking.</span>
               </label>
             </div>
 
