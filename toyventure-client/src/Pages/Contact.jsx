@@ -69,7 +69,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-bold text-red-950">Email Us</h4>
-                <p className="text-sm font-medium text-red-950/60">support@toyblix.com</p>
+                <p className="text-sm font-medium text-red-950/60">toyblix@gmail.com</p>
               </div>
             </div>
           </div>
