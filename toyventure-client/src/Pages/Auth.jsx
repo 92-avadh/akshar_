@@ -251,8 +251,8 @@ const Auth = () => {
                   type="text" 
                   required 
                   value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="e.g. John Doe" 
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your Full Name" 
                   className="w-full bg-red-50/30 p-4 border border-red-50 rounded-2xl focus:ring-2 focus:ring-red-600 outline-none transition-all shadow-inner font-bold text-red-950" 
               />
             </div>

@@ -386,37 +386,37 @@ const Checkout = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Full Name</label>
-                  <input required type="text" name="fullName" value={shippingDetails.fullName} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="John Doe" />
+                  <input required type="text" name="fullName" value={shippingDetails.fullName} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Full Name" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Phone Number</label>
-                  <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" maxLength="10" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="9999900000" />
+                  <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" maxLength="10" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Phone Number" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Flat / Block No.</label>
-                  <input required type="text" name="flatNumber" value={shippingDetails.flatNumber} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="A-404, Sunshine Apts" />
+                  <input required type="text" name="flatNumber" value={shippingDetails.flatNumber} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Flat / House No." />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Street / Locality</label>
-                  <input required type="text" name="street" value={shippingDetails.street} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="M.G. Road" />
+                  <input required type="text" name="street" value={shippingDetails.street} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Street / Locality" />
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Landmark (Optional)</label>
-                  <input type="text" name="landmark" value={shippingDetails.landmark} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Near City Mall" />
+                  <input type="text" name="landmark" value={shippingDetails.landmark} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Landmark (Optional)" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">City</label>
-                  <input required type="text" name="city" value={shippingDetails.city} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Mumbai" />
+                  <input required type="text" name="city" value={shippingDetails.city} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your City" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Pincode</label>
-                  <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" maxLength="6" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="400001" />
+                  <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" maxLength="6" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="Your Pincode" />
                 </div>
                 <div className="md:col-span-2 flex justify-end border-t border-zinc-200/50 pt-4 mt-2">
                   <button
