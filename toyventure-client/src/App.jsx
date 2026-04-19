@@ -16,6 +16,7 @@ import Checkout from './Pages/Checkout';
 import Auth from './Pages/Auth';
 import Profile from './Pages/Profile';
 import SafetyStandards from './Pages/SafetyStandards';
+import Favorites from './Pages/Favorites';
 import NotFound from './Pages/NotFound';
 
 // Import Info Pages
@@ -63,6 +64,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/safety-standards" element={<SafetyStandards />} />
           
           {/* Information & Legal Routes */}
