@@ -2,18 +2,65 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+
+const baseQuery = fetchBaseQuery({ 
+  baseUrl: API_BASE_URL,
+  prepareHeaders: (headers) => {
+    const token = sessionStorage.getItem('token'); 
+    if (token) {
+      headers.set('authorization', `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+// Custom base query to implement sessionStorage caching
+const customBaseQuery = async (args, api, extraOptions) => {
+  const isGet = typeof args === 'string' || (args && (!args.method || args.method.toUpperCase() === 'GET'));
+  // We only cache getProducts or other heavy queries to avoid stale order/user data
+  const shouldCache = isGet && (api.endpoint === 'getProducts' || api.endpoint === 'getProductById');
+  
+  if (shouldCache) {
+    const url = typeof args === 'string' ? args : args.url;
+    const cacheKey = `toyflix_cache_${url}`;
+    const cachedData = sessionStorage.getItem(cacheKey);
+
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        const now = Date.now();
+        // 10-minute cache expiration (TTL)
+        if (parsed.expiry && now < parsed.expiry) {
+          console.log(`⚡ Returing from SessionStorage Cache: ${url}`);
+          return { data: parsed.data };
+        } else {
+          sessionStorage.removeItem(cacheKey);
+        }
+      } catch (e) {
+        sessionStorage.removeItem(cacheKey);
+      }
+    }
+  }
+
+  // Hit the actual API
+  const result = await baseQuery(args, api, extraOptions);
+
+  // Store successful responses in cache
+  if (shouldCache && result.data) {
+    const url = typeof args === 'string' ? args : args.url;
+    const cacheKey = `toyflix_cache_${url}`;
+    sessionStorage.setItem(cacheKey, JSON.stringify({
+      data: result.data,
+      expiry: Date.now() + 10 * 60 * 1000 // 10 mins
+    }));
+  }
+
+  return result;
+};
+
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: API_BASE_URL,
-    prepareHeaders: (headers) => {
-      const token = sessionStorage.getItem('token'); 
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }), 
+  baseQuery: customBaseQuery, 
   tagTypes: ['Product', 'Order', 'User', 'Contact', 'Coupon'],
   endpoints: (builder) => ({
     
