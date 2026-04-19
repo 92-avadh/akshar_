@@ -38,6 +38,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
+            set -e  # Exit immediately if any command fails
+            
             # 1. Enter the project directory
             cd /home/ubuntu/akshar_
             
@@ -49,30 +51,36 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             
             # 3. Setup and Restart Backend using PM2 Process Manager
-            echo "Preparing backend..."
+            echo "--- Preparing backend ---"
             cd toyventure-server
-            npm install
+            npm install --legacy-peer-deps
             
             if ! command -v pm2 &> /dev/null; then
                 echo "Installing PM2..."
                 npm install -g pm2
             fi
             
-            # Try to restart the existing process, or start a new one
             pm2 restart all || pm2 start server.js --name "toyblix-server"
             pm2 save
             
-            # 5. Configure Nginx for SPA routing (React Router fallback)
-            echo "Configuring Nginx for SPA routing..."
+            # 4. Configure Nginx for SPA routing (React Router fallback)
+            echo "--- Configuring Nginx for SPA routing ---"
             sudo cp /home/ubuntu/akshar_/nginx/default.conf /etc/nginx/sites-available/default
+            sudo nginx -t
+            echo "Nginx config OK"
 
-            # 6. Transfer to Nginx & Bounce Web Server
-            echo "Preparing frontend..."
-            cd ../toyventure-client
-            npm install
+            # 5. Build Frontend UI
+            echo "--- Building frontend ---"
+            cd /home/ubuntu/akshar_/toyventure-client
+            npm install --legacy-peer-deps
             npm run build
+            echo "Build completed. Files in dist:"
+            ls dist/
 
-            sudo cp -r dist/* /var/www/html/
-            sudo nginx -t && sudo systemctl restart nginx
+            # 6. Deploy to Nginx web root (clear old files first)
+            echo "--- Deploying to /var/www/html ---"
+            sudo rm -rf /var/www/html/*
+            sudo cp -r dist/. /var/www/html/
+            sudo systemctl restart nginx
             
             echo "✅ Deployment Completed Successfully!"
