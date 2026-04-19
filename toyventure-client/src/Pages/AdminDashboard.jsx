@@ -83,9 +83,14 @@ const OrderDetailsModal = ({ order, onClose }) => {
           
           <div className="bg-red-50/30 p-4 rounded-2xl border border-red-50 shadow-sm">
             <p className="text-[10px] font-black text-red-950/40 uppercase tracking-widest mb-2">Payment Info</p>
-            <div className="flex items-center gap-4 text-sm font-bold text-red-950">
+            <div className="flex items-center gap-4 text-sm font-bold text-red-950 flex-wrap">
               <span className="bg-white px-3 py-1 rounded-md shadow-sm capitalize border border-red-50 text-red-600">{order.paymentMethod || 'Unknown'} Route</span>
               <span className="bg-white px-3 py-1 rounded-md shadow-sm border border-red-50 uppercase tracking-wider text-[10px]">Status: {order.paymentStatus || 'pending'}</span>
+              {order.isGiftWrapped && (
+                <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-md shadow-sm font-black text-[10px] flex items-center gap-1 border border-amber-200 uppercase tracking-wider">
+                  <span className="material-symbols-outlined text-[14px]">redeem</span> Gift Wrap!
+                </span>
+              )}
             </div>
             {order.paymentFailureReason && <p className="text-xs text-red-600 mt-2 font-bold whitespace-pre-wrap">Error: {order.paymentFailureReason}</p>}
           </div>
@@ -105,6 +110,12 @@ const OrderDetailsModal = ({ order, onClose }) => {
                   <div className="font-black text-red-950">Rs {item.price * item.qty}</div>
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-red-100 space-y-1.5 flex flex-col items-end text-sm font-bold text-red-950">
+              {order.deliveryFee > 0 && <p className="w-full max-w-[200px] flex justify-between"><span className="text-red-950/50">Delivery Fee:</span> <span>Rs {order.deliveryFee}</span></p>}
+              {order.giftWrapFee > 0 && <p className="w-full max-w-[200px] flex justify-between"><span className="text-red-950/50">Gift Wrap Fee:</span> <span>Rs {order.giftWrapFee}</span></p>}
+              <p className="w-full max-w-[200px] flex justify-between text-lg pt-1 border-t border-red-50 mt-1"><span className="text-red-950/50 font-black">Total Paid:</span> <span className="font-black text-red-600">Rs {order.totalPrice}</span></p>
             </div>
           </div>
         </div>

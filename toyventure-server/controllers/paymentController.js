@@ -149,7 +149,7 @@ const markOrderPaid = async (order, paymentDetails) => {
 
 const createRazorpayOrder = async (req, res, next) => {
   try {
-    const { orderItems, shippingDetails, totalPrice } = req.body;
+    const { orderItems, shippingDetails, totalPrice, isGiftWrapped, deliveryFee, giftWrapFee } = req.body;
     const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
 
     validateOrderPayload({ orderItems, shippingDetails, totalPrice });
@@ -199,6 +199,9 @@ const createRazorpayOrder = async (req, res, next) => {
       orderStatus: 'pending_payment',
       paymentStatus: 'pending',
       idempotencyKey,
+      isGiftWrapped: Boolean(isGiftWrapped),
+      deliveryFee: Number(deliveryFee) || 0,
+      giftWrapFee: Number(giftWrapFee) || 0,
       razorpay: {
         orderId: razorpayOrder.id,
         receipt: razorpayOrder.receipt,
@@ -230,7 +233,7 @@ const createRazorpayOrder = async (req, res, next) => {
 
 const createDemoOrder = async (req, res, next) => {
   try {
-    const { orderItems, shippingDetails, totalPrice, couponCode } = req.body;
+    const { orderItems, shippingDetails, totalPrice, couponCode, isGiftWrapped, deliveryFee, giftWrapFee } = req.body;
     const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
 
     validateOrderPayload({ orderItems, shippingDetails, totalPrice });
@@ -270,6 +273,9 @@ const createDemoOrder = async (req, res, next) => {
       inventoryCommitted: true,
       idempotencyKey,
       couponCode: couponCode || null,
+      isGiftWrapped: Boolean(isGiftWrapped),
+      deliveryFee: Number(deliveryFee) || 0,
+      giftWrapFee: Number(giftWrapFee) || 0,
     });
 
     // Increment coupon usage if a code was applied

@@ -8,7 +8,7 @@ const crypto = require('crypto'); // FIX: Added crypto for unique key generation
 // @access  Private
 const createOrder = async (req, res) => {
     try {
-        const { orderItems, shippingDetails, totalPrice, paymentMethod, couponCode } = req.body;
+        const { orderItems, shippingDetails, totalPrice, paymentMethod, couponCode, isGiftWrapped, deliveryFee, giftWrapFee } = req.body;
 
         // Ensure direct order creation is ONLY used for Cash On Delivery
         if (paymentMethod !== 'cod') {
@@ -32,6 +32,9 @@ const createOrder = async (req, res) => {
             isPaid: false,
             couponCode: couponCode || null,
             inventoryCommitted: true,
+            isGiftWrapped: Boolean(isGiftWrapped),
+            deliveryFee: Number(deliveryFee) || 0,
+            giftWrapFee: Number(giftWrapFee) || 0,
             // FIX APPLIED HERE: Generate a unique idempotency key if one isn't provided
             idempotencyKey: req.body.idempotencyKey || `cod_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`
         });

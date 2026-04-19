@@ -33,6 +33,18 @@ const orderSchema = new mongoose.Schema({
         required: true,
         default: 0.0
     },
+    isGiftWrapped: {
+        type: Boolean,
+        default: false
+    },
+    deliveryFee: {
+        type: Number,
+        default: 0.0
+    },
+    giftWrapFee: {
+        type: Number,
+        default: 0.0
+    },
     currency: {
         type: String,
         default: 'INR'

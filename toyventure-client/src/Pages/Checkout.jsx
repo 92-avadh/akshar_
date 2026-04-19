@@ -110,6 +110,9 @@ const Checkout = () => {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [showCouponDetails, setShowCouponDetails] = useState(false);
+  
+  // Gift Wrap State
+  const [isGiftWrapped, setIsGiftWrapped] = useState(false);
 
   const subtotalPrice = cartItems.reduce((acc, item) => {
     const price = parseFloat(item.price) || 0;
@@ -117,7 +120,10 @@ const Checkout = () => {
     return acc + price * qty;
   }, 0);
 
-  const totalPrice = appliedCoupon ? appliedCoupon.finalTotal : subtotalPrice;
+  const baseTotal = appliedCoupon ? appliedCoupon.finalTotal : subtotalPrice;
+  const deliveryFee = baseTotal < 1000 ? 50 : 0;
+  const giftWrapFee = isGiftWrapped ? 50 : 0;
+  const totalPrice = baseTotal + deliveryFee + giftWrapFee;
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) { toast.error('Please enter a promo code.'); return; }
@@ -264,6 +270,9 @@ const Checkout = () => {
           orderItems: cartItems,
           shippingDetails,
           totalPrice,
+          isGiftWrapped,
+          deliveryFee,
+          giftWrapFee,
           paymentMethod: 'cod',
           idempotencyKey: checkoutRequestKey,
           couponCode: appliedCoupon?.code || null,
@@ -281,6 +290,9 @@ const Checkout = () => {
           orderItems: cartItems,
           shippingDetails,
           totalPrice,
+          isGiftWrapped,
+          deliveryFee,
+          giftWrapFee,
           paymentMethod: 'demo',
           idempotencyKey: checkoutRequestKey,
           couponCode: appliedCoupon?.code || null,
@@ -297,6 +309,9 @@ const Checkout = () => {
         orderItems: cartItems,
         shippingDetails,
         totalPrice,
+        isGiftWrapped,
+        deliveryFee,
+        giftWrapFee,
         paymentMethod: 'razorpay',
         idempotencyKey: checkoutRequestKey,
       }).unwrap();
@@ -588,6 +603,24 @@ const Checkout = () => {
               )}
             </div>
 
+            <div className="border-t border-white mt-6 pt-5">
+              <label className="flex items-center gap-3 p-4 rounded-2xl border-2 border-white bg-white/60 cursor-pointer shadow-sm hover:shadow-md transition-all">
+                <input 
+                  type="checkbox" 
+                  checked={isGiftWrapped} 
+                  onChange={(e) => setIsGiftWrapped(e.target.checked)}
+                  className="w-5 h-5 text-primary-container focus:ring-primary-container rounded"
+                />
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm text-zinc-800 tracking-wide flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px] text-zinc-600">redeem</span>
+                    Add a Gift Wrap (+Rs 50)
+                  </span>
+                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5 ml-6">Beautifully wrapped toy ready to be gifted!</span>
+                </div>
+              </label>
+            </div>
+
             <div className="border-t border-white mt-4 pt-4 space-y-3">
               <div className="flex justify-between text-sm font-bold text-zinc-600">
                 <span>Subtotal</span>
@@ -599,9 +632,19 @@ const Checkout = () => {
                   <span>- Rs {appliedCoupon.discount.toLocaleString('en-IN')}</span>
                 </div>
               )}
+              {isGiftWrapped && (
+                <div className="flex justify-between text-sm font-bold text-zinc-600">
+                  <span>Gift Wrap</span>
+                  <span>+ Rs 50</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm font-bold text-zinc-600">
-                <span>Shipping</span>
-                <span className="text-green-600">Free</span>
+                <span>Shipping {deliveryFee > 0 ? '(Under Rs 1000)' : ''}</span>
+                {deliveryFee === 0 ? (
+                  <span className="text-green-600">Free</span>
+                ) : (
+                  <span>+ Rs {deliveryFee}</span>
+                )}
               </div>
               <div className="flex justify-between items-end pt-4">
                 <span className="text-lg font-bold text-zinc-800">Total Due</span>
