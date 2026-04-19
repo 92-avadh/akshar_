@@ -1,3 +1,14 @@
+const Sentry = require("@sentry/node");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+
+// Telemetry & Error Tracking
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || '',
+  integrations: [ nodeProfilingIntegration() ],
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+});
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -91,6 +102,9 @@ app.get('/', (req, res) => {
 });
 
 // Error Handling Middlewares
+if (process.env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
 app.use(notFound);
 app.use(errorHandler);
 

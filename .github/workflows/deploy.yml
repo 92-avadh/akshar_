@@ -5,7 +5,30 @@ on:
       - main
 
 jobs:
+  security-audit:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code securely
+        uses: actions/checkout@v4
+      
+      - name: Setup Node Env
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Audit Backend Dependencies (Gate)
+        run: |
+          cd toyventure-server
+          npm audit --audit-level=high
+
+      - name: Audit Frontend Dependencies (Gate)
+        run: |
+          cd toyventure-client
+          npm audit --audit-level=high
+
   deploy:
+    needs: security-audit
     runs-on: ubuntu-latest
     steps:
       - name: Connect and Deploy via SSH Action
