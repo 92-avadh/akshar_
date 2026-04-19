@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '20'
 
-      # ── Security Audits (non-blocking) ────────────────────────────────
+      # ── Security Audits (non-blocking warnings) ───────────────────────
       - name: Security Audit — Backend
         continue-on-error: true
         run: |
@@ -32,42 +32,20 @@ jobs:
           npm install --legacy-peer-deps --silent
           npm audit --audit-level=critical || echo "⚠️ Audit warnings found"
 
-      # ── Build Frontend on fast GitHub runner ──────────────────────────
-      - name: Build Frontend
-        run: |
-          cd toyventure-client
-          npm install --legacy-peer-deps
-          npm run build
-          echo "✅ Build complete"
-          ls dist/
-
-      # ── Transfer dist/ to EC2 via native SCP ─────────────────────────
-      - name: Upload dist to EC2
-        run: |
-          echo "${{ secrets.EC2_PRIVATE_KEY }}" > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
-          tar -czf /tmp/dist.tar.gz -C toyventure-client/dist .
-          scp -i /tmp/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=30 \
-              /tmp/dist.tar.gz \
-              ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/dist.tar.gz
-          rm -f /tmp/deploy_key /tmp/dist.tar.gz
-
-      # ── SSH: sync backend, extract dist, reload nginx ─────────────────
-      - name: Deploy via SSH
+      # ── Deploy via SSH ────────────────────────────────────────────────
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
             set -e
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            # 1. Sync latest code (for backend + nginx config)
+            # 1. Sync code (node_modules is kept intact by git reset)
             cd /home/ubuntu/akshar_
             git fetch origin main
             git reset --hard origin/main
@@ -76,18 +54,39 @@ jobs:
             sudo cp /home/ubuntu/akshar_/nginx/default.conf /etc/nginx/sites-available/default
             sudo nginx -t
 
-            # 3. Backend — install & restart
+            # 3. Backend — smart install (only if package.json changed)
             cd /home/ubuntu/akshar_/toyventure-server
-            npm install --legacy-peer-deps
+            SERVER_HASH=$(md5sum package.json | cut -d' ' -f1)
+            CACHED_SERVER_HASH=$(cat /tmp/.server_pkg_hash 2>/dev/null || echo "none")
+            if [ "$SERVER_HASH" != "$CACHED_SERVER_HASH" ]; then
+              echo "Backend packages changed — installing..."
+              npm install --legacy-peer-deps
+              echo "$SERVER_HASH" > /tmp/.server_pkg_hash
+            else
+              echo "Backend packages unchanged — skipping install"
+            fi
             command -v pm2 &>/dev/null || npm install -g pm2
             pm2 restart all || pm2 start server.js --name "toyblix-server"
             pm2 save
 
-            # 4. Deploy pre-built frontend
-            sudo rm -rf /var/www/html/*
-            sudo tar -xzf /home/ubuntu/dist.tar.gz -C /var/www/html/
-            rm -f /home/ubuntu/dist.tar.gz
+            # 4. Frontend — smart install + build
+            cd /home/ubuntu/akshar_/toyventure-client
+            CLIENT_HASH=$(md5sum package.json | cut -d' ' -f1)
+            CACHED_CLIENT_HASH=$(cat /tmp/.client_pkg_hash 2>/dev/null || echo "none")
+            if [ "$CLIENT_HASH" != "$CACHED_CLIENT_HASH" ]; then
+              echo "Frontend packages changed — installing..."
+              npm install --legacy-peer-deps
+              echo "$CLIENT_HASH" > /tmp/.client_pkg_hash
+            else
+              echo "Frontend packages unchanged — skipping install"
+            fi
 
-            # 5. Restart nginx
+            echo "Building frontend..."
+            npm run build
+            ls dist/
+
+            # 5. Deploy to nginx
+            sudo rm -rf /var/www/html/*
+            sudo cp -r dist/. /var/www/html/
             sudo systemctl restart nginx
             echo "✅ Deployed Successfully!"
