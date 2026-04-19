@@ -272,7 +272,7 @@ const Home = () => {
       {/* ================= EDITORIAL PARALLAX ================= */}
       <section className="py-24 px-6 max-w-[1440px] mx-auto relative z-20">
         <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative h-[70vh] rounded-[3rem] overflow-hidden">
-          <motion.div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3')] bg-cover bg-center" initial={{ scale: 1.1 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ duration: 1.5, ease: "easeOut" }}></motion.div>
+          <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=800&auto=format&fit=crop')" }} initial={{ scale: 1.1 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ duration: 1.5, ease: "easeOut" }}></motion.div>
           <div className="absolute inset-0 bg-red-950/10"></div>
           
           {/* FIX: Centered box and text on mobile */}
