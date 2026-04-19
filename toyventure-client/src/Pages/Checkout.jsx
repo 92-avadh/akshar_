@@ -148,7 +148,18 @@ const Checkout = () => {
   const isBusy = isCreatingOrder || isVerifyingPayment || isCreatingDemoOrder || isCreatingCodOrder; 
 
   const handleInputChange = (e) => {
-    setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'phone') {
+      const sanitizedValue = value.replace(/\D/g, '');
+      if (sanitizedValue.length > 10) return;
+      setShippingDetails({ ...shippingDetails, [name]: sanitizedValue });
+    } else if (name === 'pincode') {
+      const sanitizedValue = value.replace(/\D/g, '');
+      if (sanitizedValue.length > 6) return;
+      setShippingDetails({ ...shippingDetails, [name]: sanitizedValue });
+    } else {
+      setShippingDetails({ ...shippingDetails, [name]: value });
+    }
   };
 
   const handleAutoSaveAddress = async () => {
@@ -365,7 +376,7 @@ const Checkout = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Phone Number</label>
-                  <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="+91 99999 00000" />
+                  <input required type="tel" name="phone" value={shippingDetails.phone} onChange={handleInputChange} pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" maxLength="10" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="9999900000" />
                 </div>
 
                 <div className="space-y-2">
@@ -390,7 +401,7 @@ const Checkout = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-600 ml-1">Pincode</label>
-                  <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="400001" />
+                  <input required type="text" name="pincode" value={shippingDetails.pincode} onChange={handleInputChange} pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" maxLength="6" className="w-full bg-white/60 p-4 border border-white rounded-2xl focus:ring-4 focus:ring-primary-container/20 outline-none transition-all shadow-inner font-medium text-zinc-800" placeholder="400001" />
                 </div>
                 <div className="md:col-span-2 flex justify-end border-t border-zinc-200/50 pt-4 mt-2">
                   <button

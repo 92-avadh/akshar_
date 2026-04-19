@@ -89,7 +89,13 @@ const Profile = () => {
 
   const handleAddressChange = (index, field, value) => {
     const nextAddresses = [...addresses];
-    nextAddresses[index] = { ...nextAddresses[index], [field]: value };
+    if (field === 'pincode') {
+      const sanitizedValue = value.replace(/\D/g, '');
+      if (sanitizedValue.length > 6) return;
+      nextAddresses[index] = { ...nextAddresses[index], [field]: sanitizedValue };
+    } else {
+      nextAddresses[index] = { ...nextAddresses[index], [field]: value };
+    }
     setAddresses(nextAddresses);
   };
 
@@ -393,7 +399,7 @@ const Profile = () => {
                           <input type="text" placeholder="Landmark (Optional)" value={address.landmark} onChange={(e) => handleAddressChange(index, 'landmark', e.target.value)} className="w-full bg-red-50/50 p-3 rounded-xl outline-none border border-red-100 shadow-sm text-sm font-medium text-red-950 focus:ring-2 focus:ring-red-600" />
                           <div className="grid grid-cols-2 gap-2">
                             <input type="text" placeholder="City" value={address.city} onChange={(e) => handleAddressChange(index, 'city', e.target.value)} required className="w-full bg-red-50/50 p-3 rounded-xl outline-none border border-red-100 shadow-sm text-sm font-medium text-red-950 focus:ring-2 focus:ring-red-600" />
-                            <input type="text" placeholder="Pincode" value={address.pincode} onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)} required className="w-full bg-red-50/50 p-3 rounded-xl outline-none border border-red-100 shadow-sm text-sm font-medium text-red-950 focus:ring-2 focus:ring-red-600" />
+                            <input type="text" placeholder="Pincode" value={address.pincode} onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)} pattern="[0-9]{6}" title="Please enter a valid 6-digit pincode" maxLength="6" required className="w-full bg-red-50/50 p-3 rounded-xl outline-none border border-red-100 shadow-sm text-sm font-medium text-red-950 focus:ring-2 focus:ring-red-600" />
                           </div>
                         </div>
                       </div>
