@@ -36,13 +36,16 @@ function App() {
       {/* ScrollToTop ensures the page resets to the top when navigating */}
       <ScrollToTop /> 
       
-      {/* Toaster for popup notifications - Configured to drop below Navbar on mobile */}
+      {/* Toaster for popup notifications - Configured to drop from the bottom right */}
       <Toaster 
-        position="top-center" 
+        position="bottom-right" 
         containerStyle={{ zIndex: 9999 }}
         toastOptions={{ 
-          className: 'mt-24 md:mt-4 font-bold text-sm shadow-xl', 
-          duration: 4000 
+          className: 'mb-4 md:mb-8 mr-4 font-bold text-sm shadow-2xl rounded-2xl border border-zinc-100', 
+          duration: 4000,
+          success: {
+            icon: <span className="material-symbols-outlined text-green-500 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>,
+          }
         }} 
       />
 
