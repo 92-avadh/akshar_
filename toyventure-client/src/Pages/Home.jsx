@@ -209,7 +209,7 @@ const Home = () => {
               <motion.div key={product._id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: idx * 0.1 }} className="group bg-white border border-red-100 rounded-[2rem] overflow-hidden hover:shadow-xl hover:shadow-red-900/10 transition-all duration-500 relative flex flex-col cursor-pointer" onClick={() => navigate(`/product/${product._id}`)}>
                 
                 <div className="p-3">
-                  <div className="relative h-60 p-6 flex items-center justify-center bg-red-50/50 rounded-3xl overflow-hidden group-hover:bg-red-50 transition-colors duration-500">
+                  <div className="relative h-60 p-6 flex items-center justify-center bg-slate-50 rounded-3xl overflow-hidden group-hover:bg-slate-100 transition-colors duration-500 shadow-inner border border-slate-100/50">
                     {hoverImage ? (
                       <>
                         <img loading="lazy" decoding="async" src={resolveImage(product.img)} alt={product.title} className="absolute inset-0 p-6 w-full h-full object-contain transition-all duration-500 mix-blend-multiply group-hover:opacity-0 group-hover:scale-95" />
@@ -218,7 +218,7 @@ const Home = () => {
                     ) : (
                       <img loading="lazy" decoding="async" src={resolveImage(product.img)} alt={product.title} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out" />
                     )}
-                    <div className="absolute top-4 left-4 z-10 bg-white shadow-sm border border-red-50 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
+                    <div className="absolute top-4 left-4 z-10 bg-white shadow-sm border border-slate-200 text-red-600 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
                       {product.tag || 'Popular'}
                     </div>
                   </div>
