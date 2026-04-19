@@ -49,7 +49,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-bold text-red-950">Our Store</h4>
-                <p className="text-sm font-medium text-red-950/60">ToyBlix, Surat, Gujarat</p>
+                <p className="text-sm font-medium text-red-950/60">ToyBlix(Akshar Toys) YogiChowk, Katargam, Surat, Gujarat</p>
               </div>
             </div>
 
@@ -59,7 +59,7 @@ const Contact = () => {
               </div>
               <div>
                 <h4 className="font-bold text-red-950">Phone Support</h4>
-                <p className="text-sm font-medium text-red-950/60">+91 98765 43210 (Mon-Sat, 9AM-6PM)</p>
+                <p className="text-sm font-medium text-red-950/60">+91 9898528152/+91 9974530204 (Mon-Sun, 9AM-10PM)</p>
               </div>
             </div>
 
