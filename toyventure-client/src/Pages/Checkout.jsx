@@ -479,19 +479,7 @@ const Checkout = () => {
               </label>
             </div>
 
-            {paymentMethod !== 'cod' && paymentMethod !== 'demo' && (
-              <div className="bg-white/50 border border-white rounded-[2rem] p-6 shadow-inner mt-6">
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-primary-container text-[26px]">shield_lock</span>
-                  <div>
-                    <p className="font-black text-zinc-800">ToyBlix does not collect card numbers or CVV.</p>
-                    <p className="text-sm text-zinc-500 font-medium mt-2">
-                      When you click pay, a secure hosted checkout opens so payment details stay strictly inside the payment gateway.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -667,9 +655,15 @@ const Checkout = () => {
             </button>
             
             {paymentMethod !== 'cod' && paymentMethod !== 'demo' && (
-              <p className="text-center text-[10px] text-zinc-400 font-bold mt-4 uppercase tracking-wider flex items-center justify-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">verified_user</span> Razorpay Hosted Checkout
-              </p>
+              <div className="mt-5 p-4 bg-zinc-50/80 border border-zinc-200/60 rounded-2xl flex items-start gap-3">
+                <span className="material-symbols-outlined text-green-600 text-[22px]">verified_user</span>
+                <div>
+                  <p className="font-black text-zinc-800 text-xs">ToyBlix does not collect card numbers or CVV.</p>
+                  <p className="text-[10px] text-zinc-500 font-bold mt-1.5 leading-relaxed">
+                    When you click pay, a secure hosted checkout opens so payment details stay strictly inside the payment gateway.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </div>
