@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '20'
 
-      # ── Security Audits (non-blocking warnings only) ──────────────────
+      # ── Security Audits (non-blocking) ────────────────────────────────
       - name: Security Audit — Backend
         continue-on-error: true
         run: |
@@ -32,25 +32,29 @@ jobs:
           npm install --legacy-peer-deps --silent
           npm audit --audit-level=critical || echo "⚠️ Audit warnings found"
 
-      # ── Build Frontend on GitHub's fast runner ────────────────────────
+      # ── Build Frontend on fast GitHub runner ──────────────────────────
       - name: Build Frontend
         run: |
           cd toyventure-client
           npm install --legacy-peer-deps
           npm run build
+          echo "✅ Build complete"
+          ls dist/
 
-      # ── Upload pre-built dist/ to EC2 via SCP ────────────────────────
-      - name: Upload dist/ to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "toyventure-client/dist/."
-          target: "/home/ubuntu/akshar_dist_upload"
-          strip_components: 2
+      # ── Transfer dist/ to EC2 via native SCP ─────────────────────────
+      - name: Upload dist to EC2
+        run: |
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          tar -czf /tmp/dist.tar.gz -C toyventure-client/dist .
+          scp -i /tmp/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
+              /tmp/dist.tar.gz \
+              ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/dist.tar.gz
+          rm -f /tmp/deploy_key /tmp/dist.tar.gz
 
-      # ── SSH: Sync backend, copy dist, reload nginx ───────────────────
+      # ── SSH: sync backend, extract dist, reload nginx ─────────────────
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -63,7 +67,7 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            # 1. Pull latest code
+            # 1. Sync latest code (for backend + nginx config)
             cd /home/ubuntu/akshar_
             git fetch origin main
             git reset --hard origin/main
@@ -72,18 +76,18 @@ jobs:
             sudo cp /home/ubuntu/akshar_/nginx/default.conf /etc/nginx/sites-available/default
             sudo nginx -t
 
-            # 3. Backend — only npm install (no build needed)
-            cd toyventure-server
+            # 3. Backend — install & restart
+            cd /home/ubuntu/akshar_/toyventure-server
             npm install --legacy-peer-deps
             command -v pm2 &>/dev/null || npm install -g pm2
             pm2 restart all || pm2 start server.js --name "toyblix-server"
             pm2 save
 
-            # 4. Swap in new frontend build
+            # 4. Deploy pre-built frontend
             sudo rm -rf /var/www/html/*
-            sudo cp -r /home/ubuntu/akshar_dist_upload/. /var/www/html/
-            rm -rf /home/ubuntu/akshar_dist_upload
+            sudo tar -xzf /home/ubuntu/dist.tar.gz -C /var/www/html/
+            rm -f /home/ubuntu/dist.tar.gz
 
-            # 5. Reload nginx
+            # 5. Restart nginx
             sudo systemctl restart nginx
             echo "✅ Deployed Successfully!"
