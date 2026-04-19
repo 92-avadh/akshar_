@@ -141,7 +141,7 @@ const Footer = () => {
             <h4 className="text-white font-black mb-10 uppercase text-sm tracking-widest opacity-100 drop-shadow-md">Support</h4>
             <ul className="space-y-8 text-white/80 text-base font-medium">
               <li><Link to="/shipping" className="hover:text-white hover:translate-x-1 inline-block transition-all">Shipping Info</Link></li>
-              <li><Link to="/returns" className="hover:text-white hover:translate-x-1 inline-block transition-all">Easy Returns</Link></li>
+              <li><Link to="/returns" className="hover:text-white hover:translate-x-1 inline-block transition-all"> Returns</Link></li>
               <li><Link to="/safety-standards" className="hover:text-white hover:translate-x-1 inline-block transition-all">Safety Standards</Link></li>
             </ul>
           </div>

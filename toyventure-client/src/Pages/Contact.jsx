@@ -124,7 +124,7 @@ const Contact = () => {
                 allowFullScreen="" 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                className="rounded-[2.5rem] opacity-90 grayscale hover:grayscale-0 transition-all duration-500 shadow-inner"
+                className="rounded-[2.5rem] opacity-90 transition-all duration-500 shadow-inner"
               ></iframe>
             </div>
           </div>
@@ -141,7 +141,7 @@ const Contact = () => {
                 allowFullScreen="" 
                 loading="lazy" 
                 referrerPolicy="no-referrer-when-downgrade"
-                className="rounded-[2.5rem] opacity-90 grayscale hover:grayscale-0 transition-all duration-500 shadow-inner"
+                className="rounded-[2.5rem] opacity-90 transition-all duration-500 shadow-inner"
               ></iframe>
             </div>
           </div>
